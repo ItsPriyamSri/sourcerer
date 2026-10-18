@@ -24,6 +24,8 @@ export interface LlmChatOptions {
   images?: string[];
   /** Standard JSON Schema. Constrains the model's output where supported. */
   jsonSchema?: Record<string, unknown>;
+  /** Pins llama.cpp's sampler. Set by the evidence capture; see config.ollama.seed. */
+  seed?: number;
   temperature?: number;
   maxTokens?: number;
   model?: string;
@@ -105,6 +107,8 @@ export class OllamaProvider implements LlmProvider {
       (opts.capability === "text" && config.ollama.textModel ? config.ollama.textModel : config.ollama.model);
     const images = (opts.images ?? []).map(stripDataUrl);
 
+    const seed = opts.seed ?? config.ollama.seed;
+
     const messages = opts.messages.map((m, i) => {
       const isLastUser = m.role === "user" && i === opts.messages.length - 1;
       return {
@@ -125,6 +129,9 @@ export class OllamaProvider implements LlmProvider {
       options: {
         temperature: opts.temperature ?? 0.2,
         num_predict: opts.maxTokens ?? 900,
+        // Only sent when a seed is configured. Left out entirely otherwise, so Ollama's
+        // own default (a fresh random seed per request) still applies.
+        ...(seed === undefined ? {} : { seed }),
       },
     };
     // Structured output: Ollama accepts a JSON schema here and *constrains* sampling.
@@ -188,8 +195,19 @@ export class BackboardProvider implements LlmProvider {
     const model = opts.model || config.backboard.model;
 
     // Backboard is a thread API: one `content` string per send, no message array.
-    // We flatten the conversation, keeping the system prompt first and explicit.
-    const system = opts.messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
+    //
+    // The system prompt goes in `system_prompt`, which is the documented per-turn
+    // instructions field. The first version put it inside `content` behind a `[SYSTEM]`
+    // heading and used an `instructions` field for the JSON case — and `instructions` is
+    // not in Backboard's schema. It would have been ignored without complaint, so the
+    // identify step would have posted the text "Produce the JSON now." with the item
+    // description and the schema both dropped. Nothing local could catch that: the path
+    // only runs when a real key is present, which is exactly when you are least able to
+    // debug it. The parameters here are checked against the published request schema.
+    const system = opts.messages
+      .filter((m) => m.role === "system")
+      .map((m) => m.content)
+      .join("\n\n");
     const turns = opts.messages.filter((m) => m.role !== "system");
     const last = turns[turns.length - 1];
     const history = turns
@@ -197,7 +215,17 @@ export class BackboardProvider implements LlmProvider {
       .map((m) => `${m.role === "assistant" ? "Assistant" : "User"}: ${m.content}`)
       .join("\n");
 
-    const content = [system && `[SYSTEM]\n${system}`, history && `[HISTORY]\n${history}`, `[USER]\n${last?.content ?? ""}`]
+    const content = [history && `[HISTORY]\n${history}`, last?.content ?? ""]
+      .filter(Boolean)
+      .join("\n\n");
+
+    // Backboard's structured-output switch is `json_output`, not an OpenAI-style
+    // `response_format`; the schema itself has to travel in the instructions.
+    const systemPrompt = [
+      system,
+      opts.jsonSchema &&
+        `Respond with ONLY valid JSON matching this schema:\n${JSON.stringify(opts.jsonSchema)}`,
+    ]
       .filter(Boolean)
       .join("\n\n");
 
@@ -208,6 +236,7 @@ export class BackboardProvider implements LlmProvider {
       // Vision must go over multipart: Backboard rejects binaries in JSON.
       const form = new FormData();
       form.set("content", content);
+      form.set("system_prompt", systemPrompt);
       form.set("llm_provider", config.backboard.llmProvider);
       form.set("model_name", model);
       images.forEach((b64, i) => {
@@ -223,14 +252,12 @@ export class BackboardProvider implements LlmProvider {
     } else {
       const jsonBody: Record<string, unknown> = {
         content,
+        system_prompt: systemPrompt,
         llm_provider: config.backboard.llmProvider,
         model_name: model,
         stream: false,
       };
-      if (opts.jsonSchema) {
-        jsonBody.instructions = `${content}\n\nRespond with ONLY valid JSON matching this schema:\n${JSON.stringify(opts.jsonSchema)}`;
-        jsonBody.content = "Produce the JSON now.";
-      }
+      if (opts.jsonSchema) jsonBody.json_output = true;
       res = await fetch(`${this.baseUrl}/threads/messages`, {
         method: "POST",
         headers: { "X-API-Key": this.apiKey, "content-type": "application/json" },
