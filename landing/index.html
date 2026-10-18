@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sourcerer — Know what it's worth. Anywhere.</title>
+    <meta
+      name="description"
+      content="An offline-first sourcing copilot for resellers. A local open-weight model reads the item; plain arithmetic decides the most you should pay."
+    />
+    <meta name="theme-color" content="#14120E" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        --bg: #f7f3ea;
+        --surface: #fffdf7;
+        --surface-2: #f1eadb;
+        --ink: #17150f;
+        --ink-2: #4a4437;
+        --muted: #726a5b;
+        --line: #e2d8c4;
+        --amber: #a75d07;
+        --amber-bright: #d98b12;
+        --buy: #0a6b45;
+        --paper-warm: #f0b45a;
+        --mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+        --display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+      a { color: inherit; }
+
+      /* ── hero ───────────────────────────────────────────────────────────── */
+      header.top {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 18px 0;
+      }
+      .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: -0.01em; }
+      .brand svg { width: 28px; height: 28px; }
+      nav a { margin-left: 20px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 600; }
+      nav a:hover { color: var(--ink); }
+
+      .hero { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 56px; align-items: center; padding: 56px 0 72px; }
+      @media (max-width: 860px) { .hero { grid-template-columns: 1fr; gap: 36px; padding: 32px 0 48px; } }
+
+      .kicker {
+        display: inline-flex; align-items: center; gap: 8px;
+        font: 600 12px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--amber); background: #fbeccf; border: 1px solid #f0d9a8;
+        padding: 7px 12px; border-radius: 999px;
+      }
+      h1 {
+        font-family: var(--display);
+        font-size: clamp(38px, 5.4vw, 62px);
+        line-height: 1.03; letter-spacing: -0.025em;
+        margin: 20px 0 0;
+      }
+      h1 .sub { color: var(--muted); display: block; font-size: 0.52em; letter-spacing: -0.01em; margin-top: 14px; line-height: 1.25; }
+      .lede { font-size: 18px; color: var(--ink-2); max-width: 46ch; margin: 24px 0 0; }
+
+      .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+      .btn {
+        display: inline-flex; align-items: center; gap: 9px; min-height: 48px; padding: 0 20px;
+        border-radius: 12px; text-decoration: none; font-weight: 650; font-size: 15px;
+        border: 1px solid transparent; transition: transform 0.12s ease, background 0.15s ease;
+      }
+      .btn:active { transform: translateY(1px); }
+      .btn-primary { background: var(--ink); color: var(--bg); }
+      .btn-primary:hover { background: #2a2519; }
+      .btn-ghost { border-color: #cbbfa6; color: var(--ink); }
+      .btn-ghost:hover { background: var(--surface-2); }
+
+      .proof { display: flex; flex-wrap: wrap; gap: 28px; margin-top: 40px; padding-top: 26px; border-top: 1px solid var(--line); }
+      .proof div { }
+      .proof .n { font-family: var(--mono); font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+      .proof .l { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+
+      /* ── the phone ──────────────────────────────────────────────────────── */
+      .phone {
+        margin: 0 auto; width: 100%; max-width: 340px;
+        border-radius: 34px; padding: 12px; background: #17150f;
+        box-shadow: 0 30px 60px -30px rgba(23, 21, 15, 0.55);
+      }
+      .phone img { display: block; width: 100%; border-radius: 24px; }
+      .caption { text-align: center; font-size: 12px; color: var(--muted); margin-top: 14px; }
+
+      /* ── sections ───────────────────────────────────────────────────────── */
+      section { padding: 64px 0; border-top: 1px solid var(--line); }
+      h2 { font-family: var(--display); font-size: clamp(26px, 3.2vw, 36px); letter-spacing: -0.02em; margin: 0 0 8px; }
+      .sub { color: var(--muted); max-width: 62ch; margin: 0 0 34px; }
+
+      .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+      @media (max-width: 800px) { .three { grid-template-columns: 1fr; } }
+      .card {
+        background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px;
+      }
+      .card .step { font: 700 12px/1 var(--mono); color: var(--amber); letter-spacing: 0.08em; }
+      .card h3 { font-family: var(--display); font-size: 20px; margin: 10px 0 6px; letter-spacing: -0.01em; }
+      .card p { margin: 0; color: var(--ink-2); font-size: 15px; }
+
+      .finding { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+      @media (max-width: 800px) { .finding { grid-template-columns: 1fr; } }
+      .finding .card { border-left: 4px solid var(--amber); }
+      .finding .card.good { border-left-color: var(--buy); }
+      .price { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+      .stack { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+      .stack .s { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+      .stack .s b { display: block; font-size: 14px; }
+      .stack .s span { font-size: 13px; color: var(--muted); }
+
+      .limits { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 26px 28px; }
+      .limits ul { margin: 0; padding-left: 20px; color: var(--ink-2); }
+      .limits li { margin: 10px 0; }
+      .limits li b { color: var(--ink); }
+
+      blockquote {
+        margin: 0 0 28px; padding: 18px 24px; border-left: 4px solid var(--amber);
+        background: var(--surface); border-radius: 0 12px 12px 0;
+        font-family: var(--display); font-size: 21px; line-height: 1.4; color: var(--ink);
+      }
+
+      footer { padding: 48px 0 72px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+      footer a { color: var(--amber); }
+      .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
+      .gallery figure { margin: 0; }
+      .gallery img { width: 100%; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); }
+      .gallery figcaption { font-size: 12px; color: var(--muted); margin-top: 8px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <span class="brand">
+          <svg viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="112" fill="#17150F"/><g transform="translate(256 262) rotate(-18)"><path d="M-116-74h132a34 34 0 0 1 24 10l96 96a34 34 0 0 1 0 48l-118 118a34 34 0 0 1-48 0l-96-96a34 34 0 0 1-10-24v-132a34 34 0 0 1 34-34z" fill="#F0B45A"/><circle cx="-52" cy="-28" r="17" fill="#17150F"/></g><path d="M352 96l10 34 34 10-34 10-10 34-10-34-34-10 34-10z" fill="#F7C566"/></svg>
+          Sourcerer
+        </span>
+        <nav>
+          <a href="#how">How it works</a>
+          <a href="#why">Why local</a>
+          <a href="#limits">Limits</a>
+          <a href="https://github.com/" rel="noopener">Source</a>
+        </nav>
+      </header>
+
+      <div class="hero">
+        <div>
+          <span class="kicker">● Runs on your machine</span>
+          <h1>
+            Know what it's worth.
+            <span class="sub">Anywhere. Including the basement with no bars.</span>
+          </h1>
+          <p class="lede">
+            Photograph something in a thrift shop. A local open-weight model reads it, your own
+            sold history and live listings price it, and you get the one number that actually
+            matters: <strong>the most you should pay.</strong>
+          </p>
+          <div class="cta">
+            <a class="btn btn-primary" href="#demo">See it work</a>
+            <a class="btn btn-ghost" href="https://github.com/" rel="noopener">Read the code</a>
+          </div>
+          <div class="proof">
+            <div><div class="n">0</div><div class="l">Photos uploaded</div></div>
+            <div><div class="n">0&nbsp;API&nbsp;keys</div><div class="l">Needed to work</div></div>
+            <div><div class="n" id="p-speed">—</div><div class="l">Per identification</div></div>
+            <div><div class="n" id="p-acc">—</div><div class="l">Items read correctly</div></div>
+          </div>
+        </div>
+        <div>
+          <div class="phone">
+            <img src="./img/03-verdict.png" alt="Sourcerer verdict card: a Pendleton wool board shirt, verdict MAYBE, max offer $14.12, estimated resale $59.80" />
+          </div>
+          <p class="caption">A real run on a 2019 laptop with no GPU busy. Verdict in about nine seconds.</p>
+        </div>
+      </div>
+
+      <section id="how">
+        <h2>Three steps, one number</h2>
+        <p class="sub">The loop a reseller already runs in their head — with the part their memory is bad at, made reliable.</p>
+        <div class="three">
+          <div class="card"><div class="step">01</div><h3>Read the item</h3><p>Gemma 3 runs locally on the photo. Brand, model, era, size, flaws, and the keywords a reseller would actually search.</p></div>
+          <div class="card"><div class="step">02</div><h3>Price the market</h3><p>Live listings when there's signal. Your own sold history when there isn't. The app always tells you which one it used.</p></div>
+          <div class="card"><div class="step">03</div><h3>Decide the offer</h3><p>Fees, shipping, packaging and your target margin, solved for the ceiling. <span class="price">BUY</span>, <span class="price">MAYBE</span> or <span class="price">PASS</span>.</p></div>
+        </div>
+      </section>
+
+      <section id="demo">
+        <h2>See it work</h2>
+        <p class="sub">An unedited run: describe the item, type the price on the tag, get a verdict. No network involved.</p>
+        <div class="gallery">
+          <figure><img src="./img/02-scan-filled.png" alt="The capture screen with an item description and an asking price typed in" /><figcaption>The capture screen. Type it if there's no light for a photo.</figcaption></figure>
+          <figure><img src="./img/04-provenance.png" alt="Comparables and a what-ran-where log showing every step ran on the device" /><figcaption>Every scan carries a receipt for what ran, and where.</figcaption></figure>
+          <figure><img src="./img/05-listings.png" alt="The listings queue with generated drafts" /><figcaption>The 11pm typing grind, deleted.</figcaption></figure>
+          <figure><img src="./img/06-insights.png" alt="Profit, sell-through and forecast accuracy computed locally" /><figcaption>Profit you can only see if you keep the records.</figcaption></figure>
+        </div>
+      </section>
+
+      <section id="why">
+        <h2>Why the brain has to be on the device</h2>
+        <blockquote>
+          The decision happens in a basement with no bars, so the model has to be in your hand.
+          That isn't ideology — it's plumbing.
+        </blockquote>
+        <div class="finding">
+          <div class="card">
+            <h3>The model reads</h3>
+            <p class="price" style="color:var(--amber)">fuzzy · tolerant of bad light · right most of the time</p>
+            <p style="margin-top:10px">Identification is exactly the job a small open-weight vision model is good at. It doesn't need to be perfect; it needs to be fast, private and free at the margin.</p>
+          </div>
+          <div class="card good">
+            <h3>Arithmetic decides</h3>
+            <p class="price" style="color:var(--buy)">deterministic · unit-tested · identical offline</p>
+            <p style="margin-top:10px">The money is never left to a language model. Fees, shipping and the max offer are plain functions, so the number you get in a basement equals the number you get online.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="limits">
+        <h2>Honest limits</h2>
+        <div class="limits">
+          <ul>
+            <li><b>It is slow on CPU.</b> Roughly nine seconds per item once the model is warm, and about forty seconds on the very first photo of a session while the weights load. A GPU changes this; this laptop's doesn't.</li>
+            <li><b>eBay's real sold prices are not available.</b> eBay moved completed listings behind a login and the search API's sold filter went with them. The app returns live <em>asking</em> prices, labels them as asking, and applies a visible 14% haircut. It is a range, not a promise.</li>
+            <li><b>Gemma 3 4B cannot call tools.</b> Identification and writing work; the tool-using advisor needs a different open model beside it. The app says so instead of failing quietly.</li>
+            <li><b>The price model needs your data.</b> With no sold history it falls back to condition-adjusted comps and a deliberately pessimistic guess. It gets personal only after you log sales.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section>
+        <h2>Built with</h2>
+        <p class="sub">Open weights at the core, open source around it. Every one of these sits behind a fallback, so removing any of them degrades the app instead of breaking it.</p>
+        <div class="stack">
+          <div class="s"><b>Gemma 3</b><span>Local multimodal identification and listing copy</span></div>
+          <div class="s"><b>Ollama</b><span>On-device inference runtime</span></div>
+          <div class="s"><b>Mastra</b><span>Agent runtime, tools, memory, workflow</span></div>
+          <div class="s"><b>SerpApi</b><span>Live market listings when there's signal</span></div>
+          <div class="s"><b>TabPFN</b><span>Price and days-to-sell from your own sales</span></div>
+          <div class="s"><b>Sentry</b><span>Agent tracing, per step and per token</span></div>
+          <div class="s"><b>Temporal</b><span>Durable nightly reprice that survives a crash</span></div>
+          <div class="s"><b>Tiger Data</b><span>pgvector memory: "have I bought this before?"</span></div>
+          <div class="s"><b>ElevenLabs</b><span>Speak the item, hear the verdict</span></div>
+          <div class="s"><b>Backboard</b><span>Hosted open-weight brain for demo machines</span></div>
+          <div class="s"><b>Render</b><span>Hosting for the hosted path</span></div>
+          <div class="s"><b>.tech</b><span>This domain</span></div>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          Sourcerer — a submission to the DEV Hacktoberfest Open-Source AI Challenge, Week 2: Side Hustle.
+          MIT licensed. The photos never leave your device, and you can check.
+        </p>
+        <p><a href="https://github.com/" rel="noopener">github.com/…/sourcerer</a></p>
+      </footer>
+    </div>
+
+    <script>
+      // Pull the two measured headline numbers out of the committed eval output, so the
+      // page cannot drift away from the evidence the way a hand-typed stat would.
+      fetch("./evidence.json")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (!d) return;
+          if (d.speed) document.getElementById("p-speed").textContent = d.speed;
+          if (d.accuracy) document.getElementById("p-acc").textContent = d.accuracy;
+        })
+        .catch(() => {});
+    </script>
+  </body>
+</html>

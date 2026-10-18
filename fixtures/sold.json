@@ -1,0 +1,17 @@
+{
+  "_README": "Synthetic sample data for the demo. These are NOT real sales and NOT market data. They exist so a clean clone can exercise the offline pricing path and the Insights screen without owning anything. Dates are fixed so screenshots are reproducible. `POST /demo/seed` loads this file.",
+  "sold": [
+    { "title": "Levi's 501 Big E selvedge denim jacket", "category": "denim jacket", "brand": "Levi's", "condition": "good", "price": 145, "daysToSell": 21, "compsMedian": 150, "compsCount": 18, "soldAt": "2026-03-14T18:20:00.000Z" },
+    { "title": "Pyrex 444 Cinderella mixing bowl set", "category": "glassware", "brand": "Pyrex", "condition": "good", "price": 68, "daysToSell": 9, "compsMedian": 72, "compsCount": 31, "soldAt": "2026-03-29T15:05:00.000Z" },
+    { "title": "MCM teak serving tray Denmark", "category": "homeware", "brand": "unknown", "condition": "good", "price": 34, "daysToSell": 8, "compsMedian": 38, "compsCount": 27, "soldAt": "2026-04-11T20:40:00.000Z" },
+    { "title": "Stetson Open Road 7 1/4 straw hat", "category": "hat", "brand": "Stetson", "condition": "good", "price": 64, "daysToSell": 13, "compsMedian": 70, "compsCount": 22, "soldAt": "2026-05-02T17:12:00.000Z" },
+    { "title": "Cast iron Griswold #8 skillet", "category": "cookware", "brand": "Griswold", "condition": "good", "price": 88, "daysToSell": 6, "compsMedian": 92, "compsCount": 40, "soldAt": "2026-05-24T19:33:00.000Z" },
+    { "title": "Pendleton wool board shirt", "category": "shirt", "brand": "Pendleton", "condition": "good", "price": 52, "daysToSell": 11, "compsMedian": 55, "compsCount": 25, "soldAt": "2026-06-13T16:48:00.000Z" },
+    { "title": "Woolrich 60/40 mountain parka", "category": "coat", "brand": "Woolrich", "condition": "good", "price": 78, "daysToSell": 16, "compsMedian": 85, "compsCount": 20, "soldAt": "2026-07-04T21:02:00.000Z" },
+    { "title": "Nikon FM2 35mm film camera body", "category": "film camera", "brand": "Nikon", "condition": "like_new", "price": 230, "daysToSell": 14, "compsMedian": 240, "compsCount": 12, "soldAt": "2026-07-27T14:19:00.000Z" },
+    { "title": "Sony Walkman WM-EX674 cassette player", "category": "audio", "brand": "Sony", "condition": "good", "price": 95, "daysToSell": 24, "compsMedian": 105, "compsCount": 9, "soldAt": "2026-08-15T18:55:00.000Z" },
+    { "title": "Polaroid SX-70 folding camera", "category": "camera", "brand": "Polaroid", "condition": "like_new", "price": 195, "daysToSell": 19, "compsMedian": 205, "compsCount": 15, "soldAt": "2026-09-03T15:41:00.000Z" },
+    { "title": "Ludwig Acrolite snare drum", "category": "drum", "brand": "Ludwig", "condition": "fair", "price": 180, "daysToSell": 33, "compsMedian": 210, "compsCount": 8, "soldAt": "2026-09-19T20:07:00.000Z" },
+    { "title": "Fender Princeton Reverb amp chassis", "category": "amplifier", "brand": "Fender", "condition": "fair", "price": 420, "daysToSell": 41, "compsMedian": 470, "compsCount": 6, "soldAt": "2026-10-02T17:26:00.000Z" }
+  ]
+}

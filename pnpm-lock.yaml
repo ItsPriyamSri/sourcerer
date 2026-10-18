@@ -6,7 +6,20 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.18.0
+        version: 22.20.5
+      playwright:
+        specifier: ^1.56.1
+        version: 1.64.1
+      tsx:
+        specifier: ^4.20.0
+        version: 4.23.15
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   apps/brain:
     dependencies:
@@ -28,6 +41,21 @@ importers:
       '@sourcerer/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@temporalio/activity':
+        specifier: ^1.24.0
+        version: 1.24.0
+      '@temporalio/client':
+        specifier: ^1.24.0
+        version: 1.24.0
+      '@temporalio/common':
+        specifier: ^1.24.0
+        version: 1.24.0
+      '@temporalio/worker':
+        specifier: ^1.24.0
+        version: 1.24.0(esbuild@0.28.2)
+      '@temporalio/workflow':
+        specifier: ^1.24.0
+        version: 1.24.0
       ai:
         specifier: latest
         version: 7.0.143(zod@4.6.7)
@@ -47,24 +75,9 @@ importers:
         specifier: ^4.1.8
         version: 4.6.7
     devDependencies:
-      '@temporalio/activity':
-        specifier: ^1.24.0
-        version: 1.24.0
-      '@temporalio/client':
-        specifier: ^1.24.0
-        version: 1.24.0
-      '@temporalio/common':
-        specifier: ^1.24.0
-        version: 1.24.0
       '@temporalio/testing':
         specifier: ^1.24.0
         version: 1.24.0(esbuild@0.28.2)
-      '@temporalio/worker':
-        specifier: ^1.24.0
-        version: 1.24.0(esbuild@0.28.2)
-      '@temporalio/workflow':
-        specifier: ^1.24.0
-        version: 1.24.0
       '@types/node':
         specifier: ^22.18.0
         version: 22.20.5
@@ -3755,6 +3768,16 @@ packages:
 
   pkg-types@2.3.3:
     resolution: {integrity: sha512-j/lCFdcppV0JxWpCEITdbDltBxPP6cHT+yNJ6Go2OgoSA9518X847X9z0p6LtA4Nc16+eQzCZjRrWanTGvHJ5w==}
+
+  playwright-core@1.64.1:
+    resolution: {integrity: sha512-BC4s8y6SEVA6Q1rSxZTto8hI1KUI3xXlHGZgvGqP4IqPdI/a6FX9H29IDNz7vKo9l21b6LfYosScPL6M3xxyDQ==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  playwright@1.64.1:
+    resolution: {integrity: sha512-HCrVhHr5QQuwYoswEUGTb7gGp522yflbv/ST8nF4sFWGuLjQCt17Q/EubpGGSNKYn1tsTCPZxqHhHCfVURu7UA==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   possible-typed-array-names@1.1.0:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
@@ -8487,6 +8510,12 @@ snapshots:
       confbox: 0.3.1
       exsolve: 1.1.3
       pathe: 2.0.3
+
+  playwright-core@1.64.1: {}
+
+  playwright@1.64.1:
+    dependencies:
+      playwright-core: 1.64.1
 
   possible-typed-array-names@1.1.0: {}
 

@@ -1,0 +1,3 @@
+started reprice-2026-10-18-demo-164926 over 12 items, paced 1200ms
+watch it: http://127.0.0.1:8233/namespaces/default/workflows/reprice-2026-10-18-demo-164926
+done: 12/12 refreshed, 0 failed

@@ -40,8 +40,8 @@ export default function ScanPage() {
   const verdictRef = useRef<HTMLDivElement>(null);
 
   const hasInput = Boolean(photo || text.trim());
-  const modelReady = Boolean(caps?.llm.some((l) => l.available));
-  const modelDetail = caps?.llm.find((l) => !l.available)?.detail;
+  const modelReady = Boolean(caps?.llm[0]?.available);
+  const modelDetail = caps?.llm[0]?.detail;
   const brainReachable = brainUp === true && modelReady;
 
   // Keep the user's saved cost model current without a round trip.

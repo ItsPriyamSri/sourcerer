@@ -101,6 +101,18 @@ export async function recordSold(record: SoldRecord): Promise<void> {
   await writeJson("sold.json", rows);
 }
 
+/**
+ * Wipe the local data and start over from the committed fixture.
+ *
+ * This exists so the demo is reproducible: `POST /demo/seed?reset=1` always leaves
+ * exactly the sample dataset, which is what makes the numbers in the README and the
+ * evidence directory mean the same thing on your machine as they do on mine.
+ */
+export async function clearLocalData(): Promise<void> {
+  await writeJson("inventory.json", []);
+  await writeJson("sold.json", []);
+}
+
 /** Persist a captured photo locally. Returns the path. */
 export async function savePhoto(id: string, bytes: Buffer): Promise<string> {
   await ensureDirs();

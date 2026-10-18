@@ -146,21 +146,31 @@ first-run has instant value.
 
 ## 7. Technology → partner-category mapping (only what is genuinely used)
 
-| Category | How it is genuinely used |
-|---|---|
-| **Gemma** (featured) | Local multimodal inference: identify item from photo, read labels, write listings, parse voice notes. |
-| **Mastra** | Agent runtime: tools (identify, comps, price, fee-math, listing), memory of the user's sold history, workflow orchestration. |
-| **SerpApi** | Live sold-comps search when online — grounds the price in fresh, real listings. |
-| **TabPFN** | On-device price / days-to-sell prediction from tabular comp + history features — the offline pricing brain. |
-| **Sentry** | Agent tracing: per-stage latency, tokens, cost, and the real debugging story. |
-| **Temporal** | Durable nightly reprice / comp-refresh workflow; retries flaky search calls; resumes. |
-| **Tiger Data** | Inventory + pgvector embeddings for similar-item retrieval and dedupe. |
-| **ElevenLabs** | Voice → structured item while hands are full; spoken verdicts. |
-| **Backboard** | Hosted brain path: the same agent against open-weight models through one key (enables a live demo with no GPU). |
-| **.tech domain** | Public landing page + demo. |
-| **Render / DigitalOcean** | Host the agent + web for a live demo link. |
-| **GitHub Copilot** | Dev workflow: Actions automation + review. |
-| **Entire** | Share the agent sessions behind the build in the write-up. |
+The third column is the honest status at submission time. **We only enter categories in
+the left column of the "Status" field** — anything marked *not entered* is listed here so
+the reader can see what was considered and dropped, not because we claim it.
+
+| Category | How it is genuinely used | Status |
+|---|---|---|
+| **Gemma** (featured) | Local multimodal inference: identify an item from a photo, read labels, write listings. Two sizes chosen by task: `gemma3:4b` for vision, `gemma3:1b` for cheap text paths. | **Implemented, verified end to end** — `docs/evidence/identify-results.json` |
+| **Temporal** | Durable nightly reprice: refresh stale comps with retry/backoff, survive a worker crash, resume from history. | **Implemented, verified** — a `SIGKILL` mid-sweep is proven in `docs/evidence/temporal/` |
+| **Mastra** | Agent runtime: five tools wrapping the deterministic pipeline functions, a memory-backed sourcing advisor, a listing-writer agent, a four-step typed scan workflow, LibSQL storage. | **Implemented** — workflow + tools + memory wired; the tool loop needs a tool-capable model beside Gemma (see below) |
+| **SerpApi** | Live eBay *asking* prices for market grounding, with condition and free-shipping filters and a JSON restrictor. Sold comps no longer exist; see the README. | **Implemented, not verified with a live key** |
+| **TabPFN** | Price + days-to-sell fitted on the user's own sold history via the Prior Labs REST API; makes the offline number personal instead of generic. | **Implemented, not verified with a live token** |
+| **Sentry** | `@sentry/node` auto-instruments Mastra into `gen_ai.*` spans; input recording off so photos never enter a trace. | **Implemented, not verified with a live DSN** |
+| **Tiger Data** | Postgres + pgvector for "have I bought this before?" hybrid retrieval and duplicate detection, with a local pgvector container as the zero-cloud option. | **Implemented, not verified with a live database** |
+| **ElevenLabs** | Speak a note while your hands are full; hear the verdict read back. | **Implemented, not verified with a live key** |
+| **Backboard** | The hosted brain path: the same agent against open-weight models through one key, which is what makes a GPU-less demo possible. | **Implemented, not verified with a live key** |
+| **.tech domain** | Public landing page for the demo. | **Landing page built**; domain not yet registered |
+| **Render** | Blueprint for the hosted brain (Backboard-backed, because free tiers have no GPU) and the static PWA. | **Blueprint written**, not deployed |
+| **GitHub Copilot** | — | *Not entered.* A dev tool, not a product integration. |
+| **Entire** | — | *Not entered.* Not used. |
+
+**A limitation this table exists to make visible:** Ollama reports Gemma 3's capabilities
+as `completion, vision` — there is **no `tools`**. So the model that reads your photograph
+cannot run the agent's tool loop, and a second small tool-capable open model
+(`OLLAMA_TOOL_MODEL`, default `qwen3:4b`) runs beside it. `GET /capabilities` reports this
+as its own row with the fix in its `detail` string.
 
 Everything above sits behind a **capability registry** with graceful degradation: with no
 keys and no network the app still works end-to-end on local Gemma + local heuristics.

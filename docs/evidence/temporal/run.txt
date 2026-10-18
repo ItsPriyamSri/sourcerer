@@ -1,0 +1,37 @@
+── Sourcerer reprice durability demo ──
+(2026-10-18T22:19:26+05:30)
+temporal:  temporal version 1.9.1 (Server 1.32.0, UI 2.54.1)
+
+1. seeding a demo inventory (sold history + items, no model calls)
+   {"ok":true,"seeded":12,"inventory":12,"note":"Sold history and inventory seeded through the real pipeline (no model calls). Set TABPFN_TOKEN and POST /train to fit the price model."}
+   inventory now holds 12 items
+
+2. starting worker #1
+   [reprice-worker] listening on sourcerer-reprice at 127.0.0.1:7233
+
+3. starting a paced sweep (1200ms between items: a rate limit for a paid API)
+   client not started yet
+
+4. waiting for some real work to land, then killing worker #1 outright (SIGKILL)
+   worker #1 had refreshed 3 item(s) when it died
+   workflow status right after the kill: WORKFLOW_EXECUTION_STATUS_RUNNING
+   (the process is gone; the run is not)
+
+5. starting worker #2 — it should replay history and resume at the next item
+   [reprice-worker] listening on sourcerer-reprice at 127.0.0.1:7233
+
+══ durability result ══
+items in the sweep                          : 12
+worker #1 refreshed before the SIGKILL      : 3
+worker #2 refreshed after the restart       : 9
+distinct items across both worker logs      : 12
+items refreshed twice (should be 0)         : 0
+activity executions in the history          : 24  (expected 24 = 2/item)
+workflow tasks scheduled                    : 38  (replays from the crash included)
+total events persisted                      : 211
+final result reported by the client         : done: 12/12 refreshed, 0 failed
+
+PASS — the SIGKILL cost the run time and nothing else.
+       No item was refreshed twice, and no activity was re-executed on replay.
+
+evidence: /home/mrstark/Documents/my-workspace/hacktoberfest-26/week-2/sourcerer/docs/evidence/temporal/

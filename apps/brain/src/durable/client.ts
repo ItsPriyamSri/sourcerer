@@ -10,7 +10,7 @@ import type { RepriceProgress } from "./workflows.ts";
  * Tuesday attaches to the same durable run instead of spawning a duplicate that
  * spends the same API quota again.
  */
-export async function startReprice(opts: { itemIds?: string[] } = {}) {
+export async function startReprice(opts: { itemIds?: string[]; paceMs?: number } = {}) {
   const connection = await Connection.connect({ address: config.temporal.address });
   const client = new Client({ connection, namespace: config.temporal.namespace });
 
@@ -26,7 +26,7 @@ export async function startReprice(opts: { itemIds?: string[] } = {}) {
   const handle = await client.workflow.start("repriceInventory", {
     taskQueue: config.temporal.taskQueue,
     workflowId,
-    args: [{ items: itemIds }],
+    args: [{ items: itemIds, paceMs: opts.paceMs }],
     workflowExecutionTimeout: "2 hours",
   });
 

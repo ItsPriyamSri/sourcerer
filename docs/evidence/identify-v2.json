@@ -1,0 +1,380 @@
+[
+  {
+    "itemId": "01",
+    "text": "Levi's 501 Big E selvedge denim jacket, size 42, small hole at cuff",
+    "ms": 8907,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Levi's 501 Big E Selvedge Denim Jacket",
+      "category": "Men's Jackets"
+    }
+  },
+  {
+    "itemId": "02",
+    "text": "Pyrex 444 Cinderella mixing bowl, green, nesting set of 3",
+    "ms": 8768,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Pyrex Cinderella Mixing Bowl - Green Nesting Set of 3",
+      "category": "Cookware"
+    }
+  },
+  {
+    "itemId": "03",
+    "text": "Nikon FM2 35mm film camera body, black, with 50mm lens",
+    "ms": 9060,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Nikon FM2 35mm Film Camera Body with 50mm Lens",
+      "category": "Cameras"
+    }
+  },
+  {
+    "itemId": "04",
+    "text": "Pendleton wool board shirt, size L, teal plaid",
+    "ms": 7394,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Pendleton Wool Board Shirt",
+      "category": "Men's Clothing"
+    }
+  },
+  {
+    "itemId": "05",
+    "text": "Ludwig Acrolite snare drum, 14 inch, aluminium shell, with case",
+    "ms": 8989,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Ludwig Acrolite Snare Drum",
+      "category": "Drum & Percussion"
+    }
+  },
+  {
+    "itemId": "06",
+    "text": "Griswold cast iron skillet #8, small block logo",
+    "ms": 4411,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Griswold Cast Iron Skillet #8",
+      "category": "Cookware"
+    }
+  },
+  {
+    "itemId": "07",
+    "text": "Polaroid SX-70 folding camera, leather, untested",
+    "ms": 7034,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Polaroid SX-70 Folding Camera",
+      "category": "Cameras"
+    }
+  },
+  {
+    "itemId": "08",
+    "text": "Stetson Open Road straw hat, size 7 1/4, tan",
+    "ms": 9074,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Stetson Open Road Straw Hat - Size 7 1/4",
+      "category": "Hats & Caps"
+    }
+  },
+  {
+    "itemId": "09",
+    "text": "Sony Walkman WM-EX674 cassette player, works, no headphones",
+    "ms": 8773,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Sony Walkman WM-EX674 Cassette Player",
+      "category": "Audio - Cassette Players"
+    }
+  },
+  {
+    "itemId": "10",
+    "text": "Teak serving tray, Denmark, mid century, no maker mark",
+    "ms": 6792,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Teak Serving Tray",
+      "category": "Home & Garden > Dining & Entertaining > Serving & Buffetware"
+    }
+  },
+  {
+    "itemId": "11",
+    "text": "Fender Princeton Reverb 1965 blackface amp chassis only",
+    "ms": 10678,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Fender Princeton Reverb 1965 Blackface Amp Chassis",
+      "category": "Amplifiers"
+    }
+  },
+  {
+    "itemId": "12",
+    "text": "Woolrich 60/40 mountain parka, navy, size M",
+    "ms": 7879,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Woolrich 60/40 Mountain Parka",
+      "category": "Outerwear"
+    }
+  },
+  {
+    "itemId": "13",
+    "text": "KitchenAid K45 stand mixer, white, with paddle and dough hook",
+    "ms": 8496,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "KitchenAid K45 Stand Mixer - White",
+      "category": "Kitchen Appliances"
+    }
+  },
+  {
+    "itemId": "14",
+    "text": "Stanley No. 4 smoothing plane, sweetheart iron",
+    "ms": 8411,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Stanley No. 4 Smoothing Plane with Sweetheart Iron",
+      "category": "Woodworking Tools"
+    }
+  },
+  {
+    "itemId": "15",
+    "text": "Patagonia Synchilla fleece pullover, retro X, size M",
+    "ms": 8529,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Patagonia Retro X Synchilla Fleece Pullover",
+      "category": "Men's Fleece"
+    }
+  },
+  {
+    "itemId": "16",
+    "text": "Weber kettle grill, 22 inch, one touch, rusted grate",
+    "ms": 8749,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Weber 22-Inch Kettle Grill",
+      "category": "Outdoor & Garden > Grills & Outdoor Cooking"
+    }
+  },
+  {
+    "itemId": "17",
+    "text": "Fiestaware dinner plates, set of 6, turquoise",
+    "ms": 4097,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Fiestaware Turquoise Dinner Plates - Set of 6",
+      "category": "Tableware"
+    }
+  },
+  {
+    "itemId": "18",
+    "text": "Technics SL-1200 turntable, no dust cover, needs stylus",
+    "ms": 9337,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Technics SL-1200 Turntable",
+      "category": "Audio - Turntables"
+    }
+  },
+  {
+    "itemId": "19",
+    "text": "CorningWare blue cornflower casserole dish with lid, 2 quart",
+    "ms": 4530,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "CorningWare Blue Cornflower Casserole Dish with Lid",
+      "category": "Cookware"
+    }
+  },
+  {
+    "itemId": "20",
+    "text": "Dr. Martens 1460 boots, black, size 9 UK, worn soles",
+    "ms": 9617,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Dr. Martens 1460 Boots - Black - Size 9 UK",
+      "category": "Shoes"
+    }
+  },
+  {
+    "itemId": "21",
+    "text": "Eames style lounge chair, rosewood, no labels anywhere",
+    "ms": 4087,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Eames Style Lounge Chair",
+      "category": "Furniture"
+    }
+  },
+  {
+    "itemId": "22",
+    "text": "Wedgwood Jasperware trinket box, pale blue, small chip on lid",
+    "ms": 8388,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Wedgwood Jasperware Trinket Box - Pale Blue",
+      "category": "Ceramics & Collectibles"
+    }
+  },
+  {
+    "itemId": "23",
+    "text": "Coleman 228E lantern, green, two mantle, glass intact",
+    "ms": 7803,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Coleman 228E Lantern",
+      "category": "Camping Lanterns"
+    }
+  },
+  {
+    "itemId": "24",
+    "text": "Vintage quilt, hand stitched, some fading, no tags",
+    "ms": 7337,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Vintage Handstitched Quilt",
+      "category": "Textiles & Sewing"
+    }
+  },
+  {
+    "itemId": "25",
+    "text": "Braun ET66 calculator, black, with case",
+    "ms": 3623,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Braun ET66 Calculator",
+      "category": "Electronics"
+    }
+  },
+  {
+    "itemId": "26",
+    "text": "Filson wool cruiser jacket, tin cloth, size 40",
+    "ms": 8363,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Filson Wool Cruiser Jacket",
+      "category": "Outerwear"
+    }
+  },
+  {
+    "itemId": "27",
+    "text": "Singer Featherweight 221 sewing machine, black, with case",
+    "ms": 7640,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Singer Featherweight 221 Sewing Machine",
+      "category": "Sewing Machines"
+    }
+  }
+]

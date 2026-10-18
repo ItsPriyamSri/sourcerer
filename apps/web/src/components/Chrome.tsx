@@ -246,7 +246,18 @@ function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }
           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">What runs where</h3>
           <ul className="space-y-1.5 text-sm">
             <Row label="Identification" value={caps ? `${caps.llm[0]?.provider} · ${caps.llm[0]?.model}` : "—"} on={Boolean(caps?.llm[0]?.available)} local={Boolean(caps?.llm[0]?.local)} />
-            <Row label="Hosted brain" value={caps?.llm[1]?.model ?? "Backboard"} on={Boolean(caps?.llm[1]?.available)} local={false} />
+            <Row
+              label="Agent tool loop"
+              value={caps?.llm.find((l) => l.provider.includes("tools"))?.model ?? "tool model"}
+              on={Boolean(caps?.llm.find((l) => l.provider.includes("tools"))?.available)}
+              local
+            />
+            <Row
+              label="Hosted brain"
+              value={caps?.llm.find((l) => l.provider === "backboard")?.model ?? "Backboard"}
+              on={Boolean(caps?.llm.find((l) => l.provider === "backboard")?.available)}
+              local={false}
+            />
             <Row label="Live market comps" value={caps?.comps.find((c) => !c.local)?.provider ?? "SerpApi"} on={Boolean(caps?.comps.find((c) => !c.local)?.available)} local={false} />
             <Row label="Price model" value={caps?.pricing.tabpfn ? "TabPFN" : "Built-in heuristics"} on={Boolean(caps?.pricing.tabpfn)} local />
             <Row label="Tracing" value="Sentry" on={Boolean(caps?.tracing.sentry)} local={false} />

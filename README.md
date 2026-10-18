@@ -2,10 +2,17 @@
 
 **Know what it's worth. Anywhere.**
 
-An offline-first sourcing copilot for resellers and flippers. Photograph an item, and a
-multimodal open-weight model running *on your own machine* identifies it, prices it
-against the market, and tells you the most you should pay — in the basement, in the
-back room of an estate sale, in a warehouse with no bars on your phone.
+An offline-first sourcing copilot for resellers. Photograph an item and a multimodal
+open-weight model running *on your own machine* identifies it, prices it against the
+market, and tells you the most you should pay — in a thrift-store basement, in the back
+room of an estate sale, in a warehouse with no bars on your phone.
+
+<img src="docs/media/verdict.buy.light.png" alt="The Sourcerer verdict card on a phone: a Levi's 501 Big E selvedge denim jacket, verdict BUY, max offer $35, estimated resale $133, with a chip reading Offline · local only" width="330">
+
+![license: MIT](https://img.shields.io/badge/license-MIT-blue)
+![node: >=22.18](https://img.shields.io/badge/node-%3E%3D22.18-brightgreen)
+![pnpm: 10](https://img.shields.io/badge/pnpm-10-orange)
+![no API keys required](https://img.shields.io/badge/API_keys_required-none-success)
 
 ```
 ┌──────────┐   ┌──────────────────────────┐   ┌─────────────────┐   ┌──────────────┐
@@ -21,8 +28,8 @@ back room of an estate sale, in a warehouse with no bars on your phone.
 
 A reseller's decision moment is **offline and time-pressured**. There is no wifi in a
 thrift-store basement and no time to wait for a server round trip while your hands are
-full. Every existing pricing tool requires the network at exactly the moment it is
-unavailable, so it fails the job-to-be-done — not by being slow, but architecturally.
+full. Every pricing tool that requires the network fails at exactly the moment it is
+needed — not by being slow, but architecturally.
 
 That is why this project is built the way it is. Open-weight AI on your own device is
 not a nice-to-have for this problem. **It is the only architecture that solves it.**
@@ -34,8 +41,20 @@ Sourcerer keeps working with:
 - no per-scan cost
 - no photos leaving your machine
 
-and gets *sharper* when you add the network and a few keys back. Degradation is a
-feature, not an error path.
+and gets *sharper* when you add the network and a few keys back. Degradation is part of
+the design, not an error path.
+
+---
+
+## What it looks like
+
+<table>
+<tr>
+<td width="33%"><img src="docs/media/verdict.buy.light.png" alt="Verdict card: BUY, max offer $35, estimated resale $133, profit after eBay fees, and a basis line reading 12 items from your own sold history"><br><sub><b>The verdict.</b> One dominant signal, the max offer in the largest type on the screen, and the range it came from.</sub></td>
+<td width="33%"><img src="docs/media/ranlog.light.png" alt="An expanded What ran where receipt listing each pipeline step, its provider, its latency, and whether data left the device"><br><sub><b>The receipt.</b> Every scan records which provider ran each step and whether anything left the device. "Photos never leave your machine" is a field you can read, not a promise.</sub></td>
+<td width="33%"><img src="docs/media/listings.queue.light.png" alt="The listings queue with captured items and generated draft titles"><br><sub><b>The other half.</b> Captures become listing drafts — title, description, tags, price — written by the local model.</sub></td>
+</tr>
+</table>
 
 ---
 
@@ -50,7 +69,7 @@ Checking the market → Pricing → Deciding`). You get a verdict card:
   it reads at arm's length and survives colour blindness
 - **the max offer price**, in the largest type on the screen
 - an expected resale range, the multiple, and the profit after real fees
-- where the number came from, always: `12 live comps` or `your sold history · 71%`
+- where the number came from, always: `12 live comps` or `your sold history`
 
 Then type the price on the tag and the whole thing re-prices **instantly and offline**,
 because the fee arithmetic is deterministic pure TypeScript shared by the server and the
@@ -83,11 +102,36 @@ pnpm --filter @sourcerer/web dev       # http://localhost:3000
 Open `http://localhost:3000` on your laptop, or on your phone by hitting your laptop's
 LAN address — and add it to your home screen. It is a PWA and it works offline.
 
+### First, the zero-key path
+
 **No keys are required.** With zero configuration you get local Gemma identification,
-local heuristic pricing and your own sold history as the comps source. Everything else
-is additive; see [`docs/KEYS.md`](docs/KEYS.md) for the exact list of optional keys and
-what each one buys you. `GET /capabilities` always tells you the truth about what is
-live right now, and the app surfaces it in Settings → *What runs where*.
+local comps from your own sold history, and local heuristic pricing. To see it work
+immediately without owning anything, load the sample data:
+
+```bash
+curl -X POST http://127.0.0.1:8787/demo/seed
+```
+
+That reads [`fixtures/sold.json`](fixtures/sold.json) — twelve **synthetic** records,
+labelled as sample data everywhere they appear, so a clean clone can exercise the
+offline pricing path and the Insights screen. They are not real sales and not market
+data.
+
+### Then, sharpen it
+
+Each of these is additive, and each degrades gracefully when absent:
+
+| Add | You get | File |
+|---|---|---|
+| `SERPAPI_API_KEY` | live eBay listing comps instead of your own history | [`docs/KEYS.md`](docs/KEYS.md) |
+| `TABPFN_TOKEN` | a price + days-to-sell model fitted on *your* sales | [`docs/KEYS.md`](docs/KEYS.md) |
+| `DATABASE_URL` (pgvector) | "have I bought one of these before?" | [`docs/KEYS.md`](docs/KEYS.md) |
+| `ELEVENLABS_API_KEY` | dictate an item; hear the verdict | [`docs/KEYS.md`](docs/KEYS.md) |
+| `SENTRY_DSN` | `gen_ai.*` traces per agent step | [`docs/KEYS.md`](docs/KEYS.md) |
+| `BACKBOARD_API_KEY` | the same agent on open weights, hosted, for machines with no GPU | [`docs/KEYS.md`](docs/KEYS.md) |
+
+`GET /capabilities` always tells the truth about what is live right now, and the app
+surfaces the same thing in Settings → *What runs where*.
 
 ### Requirements
 
@@ -95,8 +139,30 @@ live right now, and the app surfaces it in Settings → *What runs where*.
 |---|---|
 | Node | 22.18+ |
 | pnpm | 10+ (this repo is pnpm-only; no `package-lock.json`, no npm) |
-| Ollama | 0.30+ (0.40+ recommended) with `gemma3:4b` and `gemma3:1b` |
+| Ollama | 0.40+ with `gemma3:4b` and `gemma3:1b` (plus `qwen3:4b` for the advisor's tool loop) |
 | RAM | ~6 GB free for the 4B vision model. A GPU is nice; CPU works, just slower. |
+
+---
+
+## Degradation matrix
+
+This is the product thesis in tabular form. Nothing in this table throws.
+
+| Capability | Offline, no keys | + network | + keys |
+|---|---|---|---|
+| Identify from a photo | Gemma 3 4B, local | same | same |
+| Identify from text | Gemma 3 1B, local | same | same |
+| Market comps | your own sold history | sold history | live eBay listings (SerpApi) |
+| Price estimate | condition-adjusted comps | same | TabPFN model on your sales |
+| Verdict + max offer | deterministic, local | identical | identical |
+| Listing draft | template built from known fields | local model | local model |
+| Advisor | deterministic answer | local tool-using model | same |
+| Voice | — | — | ElevenLabs in/out |
+| Tracing | — | — | Sentry `gen_ai.*` spans |
+| Similar items | — | — | pgvector, when `DATABASE_URL` is set |
+| Background reprice | — | needs Temporal running | same |
+
+Full failure behaviour per layer is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) §7.
 
 ---
 
@@ -109,95 +175,189 @@ sourcerer/
 │   ├─ core/steps.ts       the pipeline: identify → comps → price → verdict → listing
 │   ├─ providers/          llm · comps · pricing · vector · voice · tracing (all optional, all swappable)
 │   ├─ mastra/             tools, two agents, a 4-step typed workflow, LibSQL memory
-│   └─ durable/            Temporal reprice workflow: activities, worker, client
-└─ apps/web/               Next-generation PWA — scan, listings, insights
+│   ├─ durable/            Temporal reprice workflow: activities, worker, client
+│   └─ eval/               the hand-labelled set and the eval runner
+└─ apps/web/               Vite + React PWA — scan, listings, insights
 ```
 
-Three decisions worth explaining:
+### The finding: the model reads the item, plain code decides the price
 
-**The money math is not in the model.** `decideVerdict`, `maxOfferFor` and
-`computeEconomics` live in `packages/shared` as pure, tested functions. A model estimates
-one number — what the thing sells for — and the arithmetic that decides whether you buy
-is deterministic, unit-tested, and identical in the server and the browser. A 4B model
-should never be trusted with your margin, and it never is.
+A small model is the right instrument for reading a blurry label in bad light, and the
+wrong one for solving for a margin. So the system is split, permanently:
 
-**Every integration degrades instead of failing.** Providers sit behind small
-interfaces. `llmChat()` walks a provider chain; the comps layer falls back from live
-market data to your own sold history; pricing falls back from TabPFN to
-condition-adjusted comps; the UI falls back from live comps to on-device estimates. At
-no point does a missing key produce a broken screen.
+- **The model identifies** — fuzzy, tolerant of bad light, occasionally wrong in
+  interesting ways.
+- **Plain arithmetic decides the money** — `decideVerdict`, `maxOfferFor` and
+  `computeEconomics` in [`packages/shared`](packages/shared/src/economics.ts) are pure,
+  unit-tested, and identical in the server and the browser.
 
-**Provenance is part of the data model, not the copy.** Every `Comp` is tagged
-`sold` or `asking`; every comps result is tagged `live`, `local_history`, `cache` or
-`estimate`; every scan returns a `ran[]` log of which provider executed each step and
-whether data left the device. The UI renders those fields directly, which is why the
-privacy claim is inspectable rather than aspirational.
+A 4B model should never be trusted with your margin. Here, it never is: the only number
+it produces is an estimate of what the item sells for, and even that is anchored to comps
+whenever comps exist.
+
+The full write-up — including the eval, the prompt-iteration table and the failure I left
+in — is in **[`docs/POST.md`](docs/POST.md)**.
+
+**Every integration degrades instead of failing.** Providers sit behind small interfaces.
+`llmChat()` walks a provider chain; comps fall back from live market data to your own
+sold history; pricing falls back from TabPFN to condition-adjusted comps. At no point
+does a missing key produce a broken screen.
+
+**Provenance is part of the data model, not the copy.** Every `Comp` is tagged `sold` or
+`asking`; every comps result is tagged `live`, `local_history`, `cache` or `estimate`;
+every scan returns a `ran[]` log of which provider executed each step and whether data
+left the device. The UI renders those fields directly, which is why the privacy claim is
+inspectable rather than aspirational.
 
 ### A real engineering decision: eBay retired its sold-comps filter
 
-When this was built (October 2026), eBay had moved completed listings behind a login,
-and the SerpApi `show_only=Sold` filter was retired with them. There is no sold-comps
-engine to call.
+When this was built (October 2026), eBay had moved completed listings behind a login and
+the SerpApi `show_only=Sold` filter was retired with them. There is no sold-comps engine
+to call.
 
 The wrong move would have been to quietly return *asking* prices and label them "sold".
 Instead: Sourcerer returns live asking prices tagged `kind: "asking"`, applies an
 explicit, visible **`ASKING_TO_SOLD_FACTOR = 0.86`** haircut, says so in the UI, and puts
-the whole thing behind a `CompsProvider` interface so a genuine sold-comps vendor
-(Soldgraph, CompSniper, Trawl, or eBay Marketplace Insights) can drop in without
-touching the pipeline. A reseller who catches you lying about sold prices never comes
-back; a reseller who understands the haircut trusts you more.
+the whole thing behind a `CompsProvider` interface so a genuine sold-comps vendor can drop
+in without touching the pipeline. A reseller who catches you lying about sold prices
+never comes back; a reseller who understands the haircut trusts you more.
 
 ---
 
-## Partner technologies — and exactly how each one is used
+## Evidence
 
-Nothing here is a logo on a slide. Each entry is a real code path you can read.
+<!-- EVAL_TABLE_START -->
+<!-- EVAL_TABLE_END -->
 
-| Technology | Where it lives | What it genuinely does |
-|---|---|---|
-| **Gemma 3** (featured) | `apps/brain/src/providers/llm.ts` | Multimodal identification from the photo, label reading, title/description writing. Runs locally via Ollama's native `/api/chat` with JSON-schema-constrained output, so a 4B model can be trusted to emit valid structured data. |
-| **Mastra** | `apps/brain/src/mastra/*` | The agent runtime. Five tools that wrap the same deterministic functions the pipeline uses (an agent physically cannot invent a price), a sourcing-advisor agent with memory of your sold history, a listing-writer agent, a 4-step typed scan workflow, and LibSQL-backed storage. `mastra dev` opens the Studio. |
-| **SerpApi** | `providers/comps.ts` | Live eBay asking prices for real market grounding, with the condition filter, free-shipping filter, result cap and a JSON restrictor so we only pull the fields we need. |
-| **TabPFN** | `providers/pricing.ts` | A price + days-to-sell model trained on *your* sold history via the Prior Labs REST API (`prepare_train_set_upload → fit → predict`, quantile output). This is the piece that makes the offline number personal instead of generic. |
-| **Sentry** | `providers/tracing.ts` | `@sentry/node` auto-instruments Mastra, producing `gen_ai.*` spans per agent step and model call with token counts, latency and cost. Input recording is off by default so photos never enter a trace. |
-| **Temporal** | `durable/*` | A durable nightly reprice workflow: refresh comps for stale inventory with proper retry/backoff, survive a worker crash mid-run, and resume from workflow history. |
-| **Tiger Data** | `providers/vector.ts` | Postgres + pgvector for "have I bought this before?" hybrid retrieval (reciprocal rank fusion) and duplicate detection. Local pgvector via compose for anyone who wants zero cloud. |
-| **ElevenLabs** | `providers/voice.ts` | Speak a note while your hands are full; get a structured item back. Also speaks the verdict aloud. |
-| **Backboard** | `providers/llm.ts` | The second brain: the same agent against open-weight models through one key. This is what makes the hosted demo possible on a machine with no GPU. |
-| **Render** | `infra/render.yaml` | Blueprint for the hosted brain (Backboard-backed, because free tiers have no GPU) and the static PWA. |
-| **.tech** | landing page | A real domain for the demo. |
+Method: 30 items with a known brand and type, written by hand the way a person would type
+them at a rack. Ground truth is the description itself, so the scoring is mechanical and
+every failure can be checked by reading the row. Four prompt/schema configurations were
+run against the same set. Raw output, including every wrong answer:
+[`docs/evidence/identify-results.json`](docs/evidence/identify-results.json).
 
-`GET /capabilities` reports which of these are live, and the app's *What runs where*
-sheet shows the user the same thing in plain language.
+The Temporal durability evidence — a worker killed mid-sweep with `SIGKILL` and resumed —
+is in [`docs/evidence/temporal/`](docs/evidence/temporal/):
+
+```
+items in the sweep                          : 12
+worker #1 refreshed before the SIGKILL      : 3
+worker #2 refreshed after the restart       : 9
+distinct items across both worker logs      : 12
+items refreshed twice (should be 0)         : 0
+activity executions in the history          : 24  (expected 24 = 2/item)
+workflow status right after the kill        : RUNNING
+final result reported by the client         : done: 12/12 refreshed, 0 failed
+
+PASS — the SIGKILL cost the run time and nothing else.
+       No item was refreshed twice, and no activity was re-executed on replay.
+```
+
+The pacing between items is not a demo trick: it is a rate limit for a paid search API,
+because a 200-item sweep will otherwise get you throttled. It also happens to make the
+crash window observable, which is how the claim above was produced.
+
+Reproduce both:
+
+```bash
+pnpm test                              # 32 unit tests, no model, no network
+pnpm evidence:identify                 # the identification eval (needs Ollama)
+bash scripts/temporal-durability-demo.sh   # the crash-and-resume proof
+pnpm evidence:capture                  # every screenshot in docs/media, from the real app
+```
 
 ---
 
 ## Tests
 
 ```bash
-pnpm test          # 18 tests over the money math and comps statistics
+pnpm test          # 32 tests
 pnpm typecheck     # all three packages
 ```
 
-The tests live in `packages/shared` and cover the parts that decide whether someone
-makes money: fee arithmetic, the max-offer solve, the verdict thresholds, trimmed-mean
-robustness to a single absurd listing, and clamping of hostile cost-model input.
+They cover the parts that decide whether someone makes money — fee arithmetic, the
+max-offer solve, the verdict thresholds, trimmed-mean robustness to a single absurd
+listing, clamping of hostile cost-model input — plus the JSON salvage that keeps a model
+answering in prose from taking a whole scan down with it. No mocking a model is required,
+which is what makes these tests evidence rather than hygiene.
 
 ---
 
-## Configuration
+## Honest limits
 
-Every key is optional. See [`docs/KEYS.md`](docs/KEYS.md) for the full table, where to
-get each one, and what breaks (gracefully) without it. `apps/brain/.env.example` is the
-authoritative list.
+- **It is slow on CPU.** About nine seconds to identify an item from text once the model
+  is warm, thirty to forty seconds from a photo, and roughly seventy-five seconds on the
+  very first scan of a session while the weights load. `keep_alive: 30m` means you pay
+  that once per session.
+- **eBay's real sold prices are not available.** See the section above. The 0.86 haircut
+  is a judgement call and it is labelled as one everywhere it is applied.
+- **Gemma 3 4B cannot call tools.** Ollama reports its capabilities as
+  `completion, vision` — no `tools`. The tool-using advisor needs a second open model
+  beside it. `GET /capabilities` reports this rather than pretending otherwise.
+- **The price model is empty on day one.** With no sold history it falls back to
+  condition-adjusted comps and a deliberately pessimistic guess, so the first week's
+  verdicts lean PASS.
+- **The on-device fallback is heuristics, not Gemma in the tab.** When the brain is
+  unreachable the browser prices from keywords and your stored history. It is honest and
+  it is not the model.
+- **The eval is 30 items, labelled by one person, on one machine, in one afternoon.**
+- **Not everything in `docs/KEYS.md` has been exercised with a live key.** The
+  integrations are implemented and degrade correctly when absent; the table there states
+  which are verified end to end.
+
+---
+
+## Design thinking
+
+This was designed before it was built: personas, a ranked pain list, fourteen ideas with
+four cut and reasons, ten UX principles, then the flows. The full pass is in
+[`docs/DESIGN.md`](docs/DESIGN.md).
+
+The pains, ranked by frequency × severity, are what the interface is organised around:
+
+| # | Pain | Frequency | Severity |
+|---|---|---|---|
+| P1 | No comps when there's no signal | daily | severe |
+| P2 | Decision paralysis at the rack | daily | severe |
+| P3 | Listing-writing fatigue at night | daily | high |
+| P4 | Dead inventory from bad price guesses | weekly | high |
+| P5 | No idea of real profit | monthly | medium |
+| P6 | "Did I already buy one of these?" | weekly | medium |
+
+### What I deliberately did not build
+
+Conviction shows in what you refuse. Four ideas were generated and cut, with reasons:
+
+- **Social comps / a marketplace of users' prices** — needs network effects, which needs
+  users, which means shipping the thing that doesn't have any. Cut.
+- **A cloud sync service** — contradicts P1. If the data has to leave the device to be
+  useful, the architecture is wrong. Cut.
+- **Barcode-first capture** — faster when it works, useless on vintage and unlabelled
+  goods, which is the entire interesting case. Cut.
+- **An in-app storefront publisher** — real work, but it moves the moment of value from
+  the rack to the desk, and the rack is the product. Cut.
+
+---
 
 ## Documentation
 
-- [`docs/DESIGN.md`](docs/DESIGN.md) — the design-thinking pass: personas, the problem
-  statement, the cut list, ten UX principles and the flows they produce.
-- [`docs/KEYS.md`](docs/KEYS.md) — optional API keys, and what each unlocks.
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — the pipeline, the provider model,
-  and the failure behaviour of every layer.
+- [`docs/POST.md`](docs/POST.md) — the write-up: the finding, the eval, the failure, the limits.
+- [`docs/DESIGN.md`](docs/DESIGN.md) — personas, ranked pains, the cut list, ten UX principles, flows.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — the pipeline, the provider model, and the failure behaviour of every layer.
+- [`docs/KEYS.md`](docs/KEYS.md) — optional API keys, where to get them, and what each unlocks.
+
+---
+
+## Challenge window
+
+Built and completed during the Hacktoberfest Open-Source AI Challenge Week 2
+(October 12–18, 2026). The repository was created inside the window; the submission
+commit is recorded below.
+
+### Commits after the deadline
+
+(none at the time of submission)
+
+---
 
 ## License
 

@@ -26,13 +26,30 @@ export function localModel(modelId: string = config.ollama.model) {
   return ollama.chat(modelId);
 }
 
+/**
+ * The model that runs the advise loop, which is a different job from identifying an item.
+ *
+ * Ollama reports Gemma 3's capabilities as `completion, vision` — no `tools`. Ask it to
+ * call a tool and the request fails with "does not support tools". So the agent uses a
+ * small tool-capable open model beside Gemma (Qwen 3 4B by default), while Gemma keeps
+ * the jobs it is actually good at: reading photos and writing listings.
+ *
+ * If no tool model is installed, this returns the configured model and the agent fails
+ * loudly — which the advisor route catches and turns into a deterministic answer rather
+ * than an error page.
+ */
+export function toolModel() {
+  const modelId = config.ollama.toolModel || config.ollama.model;
+  return ollama.chat(modelId);
+}
+
 export const memory = new Memory({ storage });
 
 export const sourcingAdvisor = new Agent({
   id: "sourcing-advisor",
   name: "Sourcing Advisor",
   instructions: ADVISOR_SYSTEM,
-  model: localModel(),
+  model: toolModel(),
   tools: advisorTools,
   memory,
 });

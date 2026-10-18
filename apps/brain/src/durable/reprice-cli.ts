@@ -21,15 +21,20 @@ async function main() {
   const connection = await Connection.connect({ address: config.temporal.address });
   const client = new Client({ connection, namespace: config.temporal.namespace });
 
+  // REPRICE_ID_SUFFIX lets a demo run get its own workflow id; without it the id is the
+  // calendar day, so hitting reprice twice on a Tuesday attaches to the same run.
   const day = new Date().toISOString().slice(0, 10);
+  const suffix = process.env.REPRICE_ID_SUFFIX ? `-${process.env.REPRICE_ID_SUFFIX}` : "";
+  const paceMs = Number(process.env.REPRICE_PACE_MS ?? 0) || 0;
+
   const handle = await client.workflow.start("repriceInventory", {
     taskQueue: config.temporal.taskQueue,
-    workflowId: `reprice-${day}`,
-    args: [{ items: items.map((i) => i.id) }],
+    workflowId: `reprice-${day}${suffix}`,
+    args: [{ items: items.map((i) => i.id), paceMs }],
     workflowExecutionTimeout: "2 hours",
   });
 
-  console.log(`started ${handle.workflowId} over ${items.length} items`);
+  console.log(`started ${handle.workflowId} over ${items.length} items${paceMs ? `, paced ${paceMs}ms` : ""}`);
   console.log(`watch it: http://127.0.0.1:8233/namespaces/${config.temporal.namespace}/workflows/${handle.workflowId}`);
 
   const result = (await handle.result()) as RepriceProgress;

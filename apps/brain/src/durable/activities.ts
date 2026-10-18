@@ -36,6 +36,13 @@ export async function refreshComps(itemId: string): Promise<RefreshResult> {
     throw ApplicationFailure.create({ message: `no comps for ${itemId}`, type: "NoComps" });
   }
 
+  // One line per item, so the worker's log is itself a record of how much work the
+  // crash cost you. After a restart it should contain only the items that were still
+  // outstanding — completed activities are replayed from history, not re-executed.
+  console.log(
+    `[reprice] ${itemId} ${identification.title.slice(0, 40)} → ${comps.summary.median} (${comps.summary.count} listings)`,
+  );
+
   return {
     itemId,
     title: identification.title,

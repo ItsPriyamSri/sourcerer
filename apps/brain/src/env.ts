@@ -38,6 +38,12 @@ export const config = {
     baseUrl: str("OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
     model: str("OLLAMA_MODEL", "gemma3:4b"),
     textModel: str("OLLAMA_TEXT_MODEL", "gemma3:1b"),
+    /**
+     * Tool calling is a separate capability. Ollama reports Gemma 3 as
+     * `completion, vision` and rejects `tools`, so the agent loop uses a small
+     * tool-capable open model instead. See docs/ARCHITECTURE.md §4.
+     */
+    toolModel: str("OLLAMA_TOOL_MODEL", "qwen3:4b"),
     embedModel: str("OLLAMA_EMBED_MODEL", ""),
   },
 

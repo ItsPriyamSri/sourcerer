@@ -1,22 +1,26 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
 import { nanoid } from "nanoid";
-import type { CapturedItem, Capabilities, ScanStage } from "@sourcerer/shared";
+import type { CapturedItem, Capabilities, Identification, ScanStage } from "@sourcerer/shared";
 import {
   ScanRequestZ,
   ListingDraftZ,
   defaultCostModel,
+  mergeCostModel,
   portfolioStats,
   formatMoney,
   formatMultiple,
+  round2,
 } from "@sourcerer/shared";
 import { config, modelRoute } from "./env.ts";
 import { mastra, sourcingAdvisor } from "./mastra/index.ts";
 import { brainSummary } from "./mastra/agents.ts";
-import { runScan, writeListing, identify, findComps, estimatePrice } from "./core/steps.ts";
+import { runScan, writeListing, identify, findComps, estimatePrice, makeVerdict } from "./core/steps.ts";
 import {
   listItems,
   saveItem,
@@ -26,6 +30,8 @@ import {
   recordSold,
   savePhoto,
   getItem,
+  clearLocalData,
+  type SoldRecord,
 } from "./core/store.ts";
 import { hasVectorDb, similarItems, embed, ensureSchema } from "./providers/vector.ts";
 import { hasVoice, transcribe, speak } from "./providers/voice.ts";
@@ -78,6 +84,18 @@ app.get("/capabilities", async (c) => {
           : ollamaStatus.missing.length
             ? `Waiting on model pull: ${ollamaStatus.missing.join(", ")}`
             : `Loaded: ${ollamaStatus.models.join(", ")}`,
+      },
+      {
+        provider: "ollama (tools)",
+        model: config.ollama.toolModel,
+        local: true,
+        // Ollama reports Gemma 3 as `completion, vision` — no tool calling. The agent
+        // loop needs a tool-capable model, and this is the honest report of whether
+        // one is installed.
+        available: ollamaStatus.models.includes(config.ollama.toolModel),
+        detail: ollamaStatus.models.includes(config.ollama.toolModel)
+          ? "Powers the advisor's tool loop."
+          : `Run: ollama pull ${config.ollama.toolModel} (Gemma 3 cannot call tools).`,
       },
       {
         provider: "backboard",
@@ -364,22 +382,65 @@ app.post("/photo", async (c) => {
 // ── a small demo helper so a judge can see it work in one click ────────────
 
 app.post("/demo/seed", async (c) => {
-  const history = [
-    { title: "Levi's 501 Big E selvedge denim jacket", category: "denim jacket", brand: "Levi's", condition: "good", price: 145, daysToSell: 21, compsMedian: 150, compsCount: 18 },
-    { title: "Pyrex 444 Cinderella mixing bowl set", category: "glassware", brand: "Pyrex", condition: "good", price: 68, daysToSell: 9, compsMedian: 72, compsCount: 31 },
-    { title: "Nikon FM2 35mm film camera body", category: "film camera", brand: "Nikon", condition: "like_new", price: 230, daysToSell: 14, compsMedian: 240, compsCount: 12 },
-    { title: "Pendleton wool board shirt", category: "shirt", brand: "Pendleton", condition: "good", price: 52, daysToSell: 11, compsMedian: 55, compsCount: 25 },
-    { title: "Ludwig Acrolite snare drum", category: "drum", brand: "Ludwig", condition: "fair", price: 180, daysToSell: 33, compsMedian: 210, compsCount: 8 },
-    { title: "Cast iron Griswold #8 skillet", category: "cookware", brand: "Griswold", condition: "good", price: 88, daysToSell: 6, compsMedian: 92, compsCount: 40 },
-    { title: "Polaroid SX-70 folding camera", category: "camera", brand: "Polaroid", condition: "like_new", price: 195, daysToSell: 19, compsMedian: 205, compsCount: 15 },
-    { title: "Stetson Open Road 7 1/4 straw hat", category: "hat", brand: "Stetson", condition: "good", price: 64, daysToSell: 13, compsMedian: 70, compsCount: 22 },
-    { title: "Sony Walkman WM-EX674 cassette player", category: "audio", brand: "Sony", condition: "good", price: 95, daysToSell: 24, compsMedian: 105, compsCount: 9 },
-    { title: "MCM teak serving tray Denmark", category: "homeware", brand: "unknown", condition: "good", price: 34, daysToSell: 8, compsMedian: 38, compsCount: 27 },
-    { title: "Fender Princeton Reverb amp chassis", category: "amplifier", brand: "Fender", condition: "fair", price: 420, daysToSell: 41, compsMedian: 470, compsCount: 6 },
-    { title: "Woolrich 60/40 mountain parka", category: "coat", brand: "Woolrich", condition: "good", price: 78, daysToSell: 16, compsMedian: 85, compsCount: 20 },
-  ];
+  // `?reset=1` clears inventory and sold history first, so the sample dataset is
+  // exactly reproducible — which is what makes every number in docs/evidence and the
+  // README mean the same thing wherever it is run.
+  const reset = c.req.query("reset") === "1";
+  if (reset) await clearLocalData();
+
+  // Sample data lives in a committed fixture, not in this file and not in the
+  // gitignored data/ dir — so a clean clone can run the whole offline path, and the
+  // numbers in the README and the post come from a file anyone can read.
+  const fixture = JSON.parse(
+    readFileSync(fileURLToPath(new URL("../../../fixtures/sold.json", import.meta.url)), "utf8"),
+  ) as { sold: SoldRecord[] };
+  const history = fixture.sold;
   for (const h of history) await recordSold(h);
-  return c.json({ ok: true, seeded: history.length, note: "Sold history seeded. Set TABPFN_TOKEN and POST /train to fit the price model." });
+
+  // Also build a demo inventory, through the *real* deterministic pipeline
+  // (your sold history → comps → price → verdict). Deliberately no model call: the
+  // point of the demo dataset is that it works on a machine with no Ollama installed,
+  // and that is exactly the offline path this app claims to have.
+  const seeded: CapturedItem[] = [];
+  for (const [i, h] of history.entries()) {
+    const identification: Identification = {
+      title: h.title,
+      category: h.category,
+      brand: h.brand,
+      attributes: {},
+      condition: h.condition as Identification["condition"],
+      keywords: h.title.split(/\s+/).slice(0, 4),
+      confidence: 0.82,
+    };
+    const { comps } = await findComps({ identification, offline: true });
+    const { price } = await estimatePrice({ identification, comps });
+    const cost = mergeCostModel(defaultCostModel("ebay"));
+    // Bought at roughly a third of the eventual sale — a margin a person would take,
+    // not a number that flatters the portfolio stats.
+    const buyPrice = round2(h.compsMedian * 0.34);
+    const item: CapturedItem = {
+      id: nanoid(10),
+      createdAt: new Date(Date.now() - (history.length - i) * 36 * 3600_000).toISOString(),
+      source: "manual",
+      identification,
+      comps,
+      price,
+      verdict: makeVerdict({ buyPrice, price, cost }),
+      cost,
+      buyPrice,
+      status: i % 3 === 0 ? "listed" : "bought",
+      note: "Seeded demo item — delete it whenever.",
+    };
+    await saveItem(item);
+    seeded.push(item);
+  }
+
+  return c.json({
+    ok: true,
+    seeded: history.length,
+    inventory: seeded.length,
+    note: "Sold history and inventory seeded through the real pipeline (no model calls). Set TABPFN_TOKEN and POST /train to fit the price model.",
+  });
 });
 
 /** Kick off the durable reprice workflow (Temporal). */

@@ -1,4 +1,4 @@
-import { defineQuery, proxyActivities, setHandler } from "@temporalio/workflow";
+import { defineQuery, proxyActivities, setHandler, sleep } from "@temporalio/workflow";
 import type * as activities from "./activities.ts";
 
 /**
@@ -26,6 +26,15 @@ const { refreshComps, applyReprice } = proxyActivities<typeof activities>({
 
 export interface RepriceInput {
   items: string[];
+  /**
+   * Milliseconds to pause between items.
+   *
+   * A 200-item sweep against a paid search API will happily get you rate-limited, so
+   * the pause is a real feature rather than a demo trick. It also happens to make the
+   * durability of this loop observable: there is a window in which you can kill the
+   * worker and watch the run pick up where it stopped.
+   */
+  paceMs?: number;
 }
 
 export interface RepriceProgress {
@@ -50,6 +59,7 @@ export async function repriceInventory(input: RepriceInput): Promise<RepriceProg
       progress.failed.push(itemId);
     }
     progress.done++;
+    if (input.paceMs) await sleep(input.paceMs);
   }
 
   return progress;
