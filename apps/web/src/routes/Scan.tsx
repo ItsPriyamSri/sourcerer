@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import type { CapturedItem, ScanRequest, ScanResult, ScanStage } from "@sourcerer/shared";
 import { loadCost } from "../lib/db.ts";
 import { dataUrlBytes, prepareImage } from "../lib/image.ts";
-import { listingToText, scanShareText } from "../lib/format.ts";
+import { listingToText } from "../lib/format.ts";
 import { api } from "../lib/api.ts";
 import { haptic, smartScan, useApp } from "../lib/store.tsx";
 import { runOfflineScan } from "../lib/offline.ts";
@@ -99,7 +99,12 @@ export default function ScanPage() {
         if (!usedBrain) setError(err ?? "The brain was unreachable; this is an on-device estimate.");
       }
       haptic(14);
-      requestAnimationFrame(() => verdictRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+      // Respect the motion preference here too: scrollIntoView's smooth behaviour is
+      // JavaScript's, so the global `scroll-behavior: auto` override cannot reach it.
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      requestAnimationFrame(() =>
+        verdictRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
       toast("Scan failed. Your capture is safe — try again.", "bad");
@@ -177,9 +182,16 @@ export default function ScanPage() {
 
   return (
     <Shell>
+      {/*
+        The Scan screen has no visible page title — the brand sits in the top bar and the
+        active nav tab is the label — but a screen-reader user still needs the page's h1
+        to open the heading outline, and every other screen has one.
+      */}
+      <h1 className="sr-only-text">Scan</h1>
+
       {/* ── capture ──────────────────────────────────────────────────────── */}
       {!result && !running && (
-        <section className="space-y-4">
+        <section className="space-y-4 lg:mx-auto lg:max-w-2xl">
           {items.length === 0 && <FirstRun onDemo={() => { setText("Levi's 501 Big E selvedge denim jacket, size 42, small hole at cuff"); setBuyPrice(12); }} />}
 
           <div className="card overflow-hidden">
@@ -218,9 +230,9 @@ export default function ScanPage() {
 
             <div className="space-y-3 border-t p-4" style={{ borderColor: "var(--line)" }}>
               <label className="block">
-                <span className="mb-1 flex items-baseline justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-muted">Or describe it</span>
-                  <span className="text-[11px] text-muted">works with no camera and no signal</span>
+                <span className="mb-1 flex items-baseline justify-between gap-2">
+                  <span className="kicker">Or describe it</span>
+                  <span className="meta">works with no camera and no signal</span>
                 </span>
                 <textarea
                   value={text}
@@ -234,22 +246,33 @@ export default function ScanPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <label className="block">
-                  <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted">Asking price</span>
+                  <span className="kicker mb-1 block">Asking price</span>
                   <MoneyInput value={buyPrice} onChange={setBuyPrice} placeholder="0" aria-label="Asking price" />
                 </label>
-                <label className="flex items-end gap-2 pb-1">
-                  <input
-                    type="checkbox"
-                    checked={keepLocal}
-                    onChange={(e) => setKeepLocal(e.target.checked)}
-                    className="tap h-5 w-5 rounded"
-                    id="keep-local"
-                  />
-                  <span className="text-xs leading-tight">
-                    <span className="font-semibold">Keep it fully local</span>
-                    <span className="block text-muted">skip live market comps</span>
-                  </span>
-                </label>
+                {/*
+                  The checkbox used to be `h-5 w-5 tap` — .tap forces a 44px min-height, so
+                  the 20px box rendered as a stretched 44×20 rectangle. The hit area belongs
+                  on the label, not on the glyph.
+                */}
+                <div>
+                  <span className="kicker mb-1 block">Privacy</span>
+                  <label
+                    className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border px-3"
+                    style={{ borderColor: "var(--line)" }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={keepLocal}
+                      onChange={(e) => setKeepLocal(e.target.checked)}
+                      className="h-5 w-5 shrink-0 rounded"
+                      id="keep-local"
+                    />
+                    <span className="text-xs leading-tight">
+                      <span className="font-semibold">Keep it fully local</span>
+                      <span className="meta block">skip live market comps</span>
+                    </span>
+                  </label>
+                </div>
               </div>
 
               {!brainReachable && (
@@ -270,12 +293,12 @@ export default function ScanPage() {
             {keepLocal ? "Price it on this device" : "Price it"}
           </button>
 
-          <div className="flex items-center justify-between gap-2 text-xs text-muted">
-            <span className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+            <span className="meta flex items-center gap-1.5">
               <IconDevice width={14} height={14} />
               {caps?.brain.local === false ? "Hosted open-weight model" : "Local open-weight model"}
             </span>
-            <span className="flex items-center gap-1.5">
+            <span className="meta flex items-center gap-1.5">
               <IconTag width={14} height={14} />
               {online ? "SerpApi comps available" : "no network — local pricing"}
             </span>
@@ -283,7 +306,7 @@ export default function ScanPage() {
 
           {recent.length > 0 && (
             <section aria-label="Recent captures" className="pt-2">
-              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Recent</h2>
+              <h2 className="kicker mb-2">Recent</h2>
               <ul className="space-y-2">
                 {recent.map((i) => (
                   <RecentRow key={i.id} item={i} />
@@ -297,10 +320,13 @@ export default function ScanPage() {
         </section>
       )}
 
-      {/* ── progress ─────────────────────────────────────────────────────── */}
+          {/* ── progress ─────────────────────────────────────────────────────── */}
       {running && (
-        <section className="card p-5">
-          <h2 className="display mb-4 text-lg font-semibold">Working it out…</h2>
+        <section className="card p-5 lg:mx-auto lg:max-w-2xl">
+          <h2 className="display mb-1 text-lg font-semibold">Working it out…</h2>
+          <p className="meta mb-4">
+            Four real steps, reported as they finish. Nothing here is a fake spinner — the timings are this machine&apos;s.
+          </p>
           <StageProgress stages={stages} running={running} />
           {stages.length === 0 && <div className="mt-4">{<WakingUp />}</div>}
         </section>
@@ -310,25 +336,33 @@ export default function ScanPage() {
       {result && !running && (
         <div ref={verdictRef} className="animate-rise space-y-4">
           {error && (
-            <p className="flex items-start gap-2 rounded-lg p-3 text-xs" style={{ background: "var(--maybe-soft)", color: "var(--maybe)" }}>
+            <p
+              className="flex items-start gap-2 rounded-lg p-3 text-xs"
+              style={{ background: "var(--maybe-soft)", color: "var(--maybe)" }}
+              role="status"
+            >
               <IconWarn width={16} height={16} className="mt-px shrink-0" />
               {error}
             </p>
           )}
 
-          {photo && (
-            <img src={photo.dataUrl} alt="" className="max-h-48 w-full rounded-xl border object-contain" style={{ borderColor: "var(--line)" }} />
-          )}
-
+          {/*
+            The photo is evidence, not the decision, so it travels inside the verdict card
+            as a thumbnail instead of sitting above it and pushing the number below the
+            fold on a phone.
+          */}
           <VerdictCard
             result={result}
+            buyPrice={buyPrice}
+            onBuyPrice={setBuyPrice}
             onSave={() => void doSave()}
             onListing={doListing}
             saved={saved}
             listingText={listing}
+            photoUrl={photo?.dataUrl}
           />
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 lg:max-w-md">
             <button className="btn btn-ghost flex-1" onClick={() => void runScan()}>
               <IconSparkle width={16} height={16} /> Re-price
             </button>
@@ -337,18 +371,14 @@ export default function ScanPage() {
             </button>
           </div>
 
-          <details className="card p-3 text-xs" onToggle={(e) => setShowRaw((e.target as HTMLDetailsElement).open)}>
-            <summary className="cursor-pointer font-semibold">Raw identification</summary>
+          <details className="card p-3" onToggle={(e) => setShowRaw((e.target as HTMLDetailsElement).open)}>
+            <summary className="tap cursor-pointer text-sm font-semibold">Raw identification</summary>
             {showRaw && (
-              <pre className="mt-2 overflow-auto whitespace-pre-wrap break-words text-[11px] leading-relaxed" style={{ color: "var(--ink-2)" }}>
+              <pre className="meta mt-2 overflow-auto whitespace-pre-wrap break-words leading-relaxed" style={{ color: "var(--ink-2)" }}>
                 {JSON.stringify(result.identification, null, 2)}
               </pre>
             )}
           </details>
-
-          <p className="text-center text-[11px] text-muted">
-            {scanShareText(result).split("\n")[1]}
-          </p>
         </div>
       )}
     </Shell>
@@ -356,14 +386,48 @@ export default function ScanPage() {
 }
 
 function FirstRun({ onDemo }: { onDemo: () => void }) {
+  /*
+    The first screen a judge — or a flipper — ever sees. Instead of a paragraph of prose
+    it states the loop in the order it happens, because the wait for local inference is
+    the part people misread as "broken" if nobody warned them.
+  */
+  const steps = [
+    {
+      Icon: IconCamera,
+      title: "Photograph it, or describe it",
+      body: "Point at the label. The photo is prepared on this device.",
+    },
+    {
+      Icon: IconDevice,
+      title: "The model reads it on your machine",
+      body: "Gemma runs beside you — no signal, no upload, no key.",
+    },
+    {
+      Icon: IconTag,
+      title: "You get your ceiling",
+      body: "One number: the most you should pay after fees and shipping.",
+    },
+  ];
   return (
     <div className="card stripe p-1">
       <div className="rounded-xl p-4" style={{ background: "var(--surface)" }}>
         <h2 className="display text-lg font-semibold">Never overpay in a basement again.</h2>
-        <p className="mt-1 text-sm text-muted">
-          Photograph an item. Sourcerer identifies it with a model running on your own machine, prices
-          it against real listings, and tells you the most you should pay — no signal required.
-        </p>
+        <ol className="mt-3 space-y-3">
+          {steps.map(({ Icon, title, body }) => (
+            <li key={title} className="flex gap-3">
+              <span
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                style={{ background: "var(--surface-2)", color: "var(--amber)" }}
+              >
+                <Icon width={16} height={16} />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">{title}</span>
+                <span className="meta block">{body}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
         <button className="btn btn-ghost mt-3" onClick={onDemo}>
           <IconSparkle width={16} height={16} /> Try it with a demo item
         </button>
@@ -384,7 +448,7 @@ function RecentRow({ item }: { item: CapturedItem }) {
       )}
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-semibold">{item.identification.title}</span>
-        <span className="flex items-center gap-2 text-[11px] text-muted">
+        <span className="meta flex items-center gap-2">
           <VerdictPill verdict={item.verdict} />
           <span className="price">max {`$${Math.round(item.verdict.maxOffer)}`}</span>
         </span>

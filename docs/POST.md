@@ -29,11 +29,15 @@ and nine seconds later you get:
 
 ```
 VERDICT      ● BUY
-MAX OFFER    $35
-EST. RESALE  $133   ($127 – $140)
-PROFIT       $94 after eBay fees and shipping
-BASIS        1 item from your own sold history
+MAX OFFER    $35.32
+EST. RESALE  $133.40   ($126.73 – $140.07)
+AT $12       $93.96 profit, after eBay fees, shipping and supplies
+BASIS        3 items from your own sold history
 ```
+
+Every number in that block was computed by `packages/shared`, not by the model: eBay's
+13.6% plus $0.30 payment fee on the $133.40 sale, $8 shipping, $1 supplies, a net of
+$105.96, divided by the 3× multiple she wants to make, which is where $35.32 comes from.
 
 Type a different price on the tag and the whole thing re-prices instantly, with the
 network off, because the arithmetic is not a model call. That number is the product.
@@ -50,23 +54,38 @@ descriptions for a pile of items she bought that morning.
 ## Demo
 
 The demo video is an unedited run of the real thing on this laptop:
-**[`docs/evidence/sourcerer-demo.webm`](docs/evidence/sourcerer-demo.webm)** — capture →
-verdict → max offer → listing draft, with the browser's network tab quiet.
+**[`docs/media/sourcerer-demo.webm`](docs/media/sourcerer-demo.webm)** — capture screen →
+all four pipeline stages → the verdict → the tag price changed by hand and the verdict
+re-priced with the model untouched → the run log opened → Insights.
 
-Screenshots are in [`docs/evidence/screenshots/`](docs/evidence/screenshots/), generated
-by [`scripts/capture-evidence.ts`](scripts/capture-evidence.ts), which drives the actual
-app in a real browser and records the video. They are not mockups; they are the output of
-that script.
+The run log is the part worth pausing on. It is not an overlay; it is a field in the scan
+response, and it reads *"Nothing in this scan left your device."* next to a per-stage list
+of which provider executed each step. Screenshots are in
+[`docs/media/`](docs/media/), with captions and alt text in
+[`docs/media/CAPTIONS.md`](docs/media/CAPTIONS.md).
 
-Hardware, for every timing claim in this post: 8-core CPU, 15.4 GB RAM, an NVIDIA
-GTX 1650 with 3.6 GB of VRAM — enough to hold part of the model, not all of it, so most
-inference runs on CPU. No cloud GPU, no paid inference, at any point.
+Everything in that folder was produced by
+[`scripts/capture-evidence.ts`](scripts/capture-evidence.ts), which drives the actual app
+in a real browser against a real brain, seeds the sample data from the committed fixture
+first so two runs produce the same frames, and writes the screenshots and the video in one
+pass. They are not mockups and they are not retouched.
+
+That script also found a bug worth admitting to: the asking price you typed on the capture
+form was being silently discarded by the verdict card, because the card kept a private copy
+of the price, initialised to zero. Every screenshot in that first capture came back priced
+as if the item were free. It survived every typecheck, every build and all thirty-two
+passing unit tests, and it was visible the moment something rendered the screen and wrote
+the result to a file. A screenshot is a test you cannot lie to.
+
+Hardware, for every timing claim in this post: 8-core CPU, 15.4 GB RAM, an NVIDIA GTX 1650
+with 3.6 GB of VRAM — enough to hold part of the model, not all of it, so most inference
+runs on CPU. No cloud GPU, no paid inference, at any point.
 
 ---
 
 ## Code
 
-**github.com/…/sourcerer** — MIT.
+**[github.com/ItsPriyamSri/sourcerer](https://github.com/ItsPriyamSri/sourcerer)** — MIT.
 
 `pnpm install && bash scripts/setup.sh`, then two terminals
 (`pnpm --filter @sourcerer/brain dev`, `pnpm --filter @sourcerer/web dev`). No API keys
@@ -106,7 +125,7 @@ is pure and takes no I/O, so a reseller typing a price in a dead zone gets an an
 agrees with the server's to the cent. That is not a nicety; it's why the tool can be
 trusted with money.
 
-### The thing that moved accuracy most was not the prompt
+### Two changes, and neither did the job I built it for
 
 The honest engineering story is that I expected prompt work to be the lever and it
 mostly wasn't.
@@ -118,39 +137,94 @@ what I wrote in the `text` field — a brand and an item type — so the scoring
 mechanical and every failure below can be checked by reading the row. Full output:
 [`docs/evidence/identify-results.json`](docs/evidence/identify-results.json).
 
-<<EVAL_TABLE>>
+<!-- EVAL_TABLE_START -->
+| Configuration | Emitted parseable JSON | Brand correct | Type correct | **Both** | Invented a brand | Median |
+|---|---|---|---|---|---|---|
+| `v1` prose prompt, no schema | 100% | 97% | 100% | **29/30** | 1/4 | 8.8 s |
+| `v2` same prompt, + JSON schema | 100% | 100% | 100% | **30/30** | 0/4 | 8.6 s |
+| `v3` full rules prompt, + schema | 100% | 100% | 100% | **30/30** | 0/4 | 8.5 s |
+| `v4` v3 + anti-invention rules | 100% | 100% | 100% | **30/30** | 0/4 | 8.3 s |
 
-Two things worth pulling out of that table.
+Model `gemma3:4b`, temperature 0.1, 30 items, one machine, one afternoon.
+<!-- EVAL_TABLE_END -->
 
-**Constrained decoding beat prompt engineering.** The biggest single jump came from
-passing a JSON Schema to Ollama's `format` field, which makes the sampler *structurally
-unable to* emit an invalid object. Same prompt, same model, same temperature — the only
-change was refusing to accept the answer any other way. A 4B model asked politely for
-JSON complies about half the time. A 4B model that cannot produce anything else complies
-every time. That one line is the difference between a demo and a tool.
+What comes out of that table surprised me, and the honest version of the story is narrower
+and more useful than the one I expected to write.
 
-**The prompt that mattered was the one about refusing to guess.** The failure mode that
-actually costs a reseller money isn't a wrong price, it's a *fabricated brand*. Show this
-model an unmarked mid-century chair and it will tell you it's an Eames. Correcting that
-required telling it, in the prompt, that an unbranded Eames-style chair is not an Eames
-and that `brand` should be `null` when there's no mark.
+**Both levers turned out to be different levers than I thought.** I built the JSON-extraction
+path braced for a fight — fenced code blocks, prose wrappers, objects truncated mid-string —
+and the naive prompt produced a parseable object on the first try, **30 times out of 30**,
+by wrapping it in a ```json fence that the extractor was written to handle. Prompt craft
+never bought me a single point of parseability on this model, because there was nothing to
+buy. But the prompt did do something for me, and the schema did something else entirely.
+Neither of them was "accuracy".
 
-### The failure I'm leaving in
+That sounds abstract until you look at the one row that failed.
 
-Item 21 in the labelled set is "Eames style lounge chair, rosewood, no labels anywhere."
-Ground truth: **no brand**.
+### The failure I am leaving in
 
-On the weakest prompt, the model named a designer. On the version I ship, it didn't — but
-it also, on one run, hedged into `"brand": "Unbranded"` and put *"appears to be Eames-style,
-but no maker's mark visible"* in `caveats`, which is exactly the behaviour I wanted and
-the reason the schema has a `caveats` field at all.
+Item 21 in the labelled set is *"Eames style lounge chair, rosewood, no labels anywhere."*
+Ground truth: **no brand.** Here is that same item, from the same model, as the prompt and
+the schema change. Nothing else differs — same temperature, same 30-item set:
 
-I kept the item in the set, and I kept the row in the evidence file, because the
-interesting number isn't the accuracy — it's that the model's error direction is
-*predictable*. It doesn't fail randomly; it fails optimistically, on unbranded goods that
-resemble something valuable. That is also the exact population of items a flipper is most
-likely to overpay for. So the mitigation isn't "get a better model", it's the UI: when
-confidence is below 0.5 the verdict can never say BUY, and the reason string says so.
+| Configuration | `brand` field | `confidence` | `caveats` |
+|---|---|---|---|
+| naive prose prompt, no schema | `"Eames (Style)"` | **0.95** | — |
+| same prompt, + JSON schema | *(omitted)* | 0.95 | — |
+| + full rules prompt | *(omitted)* | 0.85 | — |
+| + explicit anti-invention rules | *(omitted)* | **0.6** | *"No visible labels, condition is based on visual assessment only."* |
+
+Read the first row carefully, because it is the reason this project is shaped the way it is.
+The model did not produce garbage. It produced a clean, well-formed, **confident** record
+with a fabricated brand in a machine-readable field, plus a keyword list containing
+"Eames". Nothing about that output looks wrong. It would have become the title of a listing
+and the basis of a price, and the person reading it at the counter would have had no reason
+to doubt it.
+
+It also failed on *exactly one item*. On the naive prompt, the other three unbranded items
+in the set — a teak tray, a quilt, a brass lamp — came back `"Unknown"`, and with a schema
+present the field was omitted cleanly on all four. So the failure is not diffuse. This model
+fails **optimistically, on unbranded goods that resemble something valuable**, which is
+precisely the population a flipper is most likely to overpay for. An error that concentrates
+in the profitable-looking cases is much worse than an error that spreads evenly, because it
+is the error you were least likely to catch.
+
+And the two changes did different jobs, which took all four columns to see:
+
+- **The schema removed the fabrication.** `brand` is typed `["string", "null"]`, so "I don't
+  know" became a legal answer, and the model took it. Inventions on the set: **1 → 0**.
+- **The prompt did not change accuracy. It changed calibration.** Accuracy was already 100%
+  by the second column. What the anti-invention instructions moved was *stated confidence on
+  the one item that is unverifiable by design* — 0.95 down to 0.6 — and they made the model
+  volunteer a caveat about the missing label without being asked for one. That is a better
+  answer even though it is the same answer, because it tells you how far to trust it.
+
+**What is still wrong, and I am not going to dress it up.** Look at column four's title: the
+model still called it an "Eames Lounge Chair Rosewood". It moved the doubt out of the `brand`
+field, which was the field carrying the most weight, but the title still names the designer —
+and the title is what a reseller would paste into a marketplace listing. In the app the
+estimate and the verdict are anchored to comps rather than to the title, so the money is not
+affected; but someone copying that title would be making a claim the evidence does not
+support. The honest fix is to make the listing writer refuse a designer's name whenever
+`brand` is null, and that is the next thing I would build.
+
+There is also a limitation in *this eval* worth naming. My scorer checks the `brand` field
+and the item type. It does not penalise a title that overclaims. `"Eames (Style)"` is a hard
+failure I could catch mechanically; `"Eames Lounge Chair"` in a title is a softer one I could
+not, so I left the scorer alone rather than tuning it until the number looked better.
+
+**What I got wrong about my own project.** I assumed the interesting engineering was in the
+prompt and that the interesting risk was in the price. The second half was backwards: the
+arithmetic is deterministic, pure and unit-tested, and has been the least surprising part of
+this build since the first day — which is exactly why it is allowed anywhere near the money.
+The risk was one string field, produced by a 4B model, that a reseller would never think to
+question. The fix for the worst version of it turned out to be a type annotation, not a
+paragraph of instructions.
+
+The UI carries a second line of defence — below 0.5 confidence the verdict can never say
+BUY, whatever the arithmetic says. It is worth being precise that on this item the model
+settled at 0.6, above that floor. The caveat is what protects the user here, not the
+threshold.
 
 ### A real bug from a real run: Gemma 3 cannot call tools
 
@@ -162,33 +236,131 @@ number it would have to fetch.
 Then it failed on the first request:
 
 ```
-$ curl -s localhost:8787/advisor -d '{"message":"...Ludwig Acrolite snare for $150..."}'
+$ curl -s localhost:8787/advisor -d '{"message":"…Ludwig Acrolite snare for $150…"}'
 {"error":"registry.ollama.ai/library/gemma3:4b does not support tools"}
 
 $ ollama show gemma3:4b
-  capabilities: completion, vision
+  Capabilities
+    completion
+    vision
 ```
 
-No `tools`. Gemma 3 in Ollama will do vision and completion and nothing else, so the
-model that reads your photograph is not the model that can run an advise loop.
+No `tools`. Gemma 3 in Ollama will do vision and completion and nothing else, so the model
+that reads your photograph is not the model that can run an advise loop. The replacement
+had to be a second open model, and choosing it took three tries.
 
-The fix was to stop pretending one model does everything:
+**Try one: Qwen 3 4B.** It calls tools correctly — I verified that directly against Ollama,
+where it produced a clean `estimate_profit` call from a `thinking` field and no content at
+all — and it has a reasoning mode:
+
+```
+$ ollama show qwen3:4b
+  Capabilities
+    completion
+    tools
+    thinking
+```
+
+That `thinking` field was the first trap. The interesting tokens arrive there, before any
+content is emitted, so an early probe with a tight `num_predict` budget came back with an
+empty `content` and a perfectly good answer upstream in the response. That run is where I
+concluded "the model can't call tools", and I was wrong: I was reading the wrong field and
+the budget I had set was 20 tokens.
+
+**The second trap was quieter, and it was not mine.** Ollama's AI SDK provider resolves its
+`think` flag to `false` when nothing sets it:
 
 ```ts
-// Ollama reports Gemma 3 as `completion, vision` — no tool calling.
-// The agent loop gets a small tool-capable open model instead.
-model: toolModel(),   // qwen3:4b
+function resolveOllamaThinkFlag({ reasoning, ollamaThink, warnings }) {
+  if (ollamaThink !== void 0) return ollamaThink;
+  if (isCustomReasoning(reasoning)) { /* … */ return reasoning !== "none"; }
+  return false;   // ← the default
+}
 ```
 
-Gemma keeps the jobs it is genuinely good at — reading items, writing listings — and the
-agent loop runs beside it on a tool-capable open model. `GET /capabilities` now reports
-the tool model separately, with `Run: ollama pull qwen3:4b (Gemma 3 cannot call tools)`
-as its detail string when it's missing, and the advisor route degrades to a deterministic
-answer built from the same numbers rather than returning a 500.
+Qwen 3 thinks whether or not the flag is set. With it off, Ollama does not separate the
+reasoning out, and it arrives inside `content` — so the agent's answer was several paragraphs
+of the model arguing with itself about what a tool call is, with the actual recommendation
+somewhere in the middle. Turning it on fixes that:
 
-This is the kind of thing that only shows up when you run the thing, and it's the reason
-I'd rather ship a four-model pipeline that works than a one-model pipeline that's elegant
-in a diagram.
+```ts
+providerOptions: { ollama: { think: true } }
+```
+
+Getting the key right matters more than it should. Provider options are matched against the
+provider id, and the model object reports `provider: "ollama.responses"`. Using that string
+in place of `ollama` does nothing at all, silently, with no warning — which is how the bug
+survived a first round of debugging and a second round of false conclusions.
+
+**And then the flag showed me the bill.** With reasoning correctly separated it was finally
+visible how much of it there was: roughly 35 KB of `thinking` per step, and with the agent
+configured for up to six steps that is over four minutes to answer a question about a $215
+sale. The arithmetic was right. The wait was not survivable, and no prompt change touches it,
+because the deliberation is what the model is.
+
+So the tool model is now `llama3.2:3b`: `tools`, no thinking mode, same question answered in
+about two seconds.
+
+So the shape of it settled. Gemma keeps the jobs it is genuinely good at — reading items,
+writing listings — and the agent loop runs beside it on a tool-capable open model that does
+not stop to think about it first:
+
+```ts
+// Ollama reports Gemma 3 as `completion, vision` — no tool calling,
+// and a reasoning model spends minutes deciding to call one.
+model: toolModel(),   // llama3.2:3b
+```
+
+Two mechanical details earned their keep along the way. The tool schemas coerce now:
+`llama3.2:3b` sends `{"resalePrice":"215"}`, a string where a number belongs, and a strict
+`z.number()` turns a perfectly good tool call into a validation error the model then tries to
+apologise for. And `think` is read from the model's reported capabilities rather than
+hard-coded, because a model with no thinking mode does not ignore the flag — it rejects the
+entire request with `"llama3.2:3b" does not support thinking`.
+
+### The model got the numbers right and the answer wrong
+
+That should have been the end of it. The loop worked, the transcript was clean, and I nearly
+shipped it — which is when I noticed the same question giving different answers.
+
+A model that small will restate your numbers correctly and then invert the conclusion. Asked
+about a $150 snare with a $58.82 ceiling, one run reported that the asking price was *below*
+the ceiling and the verdict was BUY — both numbers right, the comparison backwards. Another
+said "the item should be bought". Another said PASS. Same tool, same output, three runs,
+three verdicts:
+
+```
+run 1  PASS. Most I would pay is $58.82.
+run 2  The item should be bought.
+run 3  The reseller should pass on the snare drum.
+```
+
+A number a language model paraphrased is a number you cannot audit, and auditable numbers are
+this app's whole claim. So the money sentence is no longer the model's to write. `feeMath`
+composes the reply — the verdict, the ceiling, the profit, every figure straight out of the
+same `decideVerdict()` the scan screen uses — and the route sends that instead of the model's
+version of it. The same question, five times, now produces one answer, character for
+character:
+
+```
+PASS. Most I would pay is $58.82. At $150 you would make $26.46 if it resells at $215.
+```
+
+What is left to the agent is the part it is genuinely good at: understanding the request and
+calling the tool with the right arguments. It does that well, and the three-turn transcript in
+[`docs/evidence/agent-transcript.json`](docs/evidence/agent-transcript.json) is the proof
+rather than the assertion. *"I'm shipping cross-country, so put shipping at $35"* becomes
+`shippingCost: 35`, the ceiling moves from $58.82 to $49.82, and the third turn still knows
+what the first one was about.
+
+The rule this project started with was *the model reads the item, plain code decides the
+price*. Running a small model in a loop is what convinced me to hold the agent loop to it as
+well. The advisor picks the tool. It does not get to pick a number.
+
+`GET /capabilities` reports the tool model separately, with
+`Run: ollama pull llama3.2:3b (Gemma 3 cannot call tools)` as its detail string when it is
+missing, and the advisor route degrades to a deterministic answer built from the same numbers
+rather than returning a 500.
 
 ### The comps problem I couldn't engineer around
 
@@ -210,17 +382,71 @@ A 14% haircut is not a sold price. It is a defensible range, presented as a rang
 the reasoning attached. The whole thing sits behind a `CompsProvider` interface so a real
 sold-comps vendor drops in without touching the pipeline.
 
+### Durable work, and a crash I can prove cost nothing
+
+The job nobody watches is the one where durability stops being a slide and starts being a
+line item: comps go stale, and re-pricing a few hundred inventory items should not be
+something a reseller has to sit and wait for.
+
+`apps/brain/src/durable/` is that job on Temporal. Each item is two activities — refresh
+its comps, then apply the new price — with an explicit retry policy on the flaky search
+call and a `paceMs` delay between items. **The pacing is not a demo trick.** It is a rate
+limit for a paid search API, because a 200-item sweep will otherwise get you throttled;
+it also happens to make the crash window wide enough to aim at, which is how the number
+below was produced.
+
+So I killed it. Mid-sweep, `SIGKILL`, no cleanup, no graceful shutdown — the way a laptop
+dies when someone shuts the lid at a sale:
+
+```
+items in the sweep                          : 12
+worker #1 refreshed before the SIGKILL      : 3
+worker #2 refreshed after the restart       : 9
+distinct items across both worker logs      : 12
+items refreshed twice (should be 0)         : 0
+activity executions in the history          : 24  (expected 24 = 2/item)
+workflow status right after the kill        : RUNNING
+final result reported by the client         : done: 12/12 refreshed, 0 failed
+
+PASS — the SIGKILL cost the run time and nothing else.
+```
+
+What makes that table worth reading: a second worker replays the workflow history, sees
+that the first three activities already completed, and starts at item four. The number
+that matters is `items refreshed twice: 0` — no item was priced twice, so the crash cost
+wall-clock time and nothing else. `bash scripts/temporal-durability-demo.sh` reproduces the
+whole thing, including the kill; the raw worker and client logs are committed in
+[`docs/evidence/temporal/`](docs/evidence/temporal/).
+
 ### Numbers
 
-- **18 unit tests pass**, `pnpm test`. They cover the parts that decide whether someone
-  makes money: the fee arithmetic, the max-offer solve, the verdict thresholds, and
-  trimmed-mean robustness to a single seller asking 10× the going rate.
-- **Warm identification: ~8–9 seconds** on this CPU for a typed description, ~30–40 s for
-  a photo, because the vision encoder is doing more work. The first scan after a restart
-  pays ~75 s of weight loading. `keep_alive: 30m` means you pay that once per session, not
-  once per item — which matters when you scan a dozen things in a row at a sale.
-- **Zero bytes uploaded** on a local scan. The photos are downscaled on-device before
-  anything else happens, and with live comps off there is nothing to upload *to*.
+Every figure here is measured on the machine described above, and each one is traceable to
+a file in the repository.
+
+- **32 unit tests pass** (`pnpm test`, no model, no network). Eighteen live in
+  `packages/shared` and cover the parts that decide whether someone makes money: eBay's fee
+  arithmetic, the max-offer solve, the verdict thresholds, and trimmed-mean robustness to a
+  single seller asking ten times the going rate. Fourteen live in `apps/brain` and cover the
+  two seams where a model meets code — the JSON salvage that stops a prose answer taking a
+  whole scan down, and the verdict wrapper.
+- **Warm identification: 8.3–8.8 seconds median**, depending on the prompt, measured across
+  120 real model calls in the eval above. A photo costs roughly 30–40 s, because the vision
+  encoder is doing far more work per token. The first scan after a restart pays about 75 s
+  of weight loading; the request sets `keep_alive: 30m`, so you pay that once per session
+  rather than once per item — which is the difference between usable and not when you scan
+  a dozen things in a row at a sale.
+- **The advisor answers a money question in about 2 seconds warm.** The three-turn transcript
+  — a question, a correction, and a recall — runs in roughly 16 s end to end, and the same
+  question asked five times produced the same sentence character for character. That last
+  number did not come for free; the section above is what it cost.
+- **A listing draft takes ~2 s for the local 1B model**, and 67 ms for the template that
+  stands in when no model is running. Both produce a draft the reseller can edit, which is
+  the point of the second one existing.
+- **Zero bytes uploaded** on a local scan. Photos are downscaled on-device before anything
+  else happens, and with live comps off there is nothing to upload *to*. The run log on
+  each scan states this as a field rather than a promise.
+- **12 items, 3 + 9, 0 duplicates.** A `SIGKILL` mid-sweep in the durable reprice job cost
+  the run time and nothing else; the full numbers are in the Temporal section above.
 
 ---
 
@@ -236,9 +462,9 @@ moment the product exists for. That's not a cost problem you can optimise your w
 of — it's a physics problem, and the only fix is to put the model where the decision is.
 
 Being open-weight is what makes that possible at all. I can ship a 3.3 GB vision model
-that runs on a five-year-old laptop's CPU *because* it's open weights: no per-call
-pricing, no rate limit, no vendor that can deprecate the model version my prompts depend
-on, and no terms of service standing between a user and the file on their own disk.
+that runs on a laptop with no cloud GPU *because* it's open weights: no per-call pricing,
+no rate limit, no vendor that can deprecate the model version my prompts depend on, and no
+terms of service standing between a user and the file on their own disk.
 
 **What it costs to run.** Zero, per item, forever. A closed vision+pricing API at ~$0.01
 per call sounds trivial until you're a flipper scanning forty items at a sale, six sales
@@ -275,30 +501,60 @@ optimises for the other case: forty $12 items and ten seconds each.
 
 ## Prize Categories
 
-- **Best Use of Gemma** — Gemma 3 4B runs locally through Ollama's native API to read
-  items from photos and write listings, with JSON-schema-constrained decoding; the 1B
-  variant takes the cheap text-only paths so a title costs a second, not a model load.
-- **Best Use of Mastra** — the agent runtime: five tools wrapping the deterministic
-  pipeline functions (so the agent cannot invent a price), a sourcing advisor with memory,
-  a listing-writer agent, and a four-step typed scan workflow composed from the same
-  functions the HTTP route calls.
-- **Best Use of SerpApi** — live eBay listing search with the condition filter, free-
-  shipping filter, result cap and a JSON restrictor to pull only the fields needed.
+I have split this into two lists on purpose. The challenge rules are clear that a category
+has to be genuinely used, and "genuinely used" deserves a sharper definition than "an
+import statement exists". So: the first list has evidence behind it in this post — a
+measured eval, raw logs, a screenshot you can reproduce. The second list is everything that
+is genuinely wired into the running app, appears in the capability registry, and is what the
+UI falls back *from* when its key is absent — but which I have not exercised against a live
+paid account. Those are different claims and I am not going to blur them to widen a list.
+
+### Demonstrated end to end
+
+- **Best Use of Gemma** — Gemma 3 4B runs locally through Ollama's native API via
+  `format: <JSON Schema>` to read items and write listings, with the 1B variant taking the
+  cheap text-only paths so a title costs a second rather than a model load. This is the
+  core of the product, and its accuracy is measured over 30 labelled items across 4
+  configurations in the table above.
+- **Best Use of Mastra** — the agent runtime. Five tools wrap the deterministic pipeline
+  functions, so the agent physically cannot invent a price it would have to fetch; a sourcing
+  advisor runs them with LibSQL-backed memory across turns; a listing-writer agent drafts the
+  post; and a four-step typed scan workflow is composed from the same step functions the HTTP
+  route calls. The advisor is also where this project's thesis got its hardest test — a small
+  model restates the numbers correctly and inverts the conclusion, so the money sentence is
+  composed by the tool and the agent's remaining job is choosing the tool and its arguments.
+  It does that well enough to turn "put shipping at $35" into `shippingCost: 35` mid-thread.
+- **Best Use of Temporal** — the durable reprice workflow above, with an explicit retry
+  policy on the flaky search call. Durability is demonstrated rather than asserted: a
+  `SIGKILL` mid-sweep, a second worker, 12 items refreshed exactly once, zero duplicates.
+- **Best Use of a .tech Domain** — a landing page for the demo, with the headline accuracy
+  and latency numbers read out of the eval's own JSON at capture time, so the page cannot
+  drift from the evidence.
+
+### Implemented and wired; not yet exercised against a live account
+
+- **Best Use of SerpApi** — live eBay listing search with the condition filter, free-shipping
+  filter, result cap and a JSON restrictor to pull only the fields needed. It is the reason
+  `comps.source` can become `live` instead of `local_history`.
 - **Best Use of TabPFN** — a price and days-to-sell model fitted on the user's own sold
   history via the Prior Labs REST API, which is what makes the offline number personal
   rather than generic.
-- **Best Use of Sentry Agent Tracing** — `@sentry/node` auto-instruments Mastra, emitting
-  a `gen_ai.*` span per agent step with tokens and latency; input recording is off so
+- **Best Use of Sentry Agent Tracing** — `@sentry/node` auto-instruments Mastra into a
+  `gen_ai.*` span per agent step with tokens and latency, with input recording off so
   photos never enter a trace.
-- **Best Use of Temporal** — a durable reprice workflow that refreshes stale comps with
-  explicit retry policy and resumes from history after a worker crash.
-- **Best Use of Tiger Data** — Postgres + pgvector for "have I bought this before?" hybrid
-  retrieval, with a local pgvector container for users who want no cloud at all.
+- **Best Use of Tiger Data** — Postgres + pgvector for "have I bought one of these before?"
+  hybrid retrieval, with a local pgvector container for anyone who wants no cloud at all.
 - **Best Use of ElevenLabs** — dictate an item while both hands are full, or hear the
   verdict read back.
-- **Best Use of a .tech Domain** — a landing page for the demo at the domain.
-- **Best Use of Backboard** — the second brain: the same agent against open-weight models
+- **Best Use of Backboard** — the second brain: the same agents against open-weight models
   through one key, which is what makes a GPU-less hosted demo possible.
 
-*Every category listed above has a code path in the repo; none of them is a logo on a
-slide. Anything not demonstrated above is not listed.*
+**Not entered, and why:** *GitHub Copilot* (a development tool, not an integration — it
+does not belong in a product category) and *MongoDB Atlas* (it would have duplicated the
+vector memory that Tiger Data already provides, and building both to widen a category list
+is exactly the slide-deck thinking I am trying to avoid). *Arduino* was not entered because
+there is no hardware here.
+
+[`docs/KEYS.md`](docs/KEYS.md) states the verification status of every integration in one
+table, and `GET /capabilities` reports the same thing at runtime — so nothing above has to
+be taken on trust.

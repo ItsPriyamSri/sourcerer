@@ -2,7 +2,7 @@
   {
     "itemId": "01",
     "text": "Levi's 501 Big E selvedge denim jacket, size 42, small hole at cuff",
-    "ms": 8907,
+    "ms": 9138,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -11,12 +11,13 @@
     "got": {
       "title": "Levi's 501 Big E Selvedge Denim Jacket",
       "category": "Men's Jackets"
-    }
+    },
+    "raw": "{\n  \"title\": \"Levi's 501 Big E Selvedge Denim Jacket\",\n  \"category\": \"Men's Jackets\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Levi's\", \"501\", \"Big E\", \"Selvedge Denim\", \"Vintage Jacket\", \"Denim Jacket\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Levi's\",\n    \"size\": \"42\",\n    \"material\": \"Denim\",\n    \"style\": \"Big E\",\n    \"features\": \"Selvedge Denim\",\n    \"damage\": \"Small hole at cuff\"\n  }\n}"
   },
   {
     "itemId": "02",
     "text": "Pyrex 444 Cinderella mixing bowl, green, nesting set of 3",
-    "ms": 8768,
+    "ms": 8993,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -24,13 +25,14 @@
     "inventedBrand": false,
     "got": {
       "title": "Pyrex Cinderella Mixing Bowl - Green Nesting Set of 3",
-      "category": "Cookware"
-    }
+      "category": "Kitchenware"
+    },
+    "raw": "{\n  \"title\": \"Pyrex Cinderella Mixing Bowl - Green Nesting Set of 3\",\n  \"category\": \"Kitchenware\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Pyrex\", \"Cinderella\", \"mixing bowl\", \"nesting set\", \"green\", \"vintage\", \"retro\", \"kitchen\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Pyrex\",\n    \"model\": \"Cinderella\",\n    \"color\": \"Green\",\n    \"quantity\": \"Set of 3\",\n    \"material\": \"Glass\",\n    \"shape\": \"Round\"\n  }\n}"
   },
   {
     "itemId": "03",
     "text": "Nikon FM2 35mm film camera body, black, with 50mm lens",
-    "ms": 9060,
+    "ms": 9693,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -39,12 +41,13 @@
     "got": {
       "title": "Nikon FM2 35mm Film Camera Body with 50mm Lens",
       "category": "Cameras"
-    }
+    },
+    "raw": "{\n  \"title\": \"Nikon FM2 35mm Film Camera Body with 50mm Lens\",\n  \"category\": \"Cameras\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Nikon\", \"FM2\", \"35mm\", \"film camera\", \"lens\", \"vintage camera\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Nikon\",\n    \"model\": \"FM2\",\n    \"lens_mm\": \"50mm\",\n    \"lens_type\": \"Fixed Lens\",\n    \"film_type\": \"35mm Film\",\n    \"color\": \"Black\"\n  }\n}"
   },
   {
     "itemId": "04",
     "text": "Pendleton wool board shirt, size L, teal plaid",
-    "ms": 7394,
+    "ms": 5574,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -53,12 +56,13 @@
     "got": {
       "title": "Pendleton Wool Board Shirt",
       "category": "Men's Clothing"
-    }
+    },
+    "raw": "{\"title\": \"Pendleton Wool Board Shirt\", \"category\": \"Men's Clothing\", \"condition\": \"good\", \"keywords\": [\"Pendleton\", \"wool\", \"plaid\", \"board shirt\", \"teal\", \"vintage\"], \"confidence\": 0.95, \"attributes\": { \"brand\": \"Pendleton\", \"size\": \"L\", \"material\": \"wool\", \"pattern\": \"plaid\", \"color\": \"teal\"}}"
   },
   {
     "itemId": "05",
     "text": "Ludwig Acrolite snare drum, 14 inch, aluminium shell, with case",
-    "ms": 8989,
+    "ms": 8579,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -67,12 +71,13 @@
     "got": {
       "title": "Ludwig Acrolite Snare Drum",
       "category": "Drum & Percussion"
-    }
+    },
+    "raw": "{\n  \"title\": \"Ludwig Acrolite Snare Drum\",\n  \"category\": \"Drum & Percussion\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Ludwig\", \"Acrolite\", \"Snare Drum\", \"14 inch\", \"Aluminum Shell\", \"Vintage Drum\", \"Drum Set\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Ludwig\",\n    \"shell_material\": \"Aluminum\",\n    \"shell_size\": \"14 inch\",\n    \"case_included\": \"Yes\",\n    \"model\": \"Acrolite\"\n  }\n}"
   },
   {
     "itemId": "06",
     "text": "Griswold cast iron skillet #8, small block logo",
-    "ms": 4411,
+    "ms": 4228,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -81,12 +86,13 @@
     "got": {
       "title": "Griswold Cast Iron Skillet #8",
       "category": "Cookware"
-    }
+    },
+    "raw": "{\"title\": \"Griswold Cast Iron Skillet #8\", \"category\": \"Cookware\", \"condition\": \"good\", \"keywords\": [\"Griswold\", \"cast iron\", \"skillet\", \"#8\", \"vintage\", \"small block logo\"], \"confidence\": 0.95, \"attributes\": {}}"
   },
   {
     "itemId": "07",
     "text": "Polaroid SX-70 folding camera, leather, untested",
-    "ms": 7034,
+    "ms": 7228,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -95,12 +101,13 @@
     "got": {
       "title": "Polaroid SX-70 Folding Camera",
       "category": "Cameras"
-    }
+    },
+    "raw": "{\n  \"title\": \"Polaroid SX-70 Folding Camera\",\n  \"category\": \"Cameras\",\n  \"condition\": \"unknown\",\n  \"keywords\": [\"Polaroid\", \"SX-70\", \"folding camera\", \"vintage camera\", \"film camera\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Polaroid\",\n    \"material\": \"Leather\",\n    \"type\": \"Folding Camera\",\n    \"features\": \"Vintage, Film Camera\"\n  }\n}"
   },
   {
     "itemId": "08",
     "text": "Stetson Open Road straw hat, size 7 1/4, tan",
-    "ms": 9074,
+    "ms": 8643,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -109,12 +116,13 @@
     "got": {
       "title": "Stetson Open Road Straw Hat - Size 7 1/4",
       "category": "Hats & Caps"
-    }
+    },
+    "raw": "{\n  \"title\": \"Stetson Open Road Straw Hat - Size 7 1/4\",\n  \"category\": \"Hats & Caps\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Stetson\", \"Open Road\", \"Straw Hat\", \"Tan\", \"Size 7 1/4\", \"Vintage Hat\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Stetson\",\n    \"material\": \"Straw\",\n    \"color\": \"Tan\",\n    \"size\": \"7 1/4\",\n    \"style\": \"Open Road\"\n  }\n}"
   },
   {
     "itemId": "09",
     "text": "Sony Walkman WM-EX674 cassette player, works, no headphones",
-    "ms": 8773,
+    "ms": 8599,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -123,12 +131,13 @@
     "got": {
       "title": "Sony Walkman WM-EX674 Cassette Player",
       "category": "Audio - Cassette Players"
-    }
+    },
+    "raw": "{\n  \"title\": \"Sony Walkman WM-EX674 Cassette Player\",\n  \"category\": \"Audio - Cassette Players\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Sony\", \"Walkman\", \"WM-EX674\", \"cassette player\", \"tape player\", \"vintage audio\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Sony\",\n    \"model\": \"WM-EX674\",\n    \"type\": \"Cassette Player\",\n    \"functionality\": \"Working\",\n    \"accessories\": \"No headphones included\"\n  }\n}"
   },
   {
     "itemId": "10",
     "text": "Teak serving tray, Denmark, mid century, no maker mark",
-    "ms": 6792,
+    "ms": 7100,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -137,12 +146,13 @@
     "got": {
       "title": "Teak Serving Tray",
       "category": "Home & Garden > Dining & Entertaining > Serving & Buffetware"
-    }
+    },
+    "raw": "{\"title\": \"Teak Serving Tray\", \"category\": \"Home & Garden > Dining & Entertaining > Serving & Buffetware\", \"condition\": \"good\", \"keywords\": [\"teak\", \"tray\", \"serving tray\", \"mid century\", \"Denmark\", \"vintage\"], \"confidence\": 0.95, \"attributes\": { \"material\": \"Teak\", \"country_of_origin\": \"Denmark\", \"style\": \"Mid Century Modern\", \"maker_mark\": \"None\", \"features\": \"Serving Tray\" }}"
   },
   {
     "itemId": "11",
     "text": "Fender Princeton Reverb 1965 blackface amp chassis only",
-    "ms": 10678,
+    "ms": 10763,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -151,12 +161,13 @@
     "got": {
       "title": "Fender Princeton Reverb 1965 Blackface Amp Chassis",
       "category": "Amplifiers"
-    }
+    },
+    "raw": "{\n  \"title\": \"Fender Princeton Reverb 1965 Blackface Amp Chassis\",\n  \"category\": \"Amplifiers\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Fender\", \"Princeton Reverb\", \"1965\", \"Blackface\", \"Chassis\", \"Amp\", \"Vintage\", \"Tube Amp\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Fender\",\n    \"model\": \"Princeton Reverb\",\n    \"year\": \"1965\",\n    \"color\": \"Black\",\n    \"type\": \"Chassis\",\n    \"requires_rebuild\": \"Yes\",\n    \"notes\": \"Only chassis, no tubes or speaker included.\"\n  }\n}"
   },
   {
     "itemId": "12",
     "text": "Woolrich 60/40 mountain parka, navy, size M",
-    "ms": 7879,
+    "ms": 9109,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -165,12 +176,13 @@
     "got": {
       "title": "Woolrich 60/40 Mountain Parka",
       "category": "Outerwear"
-    }
+    },
+    "raw": "{\n  \"title\": \"Woolrich 60/40 Mountain Parka\",\n  \"category\": \"Outerwear\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Woolrich\", \"Parka\", \"Mountain\", \"60/40\", \"Navy\", \"Winter Coat\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Woolrich\",\n    \"size\": \"M\",\n    \"color\": \"Navy\",\n    \"material\": \"Wool Blend (60/40)\",\n    \"style\": \"Mountain Parka\"\n  }\n}"
   },
   {
     "itemId": "13",
     "text": "KitchenAid K45 stand mixer, white, with paddle and dough hook",
-    "ms": 8496,
+    "ms": 8020,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -179,12 +191,13 @@
     "got": {
       "title": "KitchenAid K45 Stand Mixer - White",
       "category": "Kitchen Appliances"
-    }
+    },
+    "raw": "{\n  \"title\": \"KitchenAid K45 Stand Mixer - White\",\n  \"category\": \"Kitchen Appliances\",\n  \"condition\": \"good\",\n  \"keywords\": [\"KitchenAid\", \"Stand Mixer\", \"K45\", \"White\", \"Mixer\", \"Baking\"],\n  \"confidence\": 0.98,\n  \"attributes\": {\n    \"brand\": \"KitchenAid\",\n    \"model\": \"K45\",\n    \"color\": \"White\",\n    \"attachments\": \"Paddle, Dough Hook\",\n    \"power_source\": \"Electric\"\n  }\n}"
   },
   {
     "itemId": "14",
     "text": "Stanley No. 4 smoothing plane, sweetheart iron",
-    "ms": 8411,
+    "ms": 8569,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -193,40 +206,43 @@
     "got": {
       "title": "Stanley No. 4 Smoothing Plane with Sweetheart Iron",
       "category": "Woodworking Tools"
-    }
+    },
+    "raw": "{\n  \"title\": \"Stanley No. 4 Smoothing Plane with Sweetheart Iron\",\n  \"category\": \"Woodworking Tools\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Stanley\", \"smoothing plane\", \"No. 4\", \"sweetheart iron\", \"vintage\", \"woodworking\", \"tool\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Stanley\",\n    \"model\": \"No. 4\",\n    \"iron_type\": \"Sweetheart Iron\",\n    \"tool_type\": \"Smoothing Plane\",\n    \"material\": \"Cast Iron, Wood (Handle)\"\n  }\n}"
   },
   {
     "itemId": "15",
     "text": "Patagonia Synchilla fleece pullover, retro X, size M",
-    "ms": 8529,
+    "ms": 9434,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
     "typeOk": true,
     "inventedBrand": false,
     "got": {
-      "title": "Patagonia Retro X Synchilla Fleece Pullover",
-      "category": "Men's Fleece"
-    }
+      "title": "Patagonia Retro X Synchilla Fleece Pullover - Size M",
+      "category": "Outerwear"
+    },
+    "raw": "{\n  \"title\": \"Patagonia Retro X Synchilla Fleece Pullover - Size M\",\n  \"category\": \"Outerwear\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Patagonia\", \"Synchilla\", \"Fleece\", \"Retro X\", \"Pullover\", \"Size M\", \"Vintage\", \"Outdoor\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Patagonia\",\n    \"model\": \"Retro X\",\n    \"material\": \"Synchilla Fleece\",\n    \"size\": \"M\",\n    \"color\": \" (Assuming a standard color - needs visual confirmation, e.g., 'Navy Blue', 'Gray')\"\n  }\n}"
   },
   {
     "itemId": "16",
     "text": "Weber kettle grill, 22 inch, one touch, rusted grate",
-    "ms": 8749,
+    "ms": 9400,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
     "typeOk": true,
     "inventedBrand": false,
     "got": {
-      "title": "Weber 22-Inch Kettle Grill",
-      "category": "Outdoor & Garden > Grills & Outdoor Cooking"
-    }
+      "title": "Weber 22-Inch Kettle Charcoal Grill",
+      "category": "Outdoor & Garden > Grills & Outdoor Cooking > Charcoal Grills"
+    },
+    "raw": "{\n  \"title\": \"Weber 22-Inch Kettle Charcoal Grill\",\n  \"category\": \"Outdoor & Garden > Grills & Outdoor Cooking > Charcoal Grills\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Weber\", \"kettle grill\", \"charcoal grill\", \"22 inch\", \"rusty\", \"grate\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Weber\",\n    \"size\": \"22 inch\",\n    \"type\": \"Charcoal Kettle Grill\",\n    \"features\": \"One Touch Ignition\",\n    \"material\": \"Steel\",\n    \"condition_details\": \"Rust on grate\"\n  }\n}"
   },
   {
     "itemId": "17",
     "text": "Fiestaware dinner plates, set of 6, turquoise",
-    "ms": 4097,
+    "ms": 4210,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -235,12 +251,13 @@
     "got": {
       "title": "Fiestaware Turquoise Dinner Plates - Set of 6",
       "category": "Tableware"
-    }
+    },
+    "raw": "{\"title\": \"Fiestaware Turquoise Dinner Plates - Set of 6\", \"category\": \"Tableware\", \"condition\": \"good\", \"keywords\": [\"Fiestaware\", \"turquoise\", \"dinner plates\", \"set of 6\", \"ceramic\"], \"confidence\": 0.95, \"attributes\": {}}"
   },
   {
     "itemId": "18",
     "text": "Technics SL-1200 turntable, no dust cover, needs stylus",
-    "ms": 9337,
+    "ms": 10093,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -249,12 +266,13 @@
     "got": {
       "title": "Technics SL-1200 Turntable",
       "category": "Audio - Turntables"
-    }
+    },
+    "raw": "{\n  \"title\": \"Technics SL-1200 Turntable\",\n  \"category\": \"Audio - Turntables\",\n  \"condition\": \"fair\",\n  \"keywords\": [\"Technics\", \"SL-1200\", \"Turntable\", \"Vinyl\", \"Audio\", \"DJ\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Technics\",\n    \"model\": \"SL-1200\",\n    \"features\": \"Direct Drive, Belt Drive\",\n    \"missing_parts\": \"Dust Cover\",\n    \"needs_repair\": \"Stylus Replacement\"\n  }\n}"
   },
   {
     "itemId": "19",
     "text": "CorningWare blue cornflower casserole dish with lid, 2 quart",
-    "ms": 4530,
+    "ms": 4660,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -263,12 +281,13 @@
     "got": {
       "title": "CorningWare Blue Cornflower Casserole Dish with Lid",
       "category": "Cookware"
-    }
+    },
+    "raw": "{\"title\": \"CorningWare Blue Cornflower Casserole Dish with Lid\", \"category\": \"Cookware\", \"condition\": \"good\", \"keywords\": [\"CorningWare\", \"casserole dish\", \"blue cornflower\", \"2 quart\", \"vintage\", \"kitchenware\"], \"confidence\": 0.95, \"attributes\": {}}"
   },
   {
     "itemId": "20",
     "text": "Dr. Martens 1460 boots, black, size 9 UK, worn soles",
-    "ms": 9617,
+    "ms": 9745,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -277,12 +296,13 @@
     "got": {
       "title": "Dr. Martens 1460 Boots - Black - Size 9 UK",
       "category": "Shoes"
-    }
+    },
+    "raw": "{\n  \"title\": \"Dr. Martens 1460 Boots - Black - Size 9 UK\",\n  \"category\": \"Shoes\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Dr Martens\", \"1460\", \"boots\", \"black\", \"UK 9\", \"worn soles\", \"classic boots\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Dr. Martens\",\n    \"model\": \"1460\",\n    \"color\": \"Black\",\n    \"size\": \"9 UK\",\n    \"material\": \"Leather (assumed)\",\n    \"sole_condition\": \"Worn\"\n  }\n}"
   },
   {
     "itemId": "21",
     "text": "Eames style lounge chair, rosewood, no labels anywhere",
-    "ms": 4087,
+    "ms": 3841,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -291,12 +311,13 @@
     "got": {
       "title": "Eames Style Lounge Chair",
       "category": "Furniture"
-    }
+    },
+    "raw": "{\"title\": \"Eames Style Lounge Chair\", \"category\": \"Furniture\", \"condition\": \"good\", \"keywords\": [\"Eames\", \"lounge chair\", \"rosewood\", \"mid-century\", \"vintage\"], \"confidence\": 0.95, \"attributes\": {}}"
   },
   {
     "itemId": "22",
     "text": "Wedgwood Jasperware trinket box, pale blue, small chip on lid",
-    "ms": 8388,
+    "ms": 8666,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -305,40 +326,43 @@
     "got": {
       "title": "Wedgwood Jasperware Trinket Box - Pale Blue",
       "category": "Ceramics & Collectibles"
-    }
+    },
+    "raw": "{\n  \"title\": \"Wedgwood Jasperware Trinket Box - Pale Blue\",\n  \"category\": \"Ceramics & Collectibles\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Wedgwood\", \"Jasperware\", \"Trinket Box\", \"Ceramic\", \"Collectible\", \"Pale Blue\", \"Chip\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Wedgwood\",\n    \"material\": \"Jasperware\",\n    \"color\": \"Pale Blue\",\n    \"size\": \"Small\",\n    \"damage\": \"Small chip on lid\"\n  }\n}"
   },
   {
     "itemId": "23",
     "text": "Coleman 228E lantern, green, two mantle, glass intact",
-    "ms": 7803,
+    "ms": 9001,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
     "typeOk": true,
     "inventedBrand": false,
     "got": {
-      "title": "Coleman 228E Lantern",
+      "title": "Coleman 228E Lantern - Green - Two Mantle",
       "category": "Camping Lanterns"
-    }
+    },
+    "raw": "{\n  \"title\": \"Coleman 228E Lantern - Green - Two Mantle\",\n  \"category\": \"Camping Lanterns\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Coleman\", \"228E\", \"lantern\", \"green\", \"two mantle\", \"vintage\", \"camping\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Coleman\",\n    \"model\": \"228E\",\n    \"color\": \"Green\",\n    \"mantle_type\": \"Two Mantle\",\n    \"glass_condition\": \"Intact\",\n    \"power_source\": \"Propane\" }\n}"
   },
   {
     "itemId": "24",
     "text": "Vintage quilt, hand stitched, some fading, no tags",
-    "ms": 7337,
+    "ms": 8310,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
     "typeOk": true,
     "inventedBrand": false,
     "got": {
-      "title": "Vintage Handstitched Quilt",
+      "title": "Vintage Hand-Stitched Quilt",
       "category": "Textiles & Sewing"
-    }
+    },
+    "raw": "{\"title\": \"Vintage Hand-Stitched Quilt\", \"category\": \"Textiles & Sewing\", \"condition\": \"fair\", \"keywords\": [\"vintage quilt\", \"hand stitched\", \"quilt\", \"fabric\", \"craft\", \"homedecor\"], \"confidence\": 0.95, \"attributes\": {\n    \"brand\": \"Unknown\",\n    \"material\": \"Cotton (likely)\",\n    \"size\": \"Variable - dependent on stitching pattern\",\n    \"color\": \"Faded - likely original colors present\",\n    \"pattern\": \"Unknown - dependent on stitching pattern\",\n    \"age\": \"Vintage (estimated based on description)\"\n  }}"
   },
   {
     "itemId": "25",
     "text": "Braun ET66 calculator, black, with case",
-    "ms": 3623,
+    "ms": 6962,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -347,12 +371,13 @@
     "got": {
       "title": "Braun ET66 Calculator",
       "category": "Electronics"
-    }
+    },
+    "raw": "{\n  \"title\": \"Braun ET66 Calculator\",\n  \"category\": \"Electronics\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Braun\", \"ET66\", \"Calculator\", \"Vintage\", \"Scientific Calculator\", \"Black\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Braun\",\n    \"model\": \"ET66\",\n    \"color\": \"Black\",\n    \"includes_case\": \"Yes\"\n  }\n}"
   },
   {
     "itemId": "26",
     "text": "Filson wool cruiser jacket, tin cloth, size 40",
-    "ms": 8363,
+    "ms": 8099,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -361,12 +386,13 @@
     "got": {
       "title": "Filson Wool Cruiser Jacket",
       "category": "Outerwear"
-    }
+    },
+    "raw": "{\"title\": \"Filson Wool Cruiser Jacket\", \"category\": \"Outerwear\", \"condition\": \"good\", \"keywords\": [\"Filson\", \"Wool Cruiser\", \"Jacket\", \"Tin Cloth\", \"Vintage\", \"Workwear\"], \"confidence\": 0.95, \"attributes\": {\n    \"brand\": \"Filson\",\n    \"size\": \"40\",\n    \"material\": \"Wool, Tin Cloth\",\n    \"style\": \"Cruiser Jacket\",\n    \"color\": \" (Assuming - likely brown or tan based on Filson Cruiser jackets)\"\n}}"
   },
   {
     "itemId": "27",
     "text": "Singer Featherweight 221 sewing machine, black, with case",
-    "ms": 7640,
+    "ms": 7871,
     "attempts": 1,
     "parseOk": true,
     "brandOk": true,
@@ -375,6 +401,52 @@
     "got": {
       "title": "Singer Featherweight 221 Sewing Machine",
       "category": "Sewing Machines"
-    }
+    },
+    "raw": "{\n  \"title\": \"Singer Featherweight 221 Sewing Machine\",\n  \"category\": \"Sewing Machines\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Singer\", \"Featherweight\", \"221\", \"sewing machine\", \"vintage\", \"manual\", \"black\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Singer\",\n    \"model\": \"Featherweight 221\",\n    \"color\": \"Black\",\n    \"included\": \"Case\"\n  }\n}"
+  },
+  {
+    "itemId": "28",
+    "text": "Hello Kitty ceramic mug, Sanrio 2001, small crack in handle",
+    "ms": 7189,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Hello Kitty Ceramic Mug",
+      "category": "Collectibles"
+    },
+    "raw": "{\n  \"title\": \"Hello Kitty Ceramic Mug\",\n  \"category\": \"Collectibles\",\n  \"condition\": \"fair\",\n  \"keywords\": [\"Hello Kitty\", \"Sanrio\", \"ceramic mug\", \"vintage\", \"crack\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Sanrio\",\n    \"year\": \"2001\",\n    \"size\": \"small\",\n    \"material\": \"ceramic\",\n    \"defect\": \"crack in handle\"\n  }\n}"
+  },
+  {
+    "itemId": "29",
+    "text": "Orvis Battenkill fly reel, made in England, with pouch",
+    "ms": 6884,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Orvis Battenkill Fly Reel",
+      "category": "Fishing - Reels"
+    },
+    "raw": "{\n  \"title\": \"Orvis Battenkill Fly Reel\",\n  \"category\": \"Fishing - Reels\",\n  \"condition\": \"good\",\n  \"keywords\": [\"Orvis\", \"Battenkill\", \"Fly Reel\", \"Vintage\", \"Fishing\"],\n  \"confidence\": 0.95,\n  \"attributes\": {\n    \"brand\": \"Orvis\",\n    \"model\": \"Battenkill\",\n    \"origin\": \"England\",\n    \"features\": \"With pouch\"\n  }\n}"
+  },
+  {
+    "itemId": "30",
+    "text": "Unknown brass desk lamp, weighted base, adjustable arm, no markings",
+    "ms": 3899,
+    "attempts": 1,
+    "parseOk": true,
+    "brandOk": true,
+    "typeOk": true,
+    "inventedBrand": false,
+    "got": {
+      "title": "Vintage Brass Desk Lamp",
+      "category": "Lighting"
+    },
+    "raw": "{\"title\": \"Vintage Brass Desk Lamp\", \"category\": \"Lighting\", \"condition\": \"good\", \"keywords\": [\"brass lamp\", \"desk lamp\", \"vintage lamp\", \"weighted base\", \"adjustable arm\", \"retro lamp\"], \"confidence\": 0.85, \"attributes\": {}}"
   }
 ]

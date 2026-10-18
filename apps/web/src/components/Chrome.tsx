@@ -3,6 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { api, brainUrl, setBrainUrl } from "../lib/api.ts";
 import { useApp } from "../lib/store.tsx";
 import { Sheet, TextInput } from "./Bits.tsx";
+import { PAGE } from "./Shell.tsx";
 import {
   IconCamera,
   IconChart,
@@ -46,7 +47,7 @@ export function TopBar() {
         className="sticky top-0 z-30 border-b backdrop-blur"
         style={{ borderColor: "var(--line)", background: "color-mix(in oklab, var(--bg) 88%, transparent)" }}
       >
-        <div className="mx-auto flex max-w-xl items-center gap-2 px-4 pt-[max(0.6rem,env(safe-area-inset-top))] pb-2">
+        <div className={`${PAGE} flex items-center gap-2 pt-[max(0.6rem,env(safe-area-inset-top))] pb-2`}>
           <NavLink to="/" className="flex items-baseline gap-2">
             <span className="display text-xl font-bold tracking-tight">Sourcerer</span>
             <span className="hidden text-[11px] text-muted sm:inline">know what it&apos;s worth · anywhere</span>
@@ -86,7 +87,7 @@ function StatusStrip({
 }) {
   const local = caps?.brain.local ?? true;
   return (
-    <div className="mx-auto flex max-w-xl flex-wrap items-center gap-1.5 px-4 pb-2">
+    <div className={`${PAGE} flex flex-wrap items-center gap-1.5 pb-2`}>
       {/* Offline is a *state*, not an error (principle 5). */}
       <button onClick={onOpen} className="chip" style={!online ? { background: "var(--pass-soft)", color: "var(--pass)" } : undefined}>
         {online ? <IconCloud width={13} height={13} /> : <IconSignalOff width={13} height={13} />}
@@ -140,7 +141,7 @@ export function BottomNav() {
       style={{ borderColor: "var(--line)", background: "color-mix(in oklab, var(--bg) 90%, transparent)", paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label="Primary"
     >
-      <ul className="mx-auto flex max-w-xl">
+      <ul className={`${PAGE} flex`}>
         {tabs.map((t) => {
           const active = t.to === "/" ? pathname === "/" : pathname.startsWith(t.to);
           return (

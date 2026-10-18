@@ -21,14 +21,16 @@
   },
   "scripts": {
     "dev": "pnpm --parallel --filter \"./apps/**\" dev",
-    "build": "pnpm --filter \"./packages/**\" build && pnpm --filter \"./apps/web\" build",
+    "build": "pnpm --filter @sourcerer/web build",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck",
     "model:pull": "bash scripts/pull-model.sh",
     "db:up": "bash scripts/db-up.sh",
     "evidence:identify": "pnpm --filter @sourcerer/brain exec tsx eval/run-identify.ts",
     "evidence:memory": "pnpm --filter @sourcerer/brain exec tsx eval/run-memory.ts",
+    "evidence:tables": "tsx scripts/emit-eval-table.ts",
     "evidence:capture": "tsx scripts/capture-evidence.ts",
+    "preview": "pnpm --filter @sourcerer/web preview",
     "landing": "python3 -m http.server 4173 --directory landing"
   },
   "devDependencies": {

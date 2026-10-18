@@ -7,7 +7,7 @@ open-weight model running *on your own machine* identifies it, prices it against
 market, and tells you the most you should pay — in a thrift-store basement, in the back
 room of an estate sale, in a warehouse with no bars on your phone.
 
-<img src="docs/media/verdict.buy.light.png" alt="The Sourcerer verdict card on a phone: a Levi's 501 Big E selvedge denim jacket, verdict BUY, max offer $35, estimated resale $133, with a chip reading Offline · local only" width="330">
+<img src="docs/media/verdict.buy.light.png" alt="The Sourcerer verdict card on a phone: a Levi's 501 Big E Selvedge Denim Jacket, verdict BUY, max offer $35.32, estimated resale $133.40, a chip reading your sold history, and header chips reading Online, Local · gemma3:4b and heuristic pricing" width="330">
 
 ![license: MIT](https://img.shields.io/badge/license-MIT-blue)
 ![node: >=22.18](https://img.shields.io/badge/node-%3E%3D22.18-brightgreen)
@@ -44,17 +44,27 @@ Sourcerer keeps working with:
 and gets *sharper* when you add the network and a few keys back. Degradation is part of
 the design, not an error path.
 
+<p align="center">
+<img src="docs/media/offline.shell.dark.png" alt="A dark-theme phone screenshot captured with the browser network disabled: the header chips read Offline · local only and Brain asleep, and the capture screen is fully rendered from the service-worker cache" width="300">
+</p>
+<p align="center"><sub><b>Network off, for real.</b> The browser's network was disabled before this shot. The chip reads <b>Offline · local only</b>, the brain is unreachable (<b>Brain asleep</b>), and the capture screen still renders — the service worker holds the app shell. Nothing here is a simulated offline flag.</sub></p>
+
 ---
 
 ## What it looks like
 
 <table>
 <tr>
-<td width="33%"><img src="docs/media/verdict.buy.light.png" alt="Verdict card: BUY, max offer $35, estimated resale $133, profit after eBay fees, and a basis line reading 12 items from your own sold history"><br><sub><b>The verdict.</b> One dominant signal, the max offer in the largest type on the screen, and the range it came from.</sub></td>
-<td width="33%"><img src="docs/media/ranlog.light.png" alt="An expanded What ran where receipt listing each pipeline step, its provider, its latency, and whether data left the device"><br><sub><b>The receipt.</b> Every scan records which provider ran each step and whether anything left the device. "Photos never leave your machine" is a field you can read, not a promise.</sub></td>
-<td width="33%"><img src="docs/media/listings.queue.light.png" alt="The listings queue with captured items and generated draft titles"><br><sub><b>The other half.</b> Captures become listing drafts — title, description, tags, price — written by the local model.</sub></td>
+<td width="33%"><img src="docs/media/verdict.buy.light.png" alt="Verdict card: BUY, max offer $35.32, estimated resale $133.40, and a basis line reading 6 similar items you have already sold"><br><sub><b>The verdict.</b> One dominant signal, the max offer in the largest type on the screen, and the range it came from.</sub></td>
+<td width="33%"><img src="docs/media/ranlog.light.png" alt="An expanded What ran where receipt: Identify (ollama:gemma3:1b, on this device, 4646 ms), Comps (local_history, 6 listings), Price (comps_median, $133.40), each shown running locally"><br><sub><b>The receipt.</b> Every scan records which provider ran each step and whether anything left the device. "Photos never leave your machine" is a field you can read, not a promise.</sub></td>
+<td width="33%"><img src="docs/media/listings.queue.light.png" alt="The listings queue: Pendleton shirt PASS max $8.13, Pyrex bowl MAYBE max $18.35, Levi's jacket BUY max $35.32"><br><sub><b>The other half.</b> Captures land here priced, each with its own verdict; one tap writes the title, description, tags and price with the local model.</sub></td>
 </tr>
 </table>
+
+<p align="center">
+<img src="docs/media/landing.light.png" alt="The Sourcerer landing page: the headline Know what it's worth. Anywhere., a framed phone showing the BUY verdict card, and a stats row reading 0 photos uploaded, 0 API keys, 8.3 s per identification and 100% items read correctly" width="760">
+</p>
+<p align="center"><sub><b>The public page</b> for the <code>.tech</code> category. It embeds these same captures and reads its headline numbers from <code>landing/evidence.json</code>, which the capture writes straight from the eval — so the page cannot drift from the evidence the way a hand-typed statistic would.</sub></p>
 
 ---
 
@@ -75,6 +85,13 @@ Then type the price on the tag and the whole thing re-prices **instantly and off
 because the fee arithmetic is deterministic pure TypeScript shared by the server and the
 browser — not a model call.
 
+<table>
+<tr>
+<td width="50%"><img src="docs/media/scan.progress.light.png" alt="The Scan screen mid-scan: a card headed Working it out… listing four named stages — Reading the item (active, with a progress sweep), Checking the market, Pricing it, Deciding"><br><sub><b>Named stages, not a spinner.</b> The pipeline streams each real stage as it starts and finishes. On CPU inference the wait is part of the experience, so the app shows what it is doing and how long each step took rather than hiding it behind an animation.</sub></td>
+<td width="50%"><img src="docs/media/verdict.pass.light.png" alt="The same Levi's jacket with the asking price set to $999: the verdict has flipped to a grey PASS reading You would need it at $35.32 or less. At $999 this is someone else's flip., with the max offer unchanged at $35.32"><br><sub><b>It says no.</b> Set a tag price above the ceiling and the verdict flips to PASS with the ceiling unchanged — recomputed on-device from the same pure arithmetic, with no model call and no network.</sub></td>
+</tr>
+</table>
+
 **Listings.** Everything you captured is in a queue. Tap once and your local model
 writes the title, description, tags and price for each item. Copy them one at a time or
 export the lot to CSV. This is the 11pm typing grind, deleted.
@@ -82,6 +99,11 @@ export the lot to CSV. This is the 11pm typing grind, deleted.
 **Insights.** Realised vs. unrealised profit, sell-through, forecast accuracy, and which
 categories actually pay. Computed locally with the same pure functions the server uses,
 so the numbers can never disagree.
+
+<p align="center">
+<img src="docs/media/insights.light.png" alt="The Insights screen: realised profit $70.96 from 2 logged sales, spend $79 across 4 buys, revenue $119.96, an unrealised tile reading $0 on a dashed border, sell-through 50%, and best flips listing the Griswold skillet (+$40.96) and the Pendleton shirt (+$30)" width="300">
+</p>
+<p align="center"><sub><b>Computed here, from your records.</b> Realised profit comes only from sales you logged; unrealised is a projected number, so it gets a dashed tile and says so. The tile reads $0 here because the two items still held were captured but not yet bought — a deliberate line between "sourced" and "owned".</sub></p>
 
 ---
 
@@ -139,7 +161,7 @@ surfaces the same thing in Settings → *What runs where*.
 |---|---|
 | Node | 22.18+ |
 | pnpm | 10+ (this repo is pnpm-only; no `package-lock.json`, no npm) |
-| Ollama | 0.40+ with `gemma3:4b` and `gemma3:1b` (plus `qwen3:4b` for the advisor's tool loop) |
+| Ollama | 0.40+ with `gemma3:4b` and `gemma3:1b` (plus `llama3.2:3b` for the advisor's tool loop) |
 | RAM | ~6 GB free for the 4B vision model. A GPU is nice; CPU works, just slower. |
 
 ---
@@ -148,15 +170,21 @@ surfaces the same thing in Settings → *What runs where*.
 
 This is the product thesis in tabular form. Nothing in this table throws.
 
-| Capability | Offline, no keys | + network | + keys |
+The local models are present in every column — they are on your disk, not on a network — so
+the first column is not a crippled version of the app. It is the app, with the parts that need
+someone else's server switched off. (A browser with no network at all is the rarer case, and it
+still answers: `apps/web/src/lib/offline.ts` prices the item from your own sold history, tagged
+`estimate` so it can never be mistaken for a live comp.)
+
+| Capability | No network, no keys | + network | + keys |
 |---|---|---|---|
 | Identify from a photo | Gemma 3 4B, local | same | same |
 | Identify from text | Gemma 3 1B, local | same | same |
 | Market comps | your own sold history | sold history | live eBay listings (SerpApi) |
 | Price estimate | condition-adjusted comps | same | TabPFN model on your sales |
 | Verdict + max offer | deterministic, local | identical | identical |
-| Listing draft | template built from known fields | local model | local model |
-| Advisor | deterministic answer | local tool-using model | same |
+| Listing draft | local model, template if it is down | local model | local model |
+| Advisor | local tool-using model, deterministic answer if it is down | same | same, or the same agent on Backboard's hosted open weights |
 | Voice | — | — | ElevenLabs in/out |
 | Tracing | — | — | Sentry `gen_ai.*` spans |
 | Similar items | — | — | pgvector, when `DATABASE_URL` is set |
@@ -209,6 +237,11 @@ every scan returns a `ran[]` log of which provider executed each step and whethe
 left the device. The UI renders those fields directly, which is why the privacy claim is
 inspectable rather than aspirational.
 
+<p align="center">
+<img src="docs/media/comps.expanded.light.png" alt="The expanded Comparables panel: six comps from the user's own sold history, each row tagged sold with a price of $145, above low/median/mean/high tiles all reading $145 and a note that the mean is trimmed 10%" width="360">
+</p>
+<p align="center"><sub><b>Every comp is tagged.</b> With no market key configured, comps come from your own sold history and each row is labelled <code>sold</code>; the panel says so in words. Point it at a live-comps key and the same rows read <code>asking</code>, with the haircut stated on the panel — never silently relabelled as a sale.</sub></p>
+
 ### A real engineering decision: eBay retired its sold-comps filter
 
 When this was built (October 2026), eBay had moved completed listings behind a login and
@@ -227,6 +260,14 @@ never comes back; a reseller who understands the haircut trusts you more.
 ## Evidence
 
 <!-- EVAL_TABLE_START -->
+| Configuration | Emitted parseable JSON | Brand correct | Type correct | **Both** | Invented a brand | Median |
+|---|---|---|---|---|---|---|
+| `v1` prose prompt, no schema | 100% | 97% | 100% | **29/30** | 1/4 | 8.8 s |
+| `v2` same prompt, + JSON schema | 100% | 100% | 100% | **30/30** | 0/4 | 8.6 s |
+| `v3` full rules prompt, + schema | 100% | 100% | 100% | **30/30** | 0/4 | 8.5 s |
+| `v4` v3 + anti-invention rules | 100% | 100% | 100% | **30/30** | 0/4 | 8.3 s |
+
+Model `gemma3:4b`, temperature 0.1, 30 items, one machine, one afternoon.
 <!-- EVAL_TABLE_END -->
 
 Method: 30 items with a known brand and type, written by hand the way a person would type

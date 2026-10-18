@@ -78,14 +78,34 @@ async function waitVerdict(page: Page) {
 }
 
 async function resetToCapture(page: Page) {
-  const again = page.getByRole("button", { name: /Scan another|New scan|Scan something else/ }).first();
-  if (await again.count()) {
-    await again.click();
-    await page.waitForTimeout(500);
+  // "Next item" is the app's own reset: it clears the result and the capture form but
+  // leaves the queue in IndexedDB alone, which is exactly what the next screenshot needs.
+  const next = page.getByRole("button", { name: /Next item/ }).first();
+  if (await next.count()) {
+    await next.click();
+    await page.waitForTimeout(600);
     return;
   }
   await page.reload({ waitUntil: "networkidle" });
-  await page.waitForTimeout(800);
+  await page.waitForTimeout(1000);
+}
+
+/** Save the current scan to the queue, so Listings and Insights have something real. */
+async function save(page: Page) {
+  const btn = page.getByRole("button", { name: /^Save$/ }).first();
+  if (await btn.count()) {
+    await btn.click().catch(() => {});
+    await page.waitForTimeout(1300);
+  }
+}
+
+/** Close whatever disclosure is open, so the next shot is not taken through a panel. */
+async function collapse(page: Page) {
+  const open = page.locator("details[open]").first();
+  if (await open.count()) {
+    await open.locator("summary").first().click({ timeout: 2000 }).catch(() => {});
+    await page.waitForTimeout(350);
+  }
 }
 
 async function expand(page: Page, pattern: RegExp) {
@@ -93,6 +113,30 @@ async function expand(page: Page, pattern: RegExp) {
   if (await el.count()) {
     await el.click({ timeout: 3000 }).catch(() => {});
     await page.waitForTimeout(500);
+  }
+}
+
+/**
+ * Bring the top of the verdict card back into frame.
+ *
+ * Opening and collapsing the two disclosures under "The fine print" grows and shrinks
+ * the page, which leaves the scroll position parked next to the rail instead of the
+ * banner. The PASS shot is a picture of the refusal — the banner and the ceiling — so it
+ * has to be framed there rather than wherever the last disclosure left the viewport.
+ */
+async function focusVerdictTop(page: Page) {
+  await page
+    .locator('section[aria-label="Verdict"]')
+    .first()
+    .evaluate((el) => el.scrollIntoView({ block: "start" }))
+    .catch(() => {});
+  await page.waitForTimeout(350);
+}
+
+/** Toasts auto-dismiss after 4.2 s; wait past that so they do not sit over a screenshot. */
+async function clearToasts(page: Page) {
+  if (await page.locator('[role="status"] >> text=/Logged|Saved|written|draft/').count()) {
+    await page.waitForTimeout(4600);
   }
 }
 
@@ -105,20 +149,28 @@ async function main() {
 
   const browser = await chromium.launch({ channel: "chrome", headless: true });
 
-  const mkContext = (opts: { width: number; height: number; dark?: boolean; record?: boolean }) =>
+  const mkContext = (opts: { width: number; height: number; record?: boolean }) =>
     browser.newContext({
       viewport: { width: opts.width, height: opts.height },
       deviceScaleFactor: 2,
       locale: "en-US",
       timezoneId: "Asia/Kolkata",
       reducedMotion: "reduce",
-      colorScheme: opts.dark ? "dark" : "light",
+      colorScheme: "light",
       recordVideo: opts.record ? { dir: VIDEO_DIR, size: { width: opts.width, height: opts.height } } : undefined,
     });
 
-  // ── pass 1: the core loop, light theme, mobile ─────────────────────────────
+  /**
+   * One context for every screenshot, deliberately.
+   *
+   * The first version of this script gave the desktop pass its own context, which
+   * meant an empty IndexedDB, which meant the Insights screenshot said "No numbers
+   * yet". Captured items live in the browser, not on the server, so every screenshot
+   * has to come from the same browser. The viewport is resized instead, and the video
+   * gets its own short context so it stays a clean phone-shaped demo.
+   */
   console.log("\npass 1 — mobile, light");
-  const ctx = await mkContext({ width: 390, height: 844, record: true });
+  const ctx = await mkContext({ width: 390, height: 844 });
   const page = await ctx.newPage();
   page.on("pageerror", (e) => console.log(`  [page error] ${e.message}`));
   page.on("console", (m) => {
@@ -126,10 +178,10 @@ async function main() {
   });
 
   await page.goto(APP, { waitUntil: "networkidle", timeout: 90_000 });
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(2500);
   await shot(page, "scan.empty", "light");
 
-  // ① the verdict card. ② the offline/local chips. ⑥ staged progress on the way.
+  // ① the verdict card. ⑥ staged progress on the way there.
   console.log("\n  scan 1 — the BUY verdict");
   await scan(page, SCANS[0]!.text, SCANS[0]!.asking);
   await page.waitForTimeout(2500);
@@ -140,31 +192,29 @@ async function main() {
   // ④ the run log, which is what makes the privacy claim checkable.
   await expand(page, /^What ran where/);
   await shot(page, "ranlog", "light");
-  await page.keyboard.press("Escape").catch(() => {});
-  await page.waitForTimeout(300);
+  await collapse(page);
+  await page.waitForTimeout(400);
 
   // ⑤ comps, expanded.
   await expand(page, /^Comparables/);
   await shot(page, "comps.expanded", "light");
-  await page.keyboard.press("Escape").catch(() => {});
-  await page.waitForTimeout(300);
+  await collapse(page);
+  await page.waitForTimeout(400);
 
   // ③ a PASS. Editing the tag price re-prices offline, instantly — no model call.
   console.log("\n  same item, an absurd tag price → PASS (offline re-price)");
   const priceInput = page.locator('section[aria-label="Verdict"] input[aria-label="Asking price"]').first();
   await priceInput.fill("999");
   await page.waitForTimeout(900);
+  await focusVerdictTop(page);
   await freeze(page);
   await shot(page, "verdict.pass", "light");
 
-  // Put it back and save, so the queue is populated for the later shots.
+  // Put it back to the number a person would actually pay, then save, so the queue
+  // holds items with a real buy price and the Insights profit numbers mean something.
   await priceInput.fill(SCANS[0]!.asking);
-  await page.waitForTimeout(600);
-  const save = page.getByRole("button", { name: /^Save$/ }).first();
-  if (await save.count()) {
-    await save.click();
-    await page.waitForTimeout(1000);
-  }
+  await page.waitForTimeout(700);
+  await save(page);
 
   // ── a queue worth screenshotting ───────────────────────────────────────────
   console.log("\n  three more scans so the queue and the tallies are real");
@@ -172,118 +222,139 @@ async function main() {
     await resetToCapture(page);
     await scan(page, s.text, s.asking);
     await waitVerdict(page);
-    const sv = page.getByRole("button", { name: /^Save$/ }).first();
-    if (await sv.count()) {
-      await sv.click().catch(() => {});
-      await page.waitForTimeout(900);
-    }
+    await save(page);
   }
 
   // ⑦ the listings queue.
   console.log("\n  listings");
   await page.getByRole("link", { name: "Listings" }).click();
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1800);
+  await clearToasts(page);
   await shot(page, "listings.queue", "light");
 
-  // Log one sale so Insights has a sold row and a sell-through number.
-  const sold = page.getByRole("button", { name: /^Sold$/ }).first();
-  if (await sold.count()) {
+  // Log two sales so Insights has realised profit and a sell-through number.
+  for (let i = 0; i < 2; i++) {
+    const sold = page.getByRole("button", { name: /^Sold$/ }).first();
+    if (!(await sold.count())) break;
     await sold.click();
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(900);
     const logSale = page.getByRole("button", { name: /Log sale/ }).first();
     if (await logSale.count()) {
       await logSale.click();
-      await page.waitForTimeout(900);
+      await page.waitForTimeout(1100);
     }
   }
+  await clearToasts(page);
+  await shot(page, "listings.sold", "light");
 
   // ⑧ insights.
   console.log("\n  insights");
   await page.getByRole("link", { name: "Insights" }).click();
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(2000);
+  await clearToasts(page);
+  await page.mouse.wheel(0, 0);
   await shot(page, "insights", "light");
 
-  // ── pass 2: dark theme ─────────────────────────────────────────────────────
+  // ── pass 2: dark theme, same browser, same data ────────────────────────────
   console.log("\npass 2 — mobile, dark");
   await page.getByRole("link", { name: "Scan" }).click();
-  await page.waitForTimeout(600);
+  await page.waitForTimeout(700);
   const toggle = page.getByRole("button", { name: /Switch to dark theme/ }).first();
   if (await toggle.count()) {
     await toggle.click();
     await page.waitForTimeout(900);
   }
   await page.reload({ waitUntil: "networkidle" });
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(2000);
   await shot(page, "scan.empty", "dark");
 
-  await scan(page, SCANS[2]!.text, SCANS[2]!.asking);
+  // Same item as the light pair, so the dark "BUY" frame is a BUY.
+  //
+  // This shot used to scan the Pendleton shirt. That shirt prices close enough to its
+  // ceiling that a small change in the model's read flips it to PASS (asking $9 against a
+  // max offer of $8.13) — and a file called verdict.buy that shows a PASS is exactly the
+  // mislabelling this capture set is meant to avoid. The Levi's jacket clears its ceiling
+  // by a wide margin, so its BUY is not a coin toss.
+  await scan(page, SCANS[0]!.text, SCANS[0]!.asking);
   await waitVerdict(page);
   await shot(page, "verdict.buy", "dark");
-  const priceInputDark = page.locator('section[aria-label="Verdict"] input[aria-label="Asking price"]').first();
-  await priceInputDark.fill("400");
+  const priceDark = page.locator('section[aria-label="Verdict"] input[aria-label="Asking price"]').first();
+  await priceDark.fill("999");
   await page.waitForTimeout(900);
+  await focusVerdictTop(page);
   await freeze(page);
   await shot(page, "verdict.pass", "dark");
-
+  await collapse(page);
   await expand(page, /^What ran where/);
   await shot(page, "ranlog", "dark");
-  await page.keyboard.press("Escape").catch(() => {});
-  await page.waitForTimeout(300);
+  await collapse(page);
   await expand(page, /^Comparables/);
   await shot(page, "comps.expanded", "dark");
+  await collapse(page);
+
+  await page.getByRole("link", { name: "Insights" }).click();
+  await page.waitForTimeout(1800);
+  await shot(page, "insights", "dark");
+  await page.getByRole("link", { name: "Listings" }).click();
+  await page.waitForTimeout(1500);
+  await shot(page, "listings.queue", "dark");
 
   // ── pass 3: genuinely offline ──────────────────────────────────────────────
   // This is the thesis shot: the chip says offline, and the app still answers.
   console.log("\npass 3 — network actually off");
   await ctx.setOffline(true);
-  await page.reload({ waitUntil: "domcontentloaded" }).catch(() => {});
-  await page.waitForTimeout(2500);
-  await shot(page, "offline.shell", "dark");
-
   await page.getByRole("link", { name: "Scan" }).click().catch(() => {});
-  await page.waitForTimeout(800);
-  await resetToCapture(page);
+  await page.reload({ waitUntil: "domcontentloaded" }).catch(() => {});
+  await page.waitForTimeout(3000);
+  await shot(page, "offline.shell", "dark");
   await scan(page, SCANS[1]!.text, SCANS[1]!.asking);
-  await page.waitForTimeout(6000);
+  await page.waitForTimeout(7000);
   await shot(page, "offline.verdict", "dark");
   await ctx.setOffline(false);
 
+  // ── pass 4: desktop, same browser, so the data is still there ─────────────
+  console.log("\npass 4 — desktop");
+  await page.getByRole("button", { name: /Switch to light theme/ }).first().click().catch(() => {});
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${APP}/insights`, { waitUntil: "networkidle", timeout: 90_000 });
+  await page.waitForTimeout(2200);
+  await shot(page, "insights.desktop", "light");
+  await page.goto(`${APP}/listings`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(1800);
+  await shot(page, "listings.desktop", "light");
+  await page.setViewportSize({ width: 390, height: 844 });
   await ctx.close();
-  const video = await page.video();
+
+  // ── pass 5: the demo video, its own clean phone-shaped context ────────────
+  // Recorded last and recorded briefly: one uninterrupted run, photo-less (the
+  // description path) but the real thing end to end.
+  console.log("\npass 5 — recording the demo run");
+  const vctx = await mkContext({ width: 390, height: 844, record: true });
+  const vpage = await vctx.newPage();
+  await vpage.goto(APP, { waitUntil: "networkidle", timeout: 90_000 });
+  await vpage.waitForTimeout(2500);
+  await scan(vpage, SCANS[3]!.text, SCANS[3]!.asking);
+  await waitVerdict(vpage);
+  const vprice = vpage.locator('section[aria-label="Verdict"] input[aria-label="Asking price"]').first();
+  await vprice.fill("60");
+  await vpage.waitForTimeout(1600);
+  await expand(vpage, /^What ran where/);
+  await vpage.waitForTimeout(2200);
+  await collapse(vpage);
+  await vpage.getByRole("link", { name: "Insights" }).click().catch(() => {});
+  await vpage.waitForTimeout(3000);
+  await vctx.close();
+  const video = await vpage.video();
   const videoPath = video ? await video.path() : null;
   if (videoPath && existsSync(videoPath)) {
     const dest = resolve(MEDIA, "sourcerer-demo.webm");
     renameSync(videoPath, dest);
-    console.log(`\nvideo: sourcerer-demo.webm (${(statSync(dest).size / 1024 / 1024).toFixed(1)} MB)`);
+    console.log(`  video: sourcerer-demo.webm (${(statSync(dest).size / 1024 / 1024).toFixed(1)} MB)`);
   }
 
-  // ── pass 4: desktop, for two-up spreads ────────────────────────────────────
-  console.log("\npass 4 — desktop");
-  const ctx2 = await mkContext({ width: 1440, height: 900 });
-  const page2 = await ctx2.newPage();
-  await page2.goto(`${APP}/insights`, { waitUntil: "networkidle", timeout: 90_000 });
-  await page2.waitForTimeout(2000);
-  await shot(page2, "insights", "light"); // overwrites mobile; desktop is the better frame here
-  await page2.goto(`${APP}/listings`, { waitUntil: "networkidle" });
-  await page2.waitForTimeout(1500);
-  await shot(page2, "listings.queue", "light");
-  await ctx2.close();
-
-  // ── pass 5: the landing page, for the .tech category ──────────────────────
-  console.log("\npass 5 — landing page");
-  const ctx3 = await mkContext({ width: 1440, height: 900 });
-  const page3 = await ctx3.newPage();
-  const landingUp = await page3
-    .goto(LANDING, { waitUntil: "networkidle", timeout: 15_000 })
-    .then(() => true)
-    .catch(() => false);
-  if (landingUp) await shot(page3, "landing", "light");
-  else console.log("  (landing not served — skipping; run: pnpm landing)");
-  await ctx3.close();
-
-  await browser.close();
-
-  // ── feed the landing page and the README ──────────────────────────────────
+  // ── pass 6: the landing page, for the .tech category ──────────────────────
+  // Copy the captures in first: the landing page embeds them, and a hero with broken
+  // image placeholders is a worse screenshot than no screenshot.
   const imgDir = resolve(process.cwd(), "landing/img");
   mkdirSync(imgDir, { recursive: true });
   for (const [src, dest] of [
@@ -320,8 +391,21 @@ async function main() {
         2,
       ),
     );
-    console.log(`landing/evidence.json ← ${best.id}: ${Math.round(best.combinedRate * 100)}%, ${(best.medianMs / 1000).toFixed(1)}s`);
+    console.log(`\nlanding/evidence.json ← ${best.id}: ${Math.round(best.combinedRate * 100)}%, ${(best.medianMs / 1000).toFixed(1)}s`);
   }
+
+  console.log("\npass 6 — landing page");
+  const lctx = await mkContext({ width: 1440, height: 900 });
+  const lpage = await lctx.newPage();
+  const landingUp = await lpage
+    .goto(LANDING, { waitUntil: "networkidle", timeout: 15_000 })
+    .then(() => true)
+    .catch(() => false);
+  if (landingUp) await shot(lpage, "landing", "light");
+  else console.log("  (landing not served — skipping; run: pnpm landing)");
+  await lctx.close();
+
+  await browser.close();
 
   writeFileSync(resolve(MEDIA, "captured.json"), JSON.stringify({ at: new Date().toISOString(), app: APP, shots }, null, 2));
   console.log(`\n${shots.length} screenshots + video → docs/media/`);

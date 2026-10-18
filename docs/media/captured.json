@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-18T17:56:49.599Z",
+  "app": "http://127.0.0.1:3000",
+  "shots": [
+    "scan.empty.light.png",
+    "scan.progress.light.png",
+    "verdict.buy.light.png",
+    "ranlog.light.png",
+    "comps.expanded.light.png",
+    "verdict.pass.light.png",
+    "listings.queue.light.png",
+    "listings.sold.light.png",
+    "insights.light.png",
+    "scan.empty.dark.png",
+    "verdict.buy.dark.png",
+    "verdict.pass.dark.png",
+    "ranlog.dark.png",
+    "comps.expanded.dark.png",
+    "insights.dark.png",
+    "listings.queue.dark.png",
+    "offline.shell.dark.png",
+    "offline.verdict.dark.png",
+    "insights.desktop.light.png",
+    "listings.desktop.light.png",
+    "landing.light.png"
+  ]
+}

@@ -80,12 +80,40 @@ export function Disclosure({
           <IconChevron className="transition-transform group-open:rotate-90" width={16} height={16} />
           {summary}
         </span>
-        {hint && <span className="text-xs font-normal text-muted">{hint}</span>}
+        {hint && <span className="meta font-normal">{hint}</span>}
       </summary>
       <div className="border-t px-3 py-3 text-sm" style={{ borderColor: "var(--line)" }}>
         {children}
       </div>
     </details>
+  );
+}
+
+/**
+ * The announcement channel.
+ *
+ * Why this exists: a live region only announces content that *arrives* while it is
+ * already on screen. The verdict banner is mounted with its text already inside it,
+ * so a screen reader would hear nothing when the answer lands. This node is mounted
+ * once per screen and its message is updated *after* the result arrives, so the
+ * decision is spoken the moment it exists. `aria-atomic` keeps it to one clean
+ * sentence instead of a stream of fragments.
+ */
+export function Announcer({ message }: { message: string }) {
+  return (
+    <div className="sr-only-text" role="status" aria-live="polite" aria-atomic="true">
+      {message}
+    </div>
+  );
+}
+
+/** A genre shift: a small label over a hairline. Separates decision → math → fine print. */
+export function SectionHead({ title, hint }: { title: string; hint?: string }) {
+  return (
+    <div className="mb-2 flex items-baseline justify-between gap-3 border-t pt-3" style={{ borderColor: "var(--line)" }}>
+      <h3 className="kicker">{title}</h3>
+      {hint && <span className="meta">{hint}</span>}
+    </div>
   );
 }
 
@@ -191,7 +219,9 @@ export function EmptyState({
         {icon}
       </div>
       <h3 className="display text-lg font-semibold">{title}</h3>
-      <p className="mt-1 text-sm text-muted">{body}</p>
+      {/* Cap the measure: an empty-state sentence spread across a 1152px desktop card
+          is unreadable even though it is only one line. */}
+      <p className="mx-auto mt-1 max-w-sm text-sm text-muted">{body}</p>
       {action && <div className="mt-4 flex justify-center">{action}</div>}
     </div>
   );

@@ -77,7 +77,14 @@ export function CompsPanel({ comps, expected }: { comps: CompsResult; expected: 
               <div className="price shrink-0 text-sm font-semibold">
                 {formatMoney(c.price, c.currency)}
                 {Math.abs(c.price - expected) / Math.max(1, expected) > 0.6 && (
-                  <IconWarn width={12} height={12} className="ml-1 inline" aria-label="far from expected" />
+                  <span className="ml-1 inline-flex items-center align-middle" style={{ color: "var(--maybe)" }}>
+                    <IconWarn width={12} height={12} />
+                    {/*
+                      The icon is aria-hidden by the shared Base, so the meaning it carries
+                      ("this comp is well away from the estimate") has to exist as text.
+                    */}
+                    <span className="sr-only-text">well away from the expected price</span>
+                  </span>
                 )}
               </div>
               {c.url && (

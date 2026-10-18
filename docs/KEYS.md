@@ -118,14 +118,27 @@ isn't running — the app never pretends a background job exists when it doesn't
 
 ## Summary table
 
-| Env var | Service | Required | Buys you |
-|---|---|---|---|
-| — | Ollama + Gemma 3 | **no (but assumed for the full experience)** | identification + listing writing, entirely local |
-| `SERPAPI_API_KEY` | SerpApi | no | live eBay comps |
-| `TABPFN_TOKEN` | Prior Labs | no | personal price + days-to-sell model |
-| `SENTRY_DSN` | Sentry | no | agent tracing |
-| `BACKBOARD_API_KEY` | Backboard | no | hosted open-weight brain (GPU-less demo) |
-| `DATABASE_URL` | Tiger Data / pgvector | no | vector memory |
-| `ELEVENLABS_API_KEY` | ElevenLabs | no | voice in and out |
-| `SENTRY_RECORD_INPUTS` | Sentry | no | set `1` only to debug with inputs recorded |
-| `MODEL_PROVIDER` | — | no | force `ollama` or `backboard` |
+Hand this to whoever is supplying credentials. **Nothing in this table is required** to
+run Sourcerer, and the last column states plainly whether the integration has been
+exercised against a live account or merely implemented, typechecked and observed to
+degrade correctly when absent.
+
+| Env var | Service | Required | Buys you | Verified against a live account? |
+|---|---|---|---|---|
+| — | Ollama + Gemma 3 | **no (but assumed for the full experience)** | identification + listing writing, entirely local | **Yes — measured**, see `docs/evidence/identify-results.json` |
+| — | Temporal | no | crash-proof background reprice | **Yes — a `SIGKILL` mid-sweep, `docs/evidence/temporal/`** |
+| `SERPAPI_API_KEY` | SerpApi | no | live eBay comps | Not yet — implemented, falls back cleanly |
+| `TABPFN_TOKEN` | Prior Labs | no | personal price + days-to-sell model | Not yet — implemented, falls back cleanly |
+| `SENTRY_DSN` | Sentry | no | agent tracing | Not yet — implemented, falls back cleanly |
+| `BACKBOARD_API_KEY` | Backboard | no | hosted open-weight brain (GPU-less demo) | Not yet — implemented, falls back cleanly |
+| `DATABASE_URL` | Tiger Data / pgvector | no | vector memory | Not yet — implemented; local container path available |
+| `ELEVENLABS_API_KEY` | ElevenLabs | no | voice in and out | Not yet — implemented, returns `501` and hides the UI |
+| `SENTRY_RECORD_INPUTS` | Sentry | no | set `1` only to debug with inputs recorded | — |
+| `MODEL_PROVIDER` | — | no | force `ollama` or `backboard` | — |
+
+**What "implemented, falls back cleanly" means precisely:** the code path exists, is
+typechecked, is wired into the capability registry, and `GET /capabilities` reports it as
+unavailable with a reason. What it does *not* mean is that a paid account has been billed
+or a live response parsed. Those are different claims and only the first one is being
+made. If you supply the key, the integration is one `.env` line from live — and
+`GET /capabilities` is the switch that tells the UI to start using it.

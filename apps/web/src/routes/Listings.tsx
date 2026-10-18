@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   formatMoney,
   formatMultiple,
@@ -9,7 +10,7 @@ import { api } from "../lib/api.ts";
 import { downloadText, itemsToCsv, listingToText } from "../lib/format.ts";
 import { useApp } from "../lib/store.tsx";
 import { Shell } from "../components/Shell.tsx";
-import { Disclosure, EmptyState, MoneyInput, Sheet } from "../components/Bits.tsx";
+import { Announcer, Disclosure, EmptyState, MoneyInput, Sheet } from "../components/Bits.tsx";
 import { VerdictPill } from "../components/VerdictCard.tsx";
 import {
   IconCheck,
@@ -33,6 +34,7 @@ type Tab = "queue" | "sold";
  */
 export default function ListingsPage() {
   const { items, updateItem, removeItem, markSold, toast, brainUp } = useApp();
+  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("queue");
   const [query, setQuery] = useState("");
   const [busyAll, setBusyAll] = useState(false);
@@ -51,6 +53,16 @@ export default function ListingsPage() {
   }, [items, query, tab]);
 
   const queueCount = items.filter((i) => i.status !== "sold" && i.status !== "passed").length;
+  const soldCount = items.filter((i) => i.status === "sold").length;
+
+  /*
+    The two numbers a reseller managing a queue actually steers by: cash already tied
+    up in stock (which is at risk) and the profit it is expected to return. Both are
+    shown as an expected value, never as cash — the profit line says so in words.
+  */
+  const held = items.filter((i) => i.status === "sourced" || i.status === "bought" || i.status === "listed");
+  const capital = held.reduce((s, i) => s + (i.buyPrice ?? 0), 0);
+  const expectedProfit = held.reduce((s, i) => s + i.verdict.economics.expectedProfit, 0);
 
   const applyListing = async (item: CapturedItem): Promise<ListingDraft | null> => {
     try {
@@ -99,28 +111,65 @@ export default function ListingsPage() {
 
   return (
     <Shell>
-      <header className="mb-4 flex items-end justify-between gap-3">
-        <div>
-          <h1 className="display text-2xl font-bold">Listings</h1>
-          <p className="text-sm text-muted">{queueCount} waiting · {items.filter((i) => i.status === "sold").length} sold</p>
+      <Announcer message={busyAll ? `Writing listing drafts, ${progress?.done ?? 0} of ${progress?.total ?? 0} done.` : ""} />
+
+      <header className="mb-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="display text-2xl font-bold">Listings</h1>
+            <p className="meta">
+              {queueCount} waiting · {soldCount} sold
+            </p>
+          </div>
+          <button
+            className="btn btn-ghost text-xs"
+            onClick={() => downloadText(`sourcerer-${new Date().toISOString().slice(0, 10)}.csv`, itemsToCsv(items))}
+          >
+            Export CSV
+          </button>
         </div>
-        <button className="btn btn-ghost text-xs" onClick={() => downloadText(`sourcerer-${new Date().toISOString().slice(0, 10)}.csv`, itemsToCsv(items))}>
-          Export CSV
-        </button>
+
+        {/* The queue as a position, not just a pile. */}
+        {held.length > 0 && (
+          <dl className="mt-3 grid grid-cols-3 gap-3 border-t pt-3" style={{ borderColor: "var(--line)" }}>
+            <div>
+              <dt className="kicker">Holding</dt>
+              <dd className="price text-lg font-bold">{held.length}</dd>
+            </div>
+            <div>
+              <dt className="kicker">Capital in it</dt>
+              <dd className="price text-lg font-bold">{formatMoney(capital)}</dd>
+            </div>
+            <div>
+              <dt className="kicker">Expected profit</dt>
+              <dd className="price text-lg font-bold">{formatMoney(expectedProfit)}</dd>
+              <dd className="meta">if it all sells at target</dd>
+            </div>
+          </dl>
+        )}
       </header>
 
       <div className="mb-3 flex gap-2">
-        <div className="flex flex-1 rounded-xl p-1" style={{ background: "var(--surface-2)" }} role="tablist">
+        {/*
+          A real tab pair: each tab declares the panel it controls and the panel names the
+          tab that labels it, so screen readers hear "Queue, tab, selected" rather than an
+          unlabelled pair of buttons.
+        */}
+        <div className="flex flex-1 rounded-xl p-1 lg:max-w-xs" style={{ background: "var(--surface-2)" }} role="tablist" aria-label="Queue or sold">
           {(["queue", "sold"] as Tab[]).map((t) => (
             <button
               key={t}
+              id={`listings-tab-${t}`}
               role="tab"
               aria-selected={tab === t}
+              aria-controls="listings-panel"
+              tabIndex={tab === t ? 0 : -1}
               className="tap flex-1 rounded-lg text-sm font-semibold capitalize"
               style={tab === t ? { background: "var(--surface)", color: "var(--ink)" } : { color: "var(--muted)" }}
               onClick={() => setTab(t)}
             >
               {t}
+              <span className="sr-only-text"> listings</span>
             </button>
           ))}
         </div>
@@ -138,7 +187,7 @@ export default function ListingsPage() {
       </div>
 
       {filtered.length > 0 && (
-        <button className="btn btn-primary mb-3 w-full" onClick={() => void generateAll()} disabled={busyAll || brainUp === false}>
+        <button className="btn btn-primary mb-3 w-full lg:max-w-md" onClick={() => void generateAll()} disabled={busyAll || brainUp === false}>
           <IconSparkle width={18} height={18} />
           {busyAll
             ? `Writing ${progress?.done ?? 0}/${progress?.total ?? 0}…`
@@ -148,33 +197,52 @@ export default function ListingsPage() {
         </button>
       )}
 
-      {filtered.length === 0 ? (
-        <EmptyState
-          icon={<IconList />}
-          title={tab === "sold" ? "No sales logged yet" : query ? "Nothing matches that" : "Your queue is empty"}
-          body={
-            tab === "sold"
-              ? "Log a sale and Sourcerer learns what your market actually pays. That's the data no cloud service has."
-              : "Scan something on the Scan tab and it will land here."
-          }
-        />
-      ) : (
-        <ul className="space-y-3">
-          {filtered.map((item) => (
-            <ListingRow
-              key={item.id}
-              item={item}
-              onGenerate={() => void applyListing(item)}
-              onDelete={() => void removeItem(item.id)}
-              onToggleListed={() => void updateItem(item.id, { status: item.status === "listed" ? "bought" : "listed" })}
-              onSell={() => {
-                setSellFor(item);
-                setSellPrice(item.price.expected);
-              }}
-            />
-          ))}
-        </ul>
-      )}
+      <div id="listings-panel" role="tabpanel" aria-labelledby={`listings-tab-${tab}`}>
+        {filtered.length === 0 ? (
+          <EmptyState
+            icon={<IconList />}
+            title={tab === "sold" ? "No sales logged yet" : query ? "Nothing matches that" : "Your queue is empty"}
+            body={
+              tab === "sold"
+                ? "Log a sale and Sourcerer learns what your market actually pays. That's the data no cloud service has."
+                : query
+                  ? "No item in your queue matches that filter."
+                  : "Scan something on the Scan tab and it will land here, priced and ready to list."
+            }
+            action={
+              tab === "sold" ? (
+                <button className="btn btn-ghost" onClick={() => setTab("queue")}>
+                  Back to the queue
+                </button>
+              ) : query ? (
+                <button className="btn btn-ghost" onClick={() => setQuery("")}>
+                  Clear the filter
+                </button>
+              ) : (
+                <button className="btn btn-ghost" onClick={() => navigate("/")}>
+                  <IconTag width={16} height={16} /> Scan your first item
+                </button>
+              )
+            }
+          />
+        ) : (
+          <ul className="space-y-3">
+            {filtered.map((item) => (
+              <ListingRow
+                key={item.id}
+                item={item}
+                onGenerate={() => void applyListing(item)}
+                onDelete={() => void removeItem(item.id)}
+                onToggleListed={() => void updateItem(item.id, { status: item.status === "listed" ? "bought" : "listed" })}
+                onSell={() => {
+                  setSellFor(item);
+                  setSellPrice(item.price.expected);
+                }}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
 
       <Sheet open={Boolean(sellFor)} onClose={() => setSellFor(null)} title="Log this sale">
         {sellFor && (
@@ -221,6 +289,8 @@ function ListingRow({
 }) {
   const [copied, setCopied] = useState(false);
   const text = item.listing ? listingToText(item.listing) : "";
+  const isSold = item.status === "sold";
+  const realised = isSold && item.soldFor != null ? item.soldFor - (item.buyPrice ?? 0) : null;
 
   return (
     <li className="card p-3">
@@ -234,12 +304,32 @@ function ListingRow({
         )}
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">{item.identification.title}</p>
-          <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted">
+          <p className="meta mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1">
             <VerdictPill verdict={item.verdict} />
-            <span className="price">max {formatMoney(item.verdict.maxOffer)}</span>
-            <span className="price">resale {formatMoney(item.price.expected)}</span>
-            <span>· {formatMultiple(item.verdict.economics.multiple)}</span>
-            {item.status === "listed" && <span className="chip" style={{ padding: "0 0.4rem" }}>listed</span>}
+            {/* A sold row answers a different question from a queued one: what it made,
+                not what it should. Never show the expectation and the result as one line. */}
+            {realised !== null ? (
+              <>
+                <span className="price">sold {formatMoney(item.soldFor ?? 0)}</span>
+                <span className="price font-semibold" style={{ color: realised >= 0 ? "var(--buy)" : "var(--maybe)" }}>
+                  {realised >= 0 ? "+" : ""}
+                  {formatMoney(realised)}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="price">max {formatMoney(item.verdict.maxOffer)}</span>
+                <span className="price">resale {formatMoney(item.price.expected)}</span>
+                {/* No "·" separators: as separate spans they stranded a lone middot on
+                    its own wrapped line at 390px. Gap spacing separates them instead. */}
+                <span className="price">{formatMultiple(item.verdict.economics.multiple)}</span>
+              </>
+            )}
+            {item.status === "listed" && (
+              <span className="chip" style={{ padding: "0 0.4rem" }}>
+                listed
+              </span>
+            )}
           </p>
         </div>
       </div>
@@ -253,7 +343,7 @@ function ListingRow({
       )}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        {!item.listing && (
+        {!item.listing && !isSold && (
           <button className="btn btn-ghost text-xs" onClick={onGenerate}>
             <IconSparkle width={15} height={15} /> Write draft
           </button>
@@ -286,12 +376,16 @@ function ListingRow({
             <IconShare width={15} height={15} /> Share
           </button>
         )}
-        <button className="btn btn-ghost text-xs" onClick={onToggleListed}>
-          {item.status === "listed" ? "Un-list" : "Mark listed"}
-        </button>
-        <button className="btn btn-ghost text-xs" onClick={onSell}>
-          <IconCheck width={15} height={15} /> Sold
-        </button>
+        {!isSold && (
+          <button className="btn btn-ghost text-xs" onClick={onToggleListed}>
+            {item.status === "listed" ? "Un-list" : "Mark listed"}
+          </button>
+        )}
+        {!isSold && (
+          <button className="btn btn-ghost text-xs" onClick={onSell}>
+            <IconCheck width={15} height={15} /> Sold
+          </button>
+        )}
         <button className="btn btn-ghost text-xs ml-auto" onClick={onDelete} aria-label={`Delete ${item.identification.title}`}>
           <IconTrash width={15} height={15} />
         </button>

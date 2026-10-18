@@ -169,8 +169,10 @@ the reader can see what was considered and dropped, not because we claim it.
 **A limitation this table exists to make visible:** Ollama reports Gemma 3's capabilities
 as `completion, vision` — there is **no `tools`**. So the model that reads your photograph
 cannot run the agent's tool loop, and a second small tool-capable open model
-(`OLLAMA_TOOL_MODEL`, default `qwen3:4b`) runs beside it. `GET /capabilities` reports this
-as its own row with the fix in its `detail` string.
+(`OLLAMA_TOOL_MODEL`, default `llama3.2:3b`) runs beside it. It is deliberately not a
+reasoning model: Qwen 3 4B calls tools correctly and then spends minutes deciding to, while
+a plain instruct model heeds the protocol and gets on with it. `GET /capabilities` reports
+this as its own row with the fix in its `detail` string.
 
 Everything above sits behind a **capability registry** with graceful degradation: with no
 keys and no network the app still works end-to-end on local Gemma + local heuristics.

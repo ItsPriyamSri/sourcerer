@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { portfolioStats, formatMoney, formatMultiple, formatPercent } from "@sourcerer/shared";
 import { useApp } from "../lib/store.tsx";
 import { Shell } from "../components/Shell.tsx";
@@ -11,9 +12,16 @@ import { api } from "../lib/api.ts";
  *
  * Computed in the browser from local data with the *same* pure functions the brain
  * uses, so the numbers here and the numbers the agent quotes can never disagree.
+ *
+ * Two rules shape this screen:
+ *  - realised and expected money are never presented at the same weight. One is cash,
+ *    the other is a hypothesis, so the hypothesis tile is dashed and says so in words.
+ *  - every bar is labelled with its own number, because a bar without a value is a
+ *    decoration and a negative bar read as a short positive one is a lie.
  */
 export default function InsightsPage() {
   const { items, brainUp, toast } = useApp();
+  const navigate = useNavigate();
 
   const stats = useMemo(
     () =>
@@ -47,7 +55,9 @@ export default function InsightsPage() {
     [sold],
   );
 
-  const maxCat = Math.max(1, ...byCategory.map(([, v]) => v.profit));
+  // Scale bars by the largest magnitude so a loss reads as a loss of the right size,
+  // not as a tiny positive sliver at the left of the axis.
+  const maxCat = Math.max(1, ...byCategory.map(([, v]) => Math.abs(v.profit)));
   const accuracy = useMemo(() => {
     if (sold.length === 0) return null;
     const err =
@@ -64,29 +74,48 @@ export default function InsightsPage() {
           icon={<IconChart />}
           title="No numbers yet"
           body="Scan a few items and log what they sell for. Sourcerer turns that into your real profit, your sell-through rate, and a price model of your own."
+          action={
+            <button className="btn btn-ghost" onClick={() => navigate("/")}>
+              Scan your first item
+            </button>
+          }
         />
       </Shell>
     );
   }
 
+  const costOfGoodsSold = stats.revenue - stats.realisedProfit;
+
   return (
     <Shell>
       <header className="mb-4">
         <h1 className="display text-2xl font-bold">Insights</h1>
-        <p className="text-sm text-muted">Everything here is computed on this device from your own records.</p>
+        <p className="meta">Everything here is computed on this device from your own records.</p>
       </header>
 
-      <section className="mb-4 grid grid-cols-2 gap-3" aria-label="Portfolio summary">
-        <Stat label="Realised profit" value={formatMoney(stats.realisedProfit)} tone={stats.realisedProfit >= 0 ? "good" : "bad"} />
-        <Stat label="Unrealised" value={formatMoney(stats.unrealisedProfit)} hint="expected, on what you hold" />
-        <Stat label="Spent" value={formatMoney(stats.spent)} hint={`${bought.length} buys`} />
-        <Stat label="Revenue" value={formatMoney(stats.revenue)} hint={`${stats.soldCount} sold`} />
-        <Stat label="Sell-through" value={formatPercent(stats.sellThrough)} hint="sold ÷ captured" />
-        <Stat
-          label="Forecast accuracy"
-          value={accuracy === null ? "—" : formatPercent(accuracy)}
-          hint={accuracy === null ? "log a sale" : "vs. what actually sold"}
-        />
+      <section aria-label="Portfolio summary" className="mb-4 space-y-3">
+        {/* The one number that is actual money gets the hero treatment. */}
+        <div className="card p-4">
+          <p className="kicker">Realised profit · {stats.soldCount} sale{stats.soldCount === 1 ? "" : "s"}</p>
+          <p className="hero-number mt-1" style={{ color: stats.realisedProfit >= 0 ? "var(--buy)" : "var(--maybe)" }}>
+            {formatMoney(stats.realisedProfit)}
+          </p>
+          <p className="meta mt-2">
+            Cash in hand: {formatMoney(stats.revenue)} revenue − {formatMoney(costOfGoodsSold)} cost of the items you sold.
+          </p>
+        </div>
+
+        <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Stat label="Spent" value={formatMoney(stats.spent)} hint={`across ${bought.length} buy${bought.length === 1 ? "" : "s"}`} />
+          <Stat label="Revenue" value={formatMoney(stats.revenue)} hint={`${stats.soldCount} sold`} />
+          <Stat
+            label="Unrealised"
+            value={formatMoney(stats.unrealisedProfit)}
+            hint="expected, on what you still hold"
+            hypothesis
+          />
+          <Stat label="Sell-through" value={formatPercent(stats.sellThrough)} hint="sold ÷ captured" />
+        </dl>
       </section>
 
       {bestFlips.length > 0 && (
@@ -99,7 +128,7 @@ export default function InsightsPage() {
               <li key={item.id} className="flex items-center gap-3">
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm">{item.identification.title}</span>
-                  <span className="price block text-[11px] text-muted">
+                  <span className="price meta block">
                     bought {formatMoney(item.buyPrice ?? 0)} → sold {formatMoney(item.soldFor ?? 0)}
                   </span>
                 </span>
@@ -117,26 +146,38 @@ export default function InsightsPage() {
         <section className="card mb-4 p-4">
           <h2 className="mb-3 text-sm font-semibold">Where the money is</h2>
           <ul className="space-y-2.5">
-            {byCategory.map(([cat, v]) => (
-              <li key={cat}>
-                <div className="mb-1 flex items-baseline justify-between text-xs">
-                  <span className="capitalize">{cat}</span>
-                  <span className="price text-muted">
-                    {v.count} · {formatMoney(v.profit)}
-                  </span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full" style={{ background: "var(--surface-2)" }}>
-                  <div
-                    className="h-full rounded-full"
-                    style={{ width: `${Math.max(4, (v.profit / maxCat) * 100)}%`, background: v.profit >= 0 ? "var(--buy)" : "var(--maybe)" }}
-                  />
-                </div>
-              </li>
-            ))}
+            {byCategory.map(([cat, v]) => {
+              const loss = v.profit < 0;
+              return (
+                <li key={cat}>
+                  <div className="mb-1 flex items-baseline justify-between gap-2">
+                    <span className="text-xs capitalize">{cat}</span>
+                    <span className="price text-xs text-muted">
+                      {v.count} {v.count === 1 ? "item" : "items"} ·{" "}
+                      <span style={{ color: loss ? "var(--maybe)" : "var(--ink-2)" }}>
+                        {loss ? "−" : ""}
+                        {formatMoney(Math.abs(v.profit))}
+                      </span>
+                    </span>
+                  </div>
+                  {/* A short track with a visible baseline: the bar is read against the
+                      left edge, never as a floating decoration. */}
+                  <div className="h-2 overflow-hidden rounded-full" style={{ background: "var(--surface-2)" }}>
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.max(2, (Math.abs(v.profit) / maxCat) * 100)}%`,
+                        background: loss ? "repeating-linear-gradient(-45deg, var(--maybe) 0 4px, color-mix(in oklab, var(--maybe) 55%, transparent) 4px 8px)" : "var(--buy)",
+                      }}
+                    />
+                  </div>
+                </li>
+              );
+            })}
           </ul>
-          <p className="mt-3 text-[11px] text-muted">
-            Unrealised profit uses the expected resale from each item&apos;s comps — treat it as a
-            hypothesis, not cash.
+          <p className="meta mt-3">
+            Unrealised profit uses the expected resale from each item&apos;s comps — treat it as a hypothesis, not cash.
+            Hatched bars are losses.
           </p>
         </section>
       )}
@@ -145,6 +186,18 @@ export default function InsightsPage() {
         <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold">
           <IconSparkle width={16} height={16} /> Your own price model
         </h2>
+        <dl className="mb-3 grid grid-cols-2 gap-3">
+          <div>
+            <dt className="kicker">Forecast accuracy</dt>
+            <dd className="price text-lg font-bold">{accuracy === null ? "—" : formatPercent(accuracy)}</dd>
+            <dd className="meta">avg gap between my estimate and your sale</dd>
+          </div>
+          <div>
+            <dt className="kicker">Logged sales</dt>
+            <dd className="price text-lg font-bold">{sold.length}</dd>
+            <dd className="meta">the training signal</dd>
+          </div>
+        </dl>
         <p className="text-sm text-muted">
           {sold.length < 6
             ? `${6 - sold.length} more logged sale${6 - sold.length === 1 ? "" : "s"} and it's worth training a TabPFN model on your history — that's what makes the offline number sharp instead of generic.`
@@ -157,7 +210,7 @@ export default function InsightsPage() {
           <span className="price text-xs text-muted">{Math.min(sold.length, 6)}/6</span>
         </div>
         <button
-          className="btn btn-ghost mt-3 w-full"
+          className="btn btn-ghost mt-3 w-full lg:max-w-sm"
           disabled={brainUp === false}
           onClick={async () => {
             try {
@@ -175,17 +228,30 @@ export default function InsightsPage() {
   );
 }
 
-function Stat({ label, value, hint, tone }: { label: string; value: string; hint?: string; tone?: "good" | "bad" }) {
+function Stat({
+  label,
+  value,
+  hint,
+  tone,
+  hypothesis = false,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  tone?: "good" | "bad";
+  /** Marks a number that is a projection, not cash. Dashed border, and it says so. */
+  hypothesis?: boolean;
+}) {
   return (
-    <div className="card p-3">
-      <div className="text-xs font-semibold uppercase tracking-wide text-muted">{label}</div>
-      <div
+    <div className="card p-3" style={hypothesis ? { borderStyle: "dashed" } : undefined}>
+      <dt className="kicker">{label}</dt>
+      <dd
         className="price mt-0.5 text-xl font-bold"
         style={{ color: tone === "good" ? "var(--buy)" : tone === "bad" ? "var(--maybe)" : "var(--ink)" }}
       >
         {value}
-      </div>
-      {hint && <div className="text-[11px] text-muted">{hint}</div>}
+      </dd>
+      {hint && <dd className="meta">{hint}</dd>}
     </div>
   );
 }

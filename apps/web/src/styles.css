@@ -15,9 +15,16 @@
   --surface-2: #f1eadb;
   --ink: #17150f;
   --ink-2: #4a4437;
-  --muted: #726a5b;
-  --line: #e2d8c4;
-  --line-strong: #cbbfa6;
+  /* 5.83:1 on surface, 4.95:1 on surface-2 — AA for the secondary text that
+     carries real content (basis lines, fee subscripts). */
+  --muted: #6b6355;
+  /* Dividers are decorative: quiet, but lifted from 1.28:1 to 1.45:1 so card
+     separation survives a glare-y screen in a store. */
+  --line: #d8cbb2;
+  /* Control borders are *load-bearing* (they are what makes an input look like an
+     input), so this token is held to WCAG 1.4.11 non-text contrast: 3.61:1 on
+     surface, 3.31:1 on bg, 3.06:1 on surface-2. */
+  --line-strong: #94845f;
 
   --amber: #a75d07;
   --amber-soft: #fbeccf;
@@ -38,9 +45,11 @@
   --surface-2: #262019;
   --ink: #f4efe4;
   --ink-2: #d3cbba;
-  --muted: #9d9485;
-  --line: #302a20;
-  --line-strong: #463d2e;
+  /* 6.63:1 on surface, 6.16:1 on surface-2. */
+  --muted: #a89f8f;
+  --line: #3a3327;
+  /* 3.28:1 on surface, 3.05:1 on surface-2 — same 1.4.11 bar as light. */
+  --line-strong: #776a52;
 
   --amber: #f0b45a;
   --amber-soft: #33280f;
@@ -121,6 +130,48 @@
   .display {
     font-family: var(--font-display);
   }
+  /*
+    Two named text roles.
+
+    Before this, the app used ~14 ad-hoc sizes (text-[11px], text-xs, mixed with
+    uppercase-tracking utilities) which let the vertical rhythm drift between
+    screens. A "kicker" is a label above a value; a "meta" is a supporting line.
+    Naming them means the price card, the listings rows and the insight tiles all
+    share one rhythm instead of three.
+  */
+  .kicker {
+    font-size: 0.6875rem; /* 11px */
+    line-height: 1.25;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--muted);
+  }
+  .meta {
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  /*
+    The decision number.
+
+    Clamped so it stays dominant at arm's length on a 390px phone (~51px) without
+    becoming absurd on a desktop rail (capped at 60px). Fixed line-height and
+    tabular figures mean re-pricing never shifts anything under the user's thumb.
+  */
+  .hero-number {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    font-size: clamp(2.75rem, 13vw, 3.75rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  /* Sticky-header aware: scrollIntoView({block:"start"}) must not park the
+     verdict under the top bar plus its status-chip row (~130px on a phone). */
+  .scroll-anchor {
+    scroll-margin-top: 8.5rem;
+  }
   /* Thumb-first: every interactive target is >= 44px tall. */
   .tap {
     min-height: 44px;
@@ -174,6 +225,23 @@
       color-mix(in oklab, var(--amber) 14%, transparent) 0 8px,
       transparent 8px 16px
     );
+  }
+  /* A hairline that marks a shift in genre: decision → supporting math → fine print. */
+  .rule {
+    border-top: 1px solid var(--line);
+  }
+  /* Visually hidden but still announced. Used for the live verdict announcer and
+     for the meaning carried by flag icons. */
+  .sr-only-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
   }
   .sr-only-focusable:not(:focus):not(:focus-within) {
     position: absolute;
