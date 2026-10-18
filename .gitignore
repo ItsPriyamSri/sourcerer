@@ -1,0 +1,29 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# build
+dist/
+.next/
+out/
+*.tsbuildinfo
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# local data (this is a local-first app; never commit user data)
+data/
+*.sqlite
+*.sqlite-journal
+recordings/
+
+# ollama / models
+models/
+
+# misc
+.DS_Store
+*.log
+coverage/

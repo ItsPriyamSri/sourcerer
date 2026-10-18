@@ -1,0 +1,43 @@
+{
+  "name": "@sourcerer/brain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "dev": "tsx watch --clear-screen=false src/index.ts",
+    "start": "tsx src/index.ts",
+    "mastra": "mastra dev --dir src/mastra",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --experimental-strip-types \"src/**/*.test.ts\"",
+    "worker": "tsx src/durable/worker.ts",
+    "reprice": "tsx src/durable/reprice-cli.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.14.0",
+    "@mastra/core": "latest",
+    "@mastra/libsql": "latest",
+    "@mastra/memory": "latest",
+    "@sentry/node": "^11.0.0",
+    "@sourcerer/shared": "workspace:*",
+    "ai": "latest",
+    "hono": "^4.9.0",
+    "nanoid": "^5.1.0",
+    "ollama-ai-provider-v2": "latest",
+    "pg": "^8.16.0",
+    "zod": "^4.1.8"
+  },
+  "devDependencies": {
+    "@temporalio/activity": "^1.24.0",
+    "@temporalio/client": "^1.24.0",
+    "@temporalio/common": "^1.24.0",
+    "@temporalio/testing": "^1.24.0",
+    "@temporalio/worker": "^1.24.0",
+    "@temporalio/workflow": "^1.24.0",
+    "@types/node": "^22.18.0",
+    "@types/pg": "^8.15.0",
+    "mastra": "latest",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3"
+  }
+}

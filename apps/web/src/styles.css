@@ -1,0 +1,224 @@
+@import "tailwindcss";
+
+/*
+  Sourcerer design tokens.
+
+  Direction (from docs/DESIGN.md §6): retro-mercantile, warm paper / ink dark,
+  monospace for every price so it reads like a price tag. Two themes, both WCAG AA
+  for text. Every semantic colour is paired with an icon in the UI — colour is
+  never the only carrier of meaning.
+*/
+
+:root {
+  --bg: #f7f3ea;
+  --surface: #fffdf7;
+  --surface-2: #f1eadb;
+  --ink: #17150f;
+  --ink-2: #4a4437;
+  --muted: #726a5b;
+  --line: #e2d8c4;
+  --line-strong: #cbbfa6;
+
+  --amber: #a75d07;
+  --amber-soft: #fbeccf;
+  --buy: #0a6b45;
+  --buy-soft: #dcf2e6;
+  --maybe: #96600a;
+  --maybe-soft: #fbeecf;
+  --pass: #575f6d;
+  --pass-soft: #e7e9ee;
+
+  --shadow-card: 0 1px 0 var(--line), 0 8px 24px -18px rgb(23 21 15 / 0.5);
+  --ring: color-mix(in oklab, var(--amber) 55%, transparent);
+}
+
+.dark {
+  --bg: #14120e;
+  --surface: #1d1a14;
+  --surface-2: #262019;
+  --ink: #f4efe4;
+  --ink-2: #d3cbba;
+  --muted: #9d9485;
+  --line: #302a20;
+  --line-strong: #463d2e;
+
+  --amber: #f0b45a;
+  --amber-soft: #33280f;
+  --buy: #5ad9a0;
+  --buy-soft: #10291f;
+  --maybe: #f5c455;
+  --maybe-soft: #302509;
+  --pass: #9fabbc;
+  --pass-soft: #1e232b;
+
+  --shadow-card: 0 1px 0 var(--line), 0 10px 30px -22px rgb(0 0 0 / 0.9);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-buy: var(--buy);
+  --color-buy-soft: var(--buy-soft);
+  --color-maybe: var(--maybe);
+  --color-maybe-soft: var(--maybe-soft);
+  --color-pass: var(--pass);
+  --color-pass-soft: var(--pass-soft);
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+}
+
+@layer base {
+  html {
+    background-color: var(--bg);
+    color: var(--ink);
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    font-family: var(--font-sans);
+    /* iOS safe areas: the bottom action button must clear the home indicator. */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  :focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  /* Respect the user's motion preference (principle 7). */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .card {
+    background-color: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: var(--shadow-card);
+  }
+  .price {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .display {
+    font-family: var(--font-display);
+  }
+  /* Thumb-first: every interactive target is >= 44px tall. */
+  .tap {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0 1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: transform 0.08s ease, background-color 0.15s ease, border-color 0.15s ease;
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+  .btn-primary {
+    background-color: var(--ink);
+    color: var(--bg);
+  }
+  .btn-primary:hover {
+    background-color: color-mix(in oklab, var(--ink) 88%, var(--amber));
+  }
+  .btn-ghost {
+    border: 1px solid var(--line-strong);
+    color: var(--ink);
+    background-color: transparent;
+  }
+  .btn-ghost:hover {
+    background-color: var(--surface-2);
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid var(--line);
+    background-color: var(--surface-2);
+    color: var(--ink-2);
+  }
+  .stripe {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      color-mix(in oklab, var(--amber) 14%, transparent) 0 8px,
+      transparent 8px 16px
+    );
+  }
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-rise {
+  animation: rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(320%);
+  }
+}
+.animate-sweep {
+  animation: sweep 1.15s linear infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--amber) 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 16px transparent;
+  }
+}
+.animate-pulse-ring {
+  animation: pulse-ring 1.4s ease-out infinite;
+}

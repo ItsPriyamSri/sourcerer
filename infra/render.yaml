@@ -1,0 +1,68 @@
+# Sourcerer on Render.
+#
+# Honest note about the split: Render's free web tier is 512 MB with no GPU, so it
+# cannot host Gemma 3. That is fine, and it is the point of the two-brain design —
+# the hosted deployment runs the *same agent* against open-weight models through
+# Backboard, while the local run keeps inference on the user's own machine.
+#
+#   sourcerer-web   → the PWA (static, free, fast, and it never talks to Render at all
+#                     unless you point it at the hosted brain)
+#   sourcerer-brain → Hono + Mastra API. Set MODEL_PROVIDER=backboard here.
+#
+# Deploy:  render.com → New → Blueprint → point at this repo.
+
+services:
+  - type: web
+    name: sourcerer-brain
+    runtime: docker
+    dockerfilePath: ./infra/Dockerfile.brain
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: MODEL_PROVIDER
+        value: backboard
+      - key: PORT
+        value: 8787
+      - key: ALLOWED_ORIGINS
+        sync: false # e.g. https://sourcerer.tech,http://localhost:3000
+      - key: BACKBOARD_API_KEY
+        sync: false
+      - key: BACKBOARD_MODEL
+        value: google/gemma-3-27b-it
+      - key: SERPAPI_API_KEY
+        sync: false
+      - key: TABPFN_TOKEN
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false # Tiger Data connection string
+      - key: SOURCERER_DATA_DIR
+        value: /var/data
+    disk:
+      name: sourcerer-data
+      mountPath: /var/data
+      sizeGB: 1
+
+  - type: web
+    name: sourcerer-web
+    runtime: static
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @sourcerer/web build
+    staticPublishPath: ./apps/web/dist
+    envVars:
+      - key: VITE_BRAIN_URL
+        sync: false # e.g. https://sourcerer-brain.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /sw.js
+        name: Cache-Control
+        value: no-cache

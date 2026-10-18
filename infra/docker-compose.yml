@@ -1,0 +1,66 @@
+# Local stack: the brain, a vector store, and (optionally) Ollama.
+#
+#   podman compose up -d pgvector
+#   podman compose --profile ollama up -d
+#
+# The brain is run from source on the host in normal development (pnpm dev) — that is
+# the fastest loop and it lets Sourcerer reach an Ollama you already have. This compose
+# file exists for the pieces a developer should not have to install by hand.
+
+services:
+  pgvector:
+    image: pgvector/pgvector:pg16
+    container_name: sourcerer-pgvector
+    environment:
+      POSTGRES_PASSWORD: sourcerer
+      POSTGRES_DB: sourcerer
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Optional: containerised Ollama for machines that would rather not install it.
+  # CPU-only here; mount your own GPU with the nvidia runtime if you have one.
+  ollama:
+    image: ollama/ollama:latest
+    container_name: sourcerer-ollama
+    profiles: ["ollama"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  brain:
+    profiles: ["brain"]
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.brain
+    container_name: sourcerer-brain
+    environment:
+      PORT: "8787"
+      OLLAMA_BASE_URL: http://ollama:11434
+      DATABASE_URL: postgresql://postgres:sourcerer@pgvector:5432/sourcerer
+      ALLOWED_ORIGINS: http://localhost:3000
+    ports:
+      - "8787:8787"
+    volumes:
+      - brain_data:/var/data
+    depends_on:
+      pgvector:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  ollama_models:
+  brain_data:
