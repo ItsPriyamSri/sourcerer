@@ -22,6 +22,12 @@ import { config } from "../env.ts";
 /** Asking prices run above realised sale prices. This is the discount we apply. */
 export const ASKING_TO_SOLD_FACTOR = 0.86;
 
+/**
+ * How many of the identification's own tokens a past sale must share before it counts as a
+ * comparable. One is too few — see the note in `LocalHistoryCompsProvider.search`.
+ */
+export const MIN_COMP_TOKENS = 2;
+
 export interface CompsQuery {
   identification: Identification;
   condition?: Condition;
@@ -185,7 +191,12 @@ export class LocalHistoryCompsProvider implements CompsProvider {
         for (const t of tokens) if (t.length > 2 && hay.includes(t)) score++;
         return { h, score };
       })
-      .filter((x) => x.score > 0)
+      // Two shared words, not one. A single shared word is not evidence: "wool" pulled a
+      // Woolrich mountain parka into a Pendleton wool shirt's comp set and dragged the
+      // median and the confidence with it, so the app was less sure than its own history
+      // justified. Requiring two costs nothing when the record is genuinely comparable —
+      // a Levi's jacket matches on six tokens — and it stops the incidental ones.
+      .filter((x) => x.score >= MIN_COMP_TOKENS)
       .sort((a, b) => b.score - a.score)
       .slice(0, 25);
 

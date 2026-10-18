@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { compsQueryFor, snapIpg, SerpApiCompsProvider } from "./comps.ts";
+import { compsQueryFor, snapIpg, LocalHistoryCompsProvider, SerpApiCompsProvider } from "./comps.ts";
 import type { Identification } from "@sourcerer/shared";
 
 /**
@@ -143,5 +143,64 @@ describe("SerpApiCompsProvider request parameters", () => {
     const provider = new SerpApiCompsProvider("");
     assert.equal(await provider.available(), false);
     await assert.rejects(() => provider.search({ identification: identify() } as never));
+  });
+});
+
+describe("LocalHistoryCompsProvider — what counts as a comparable", () => {
+  const history = [
+    { title: "Levi's 501 Big E selvedge denim jacket", category: "denim jacket", brand: "Levi's", condition: "good", price: 145 },
+    { title: "Woolrich 60/40 mountain parka", category: "coat", brand: "Woolrich", condition: "good", price: 78 },
+    { title: "Stetson Open Road straw hat", category: "hat", brand: "Stetson", condition: "good", price: 64 },
+  ];
+  const provider = new LocalHistoryCompsProvider(async () => history);
+
+  it("counts a past sale that shares several tokens", async () => {
+    const res = await provider.search({ identification: identify() });
+    assert.equal(res.comps.length, 1);
+    assert.equal(res.comps[0]!.price, 145);
+  });
+
+  it("ignores a past sale that shares only one word", async () => {
+    // The Woolrich parka shares exactly one token with a Pendleton wool shirt: "wool".
+    // Before the minimum, it joined the comp set, dragged the median up and the confidence
+    // down, and the app became less sure than its own history warranted.
+    const res = await provider.search({
+      identification: identify({
+        title: "Pendleton wool board shirt",
+        brand: "Pendleton",
+        category: "shirt",
+        keywords: ["Pendleton", "wool", "board", "shirt", "teal"],
+      }),
+    });
+    assert.deepEqual(res.comps, []);
+    assert.match(res.basis, /Nothing similar/);
+  });
+
+  it("is not fooled by a shared word in a different item", async () => {
+    // "www" in a domain, "iron" in a band name — substring matching is blunt, so the
+    // threshold is what keeps the bluntness from becoming an opinion about price.
+    const res = await provider.search({
+      identification: identify({
+        title: "Woolrich blanket",
+        brand: "Woolrich",
+        category: "blanket",
+        keywords: ["Woolrich", "blanket"],
+      }),
+    });
+    // Shares only its brand, so it is excluded even though the brand matches exactly.
+    assert.deepEqual(res.comps, []);
+  });
+
+  it("reports no comps rather than guessing when nothing is close", async () => {
+    const res = await provider.search({
+      identification: identify({
+        title: "Nikon FM2 35mm film camera body",
+        brand: "Nikon",
+        category: "film camera",
+        keywords: ["Nikon", "FM2", "35mm", "film", "camera", "body"],
+      }),
+    });
+    assert.deepEqual(res.comps, []);
+    assert.equal(res.summary, null);
   });
 });

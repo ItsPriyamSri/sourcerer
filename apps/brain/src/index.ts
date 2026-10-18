@@ -65,7 +65,16 @@ app.onError((err, c) => {
 
 // ── health & capabilities ──────────────────────────────────────────────────
 
-app.get("/health", (c) => c.json({ ok: true, ts: new Date().toISOString(), tracing: tracingEnabled() }));
+// `seed` is reported so the evidence capture can prove the sampler was pinned before it
+// starts: unpinned captures look fine and are silently not reproducible.
+app.get("/health", (c) =>
+  c.json({
+    ok: true,
+    ts: new Date().toISOString(),
+    tracing: tracingEnabled(),
+    seed: config.ollama.seed ?? null,
+  }),
+);
 
 app.get("/capabilities", async (c) => {
   const brain = brainSummary();

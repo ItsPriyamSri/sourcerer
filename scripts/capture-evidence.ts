@@ -40,7 +40,11 @@ const FREEZE_CSS = `*, *::before, *::after {
   transition-duration: 0s !important;
   transition-delay: 0s !important;
   caret-color: transparent !important;
-}`;
+}
+/* Smooth scrolling is JavaScript-driven, so the transition rules above do not stop it.
+   Left alone, a frame shot mid-scroll lands at a slightly different offset each capture,
+   which is most of why two runs produced different screenshots. */
+html { scroll-behavior: auto !important; }`;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -50,18 +54,64 @@ async function freeze(page: Page) {
 
 const shots: string[] = [];
 
+/**
+ * The visible text of every frame, keyed by `name.theme`.
+ *
+ * A screenshot is evidence you have to look at, which means a caption quoting "$35.32" is
+ * taken on trust. This is the same evidence in a form that can be grepped, so the numbers
+ * in the captions and the alt text can be checked against the frames they describe.
+ */
+const frames: Record<string, string> = {};
+
 async function shot(page: Page, name: string, theme: "light" | "dark") {
   const file = resolve(MEDIA, `${name}.${theme}.png`);
   await freeze(page);
+  // Wait for the scroll to actually stop, and prove it stopped, rather than hoping a fixed
+  // timeout was long enough. A frame taken while the page is still moving is the same page
+  // at a different offset — visually plausible and not reproducible.
+  let y = await page.evaluate(() => window.scrollY);
+  for (let i = 0; i < 40; i++) {
+    await page.waitForTimeout(75);
+    const now = await page.evaluate(() => window.scrollY);
+    if (now === y) break;
+    y = now;
+  }
   await page.screenshot({ path: file, fullPage: false });
+  frames[`${name}.${theme}`] = (await page.evaluate(() => document.body.innerText)).trim();
   shots.push(`${name}.${theme}.png`);
   console.log(`  · ${name}.${theme}.png`);
 }
 
 async function seed() {
-  const res = await fetch(`${BRAIN}/demo/seed`, { method: "POST" });
+  // `?reset=1` clears inventory and sold history first. Without it, seeding appends, so
+  // each capture started with more "already sold" history than the last and the comparable
+  // set grew from 10 items to 15 across three runs — the same item, the same fixture, a
+  // different answer.
+  const res = await fetch(`${BRAIN}/demo/seed?reset=1`, { method: "POST" });
   const body = (await res.json()) as { inventory?: number; seeded?: number };
   console.log(`seeded: ${body.seeded} sold records, ${body.inventory} inventory items`);
+}
+
+/**
+ * The screenshots only stand as evidence if they are reproducible, and they are not unless
+ * the model's sampler is pinned. Without a seed the same description can come back
+ * identified as condition `good` in one run and `fair` in the next, which changes the
+ * comparable set and moves the price — so the frames below would quietly disagree with the
+ * numbers quoted next to them.
+ *
+ * The brain reports its seed on /health, so this is checked rather than assumed.
+ */
+async function checkSampler() {
+  const res = await fetch(`${BRAIN}/health`).catch(() => null);
+  const body = res?.ok ? ((await res.json()) as { seed?: number | null }) : {};
+  if (body.seed == null) {
+    console.log(
+      "  ! the brain has no OLLAMA_SEED pinned — frames will not match the committed ones.",
+    );
+    console.log("    Restart it with OLLAMA_SEED=7 to reproduce them.");
+  } else {
+    console.log(`sampler pinned: OLLAMA_SEED=${body.seed}`);
+  }
 }
 
 /** Fill the capture form and run one scan, then save it. */
@@ -140,11 +190,47 @@ async function clearToasts(page: Page) {
   }
 }
 
+/**
+ * Load the models before the first screenshot.
+ *
+ * This is not only about speed. Ollama returns marginally different logits on the first
+ * call after a load than on the call after that — the same description came back
+ * categorised `Jeans` on a cold call and `Jeans & Jackets` once the model was resident —
+ * so a capture that starts cold is not comparable with one that starts warm, and two
+ * captures could disagree about the price for a reason that has nothing to do with the
+ * product. The throwaway scan and listing pay for the load; every frame that follows comes
+ * from the same settled state.
+ */
+async function warmModels() {
+  const t0 = Date.now();
+  const scan = await fetch(`${BRAIN}/scan`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ text: "Warm-up item, discarded. Nothing here is captured.", askingPrice: 1 }),
+  })
+    .then((r) => (r.ok ? r.json() : null))
+    .catch(() => null);
+  if (scan) {
+    await fetch(`${BRAIN}/listing`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        identification: scan.identification,
+        price: scan.price,
+        comps: scan.comps,
+      }),
+    }).catch(() => null);
+  }
+  console.log(`models warm (${Date.now() - t0} ms)`);
+}
+
 async function main() {
   if (!existsSync(MEDIA)) mkdirSync(MEDIA, { recursive: true });
   if (existsSync(VIDEO_DIR)) rmSync(VIDEO_DIR, { recursive: true, force: true });
   mkdirSync(VIDEO_DIR, { recursive: true });
 
+  await checkSampler();
+  await warmModels();
   await seed();
 
   const browser = await chromium.launch({ channel: "chrome", headless: true });
@@ -341,6 +427,14 @@ async function main() {
   await expand(vpage, /^What ran where/);
   await vpage.waitForTimeout(2200);
   await collapse(vpage);
+  // Save here, in the video's own context, before leaving for Insights.
+  //
+  // The video is recorded in its own browser context, so it starts with an empty
+  // IndexedDB. Without a capture saved, the closing Insights screen reads "No numbers
+  // yet" — the last thing a viewer sees, and a wrong one, because the product does have
+  // this item. Saving one capture makes the closing screen show real local numbers.
+  await save(vpage);
+  await clearToasts(vpage);
   await vpage.getByRole("link", { name: "Insights" }).click().catch(() => {});
   await vpage.waitForTimeout(3000);
   await vctx.close();
@@ -408,6 +502,9 @@ async function main() {
   await browser.close();
 
   writeFileSync(resolve(MEDIA, "captured.json"), JSON.stringify({ at: new Date().toISOString(), app: APP, shots }, null, 2));
+  // The same evidence the screenshots carry, in text, so a number quoted in a caption can be
+  // checked against the frame it describes.
+  writeFileSync(resolve(MEDIA, "frames.json"), JSON.stringify(frames, null, 2));
   console.log(`\n${shots.length} screenshots + video → docs/media/`);
 }
 

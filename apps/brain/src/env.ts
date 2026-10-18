@@ -26,6 +26,12 @@ const num = (k: string, d: number): number => {
   const v = Number(process.env[k]);
   return Number.isFinite(v) ? v : d;
 };
+const optNum = (k: string): number | undefined => {
+  const raw = process.env[k]?.trim();
+  if (!raw) return undefined;
+  const v = Number(raw);
+  return Number.isFinite(v) ? v : undefined;
+};
 const list = (k: string, d: string[] = []): string[] =>
   str(k) ? str(k).split(",").map((s) => s.trim()).filter(Boolean) : d;
 
@@ -47,6 +53,18 @@ export const config = {
     // See the note in mastra/agents.ts — a reasoning model here costs minutes per turn.
     toolModel: str("OLLAMA_TOOL_MODEL", "llama3.2:3b"),
     embedModel: str("OLLAMA_EMBED_MODEL", ""),
+    /**
+     * Pins llama.cpp's RNG for every local call. Unset (the default) means Ollama picks a
+     * fresh random seed per request — real spread, and the correct behaviour for the
+     * identify eval, whose entire job is to measure that spread.
+     *
+     * `scripts/capture-evidence.ts` pins it instead, because the screenshots have to be
+     * reproducible: unpinned, the same description came back identified as condition
+     * `good` in one capture and `fair` in the next, which changed the comparable set from
+     * 6 sold items to 8 and moved the max offer from $35.32 to $28.22. Nothing in the
+     * product was wrong; the evidence was just not repeatable.
+     */
+    seed: optNum("OLLAMA_SEED"),
   },
 
   backboard: {
