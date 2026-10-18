@@ -14,6 +14,8 @@ room of an estate sale, in a warehouse with no bars on your phone.
 ![pnpm: 10](https://img.shields.io/badge/pnpm-10-orange)
 ![no API keys required](https://img.shields.io/badge/API_keys_required-none-success)
 
+**Landing page:** <https://sourcerer-ochre.vercel.app> · **Code:** <https://github.com/ItsPriyamSri/sourcerer>
+
 ```
 ┌──────────┐   ┌──────────────────────────┐   ┌─────────────────┐   ┌──────────────┐
 │ photo or │ → │ Gemma 3 (local, Ollama)  │ → │ comps + fee math│ → │ BUY / MAYBE  │
@@ -64,7 +66,7 @@ the design, not an error path.
 <p align="center">
 <img src="docs/media/landing.light.png" alt="The Sourcerer landing page: the headline Know what it's worth. Anywhere., a framed phone showing the BUY verdict card, and a stats row reading 0 photos uploaded, 0 API keys, 8.3 s per identification and 100% items read correctly" width="760">
 </p>
-<p align="center"><sub><b>The public page</b> for the <code>.tech</code> category. It embeds these same captures and reads its headline numbers from <code>landing/evidence.json</code>, which the capture writes straight from the eval — so the page cannot drift from the evidence the way a hand-typed statistic would.</sub></p>
+<p align="center"><sub><b>The public page</b> for the <code>.tech</code> category — live at <a href="https://sourcerer-ochre.vercel.app">sourcerer-ochre.vercel.app</a>. It embeds these same captures and reads its headline numbers from <code>landing/evidence.json</code>, which the capture writes straight from the eval — so the page cannot drift from the evidence the way a hand-typed statistic would.</sub></p>
 
 ---
 

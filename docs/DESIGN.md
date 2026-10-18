@@ -161,7 +161,7 @@ the reader can see what was considered and dropped, not because we claim it.
 | **Tiger Data** | Postgres + pgvector for "have I bought this before?" hybrid retrieval and duplicate detection, with a local pgvector container as the zero-cloud option. | **Implemented, not verified with a live database** |
 | **ElevenLabs** | Speak a note while your hands are full; hear the verdict read back. | **Implemented, not verified with a live key** |
 | **Backboard** | The hosted brain path: the same agent against open-weight models through one key, which is what makes a GPU-less demo possible. | **Implemented, not verified with a live key** |
-| **.tech domain** | Public landing page for the demo. | **Landing page built**; domain not yet registered |
+| **.tech domain** | Public landing page for the demo. | **Landing page deployed** to `sourcerer-ochre.vercel.app`; the `.tech` domain itself is not registered yet |
 | **Render** | Blueprint for the hosted brain (Backboard-backed, because free tiers have no GPU) and the static PWA. | **Blueprint written**, not deployed |
 | **GitHub Copilot** | — | *Not entered.* A dev tool, not a product integration. |
 | **Entire** | — | *Not entered.* Not used. |

@@ -70,6 +70,10 @@ in a real browser against a real brain, seeds the sample data from the committed
 first so two runs produce the same frames, and writes the screenshots and the video in one
 pass. They are not mockups and they are not retouched.
 
+The public landing page is live at **<https://sourcerer-ochre.vercel.app>** — the same claims
+in one page, with its headline numbers read out of the eval's JSON at capture time so they
+cannot drift from the evidence the way a hand-typed statistic would.
+
 That script also found a bug worth admitting to: the asking price you typed on the capture
 form was being silently discarded by the verdict card, because the card kept a private copy
 of the price, initialised to zero. Every screenshot in that first capture came back priced
@@ -527,9 +531,11 @@ paid account. Those are different claims and I am not going to blur them to wide
 - **Best Use of Temporal** — the durable reprice workflow above, with an explicit retry
   policy on the flaky search call. Durability is demonstrated rather than asserted: a
   `SIGKILL` mid-sweep, a second worker, 12 items refreshed exactly once, zero duplicates.
-- **Best Use of a .tech Domain** — a landing page for the demo, with the headline accuracy
-  and latency numbers read out of the eval's own JSON at capture time, so the page cannot
-  drift from the evidence.
+- **Best Use of a .tech Domain** — a public landing page, live at
+  <https://sourcerer-ochre.vercel.app>, with the headline accuracy and latency numbers read
+  out of the eval's own JSON at capture time, so the page cannot drift from the evidence. The
+  `.tech` domain itself is on the Hacktoberfest promo list and has not arrived yet, so the
+  page is currently served from a `.vercel.app` host.
 
 ### Implemented and wired; not yet exercised against a live account
 
