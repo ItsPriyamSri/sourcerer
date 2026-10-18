@@ -61,14 +61,27 @@ async function main() {
   }
 
   // Cheap, checkable heuristics — not a grade, an observation.
-  const said215 = results[0]?.reply.includes("215");
-  const mentionedShipping = /shipping|35/.test(results[1]?.reply ?? "");
+  //
+  // Turn 2 is scored on the number, not the wording. An earlier version tested the reply for
+  // the word "shipping" and scored a perfectly good answer as a failure, because the reply is
+  // now the tool's own sentence ("Most I would pay is $49.82") and it never uses that word.
+  // What actually matters is whether the correction reached the arithmetic, so the ceiling is
+  // parsed out of each reply and compared. That cannot be satisfied by phrasing.
+  const ceiling = (s: string): number | null => {
+    const m = /\$\s?([0-9][0-9,]*(?:\.[0-9]{1,2})?)/.exec(s);
+    return m ? Number(m[1].replace(/,/g, "")) : null;
+  };
+  const ceiling1 = ceiling(results[0]?.reply ?? "");
+  const ceiling2 = ceiling(results[1]?.reply ?? "");
+
+  const said215 = /215/.test(results[0]?.reply ?? "");
+  const shippingChangedTheCeiling = ceiling1 != null && ceiling2 != null && ceiling2 !== ceiling1;
   const recalledItem = /acro|snare|drum|ludwig/i.test(results[2]?.reply ?? "");
   const recalledPrice = /150/.test(results[2]?.reply ?? "");
 
   console.log("\nobservations");
-  console.log(`  turn 1 mentions the resale price it was given: ${said215}`);
-  console.log(`  turn 2 engages with the shipping change:        ${mentionedShipping}`);
+  console.log(`  turn 1 states the resale price it was given:    ${said215}`);
+  console.log(`  turn 2's ceiling moved after the shipping change: ${shippingChangedTheCeiling}  ($${ceiling1} -> $${ceiling2})`);
   console.log(`  turn 3 recalls the item from turn 1:            ${recalledItem}`);
   console.log(`  turn 3 recalls the asking price from turn 1:     ${recalledPrice}`);
   console.log(`  any turn degraded (model could not run):         ${results.some((r) => r.degraded)}`);
@@ -83,7 +96,15 @@ async function main() {
         brain: BRAIN,
         threadId: THREAD,
         generatedAt: new Date().toISOString(),
-        observations: { said215, mentionedShipping, recalledItem, recalledPrice, anyDegraded: results.some((r) => r.degraded) },
+        observations: {
+          said215,
+          shippingChangedTheCeiling,
+          ceilingTurn1: ceiling1,
+          ceilingTurn2: ceiling2,
+          recalledItem,
+          recalledPrice,
+          anyDegraded: results.some((r) => r.degraded),
+        },
         turns: results,
       },
       null,

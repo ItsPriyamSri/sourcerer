@@ -6,12 +6,20 @@
 # text model handles the cheap text-only paths (listing wording, keyword cleanup) so
 # we are not loading 3 GB of vision weights to write a title.
 #
+# The third model is the odd one out: the sourcing advisor's tool loop needs a model
+# that emits tool calls, and Gemma 3 does not (`completion, vision`, no `tools`).
+# llama3.2:3b does, and — just as importantly — has no thinking mode. The first choice
+# here was Qwen 3 4B, which calls tools correctly and spends roughly eight thousand
+# tokens thinking about it first, turning a one-line question into a four-minute wait.
+# A tool loop wants a model that follows a protocol, not one that deliberates about it.
+#
 # Usage:  bash scripts/pull-model.sh [--embed]
 set -euo pipefail
 
 OLLAMA_HOST="${OLLAMA_BASE_URL:-http://127.0.0.1:11434}"
 VISION_MODEL="${OLLAMA_MODEL:-gemma3:4b}"
 TEXT_MODEL="${OLLAMA_TEXT_MODEL:-gemma3:1b}"
+TOOL_MODEL="${OLLAMA_TOOL_MODEL:-llama3.2:3b}"
 EMBED_MODEL="${OLLAMA_EMBED_MODEL:-nomic-embed-text}"
 
 say() { printf '\033[1;33m▸\033[0m %s\n' "$*"; }
@@ -48,6 +56,7 @@ pull() {
 
 pull "$VISION_MODEL"
 pull "$TEXT_MODEL"
+pull "$TOOL_MODEL"
 
 if [ "${1:-}" = "--embed" ]; then
   pull "$EMBED_MODEL"

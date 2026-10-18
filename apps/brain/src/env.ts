@@ -43,7 +43,9 @@ export const config = {
      * `completion, vision` and rejects `tools`, so the agent loop uses a small
      * tool-capable open model instead. See docs/ARCHITECTURE.md §4.
      */
-    toolModel: str("OLLAMA_TOOL_MODEL", "qwen3:4b"),
+    // The tool loop needs a model that follows a protocol, not one that deliberates.
+    // See the note in mastra/agents.ts — a reasoning model here costs minutes per turn.
+    toolModel: str("OLLAMA_TOOL_MODEL", "llama3.2:3b"),
     embedModel: str("OLLAMA_EMBED_MODEL", ""),
   },
 

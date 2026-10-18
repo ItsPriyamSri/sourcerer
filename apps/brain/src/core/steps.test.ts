@@ -23,7 +23,7 @@ const price = (expected: number, confidence = 0.8): PriceEstimate => ({
   daysToSell: 14,
   method: "comps_median",
   confidence,
-  basis: "test fixture",
+  note: "test fixture",
 });
 
 describe("extractJson", () => {

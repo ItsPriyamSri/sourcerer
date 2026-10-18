@@ -344,20 +344,32 @@ export async function writeListing(input: {
   signal?: AbortSignal;
 }): Promise<{ listing: ListingDraft; ran: RanLogEntry }> {
   const t0 = Date.now();
-  const res = await llmChat({
-    messages: [
-      { role: "system", content: LISTING_SYSTEM },
-      { role: "user", content: listingUserPrompt(input) },
-    ],
-    jsonSchema: LISTING_JSON_SCHEMA as unknown as Record<string, unknown>,
-    capability: "text",
-    temperature: 0.5,
-    maxTokens: 700,
-    signal: input.signal,
-  });
 
+  // The model call is inside the try, and the catch produces a real listing rather than an
+  // error, because this is the one step where the interesting work is already finished. The
+  // title, the category and the price are facts the pipeline already has — the model is only
+  // rephrasing them for a listing page. If it is not running (no Ollama, no key, no network)
+  // the reseller should get a draft they can edit, not a failure page, on a screen they
+  // reached by pointing a camera at something.
   let listing: ListingDraft;
+  let provider = "template";
+  let local = true;
+
   try {
+    const res = await llmChat({
+      messages: [
+        { role: "system", content: LISTING_SYSTEM },
+        { role: "user", content: listingUserPrompt(input) },
+      ],
+      jsonSchema: LISTING_JSON_SCHEMA as unknown as Record<string, unknown>,
+      capability: "text",
+      temperature: 0.5,
+      maxTokens: 700,
+      signal: input.signal,
+    });
+    provider = `${res.provider}:${res.model}`;
+    local = res.local;
+
     const raw = extractJson(res.text) as Partial<ListingDraft>;
     listing = {
       title: String(raw.title ?? input.identification.title).slice(0, 80),
@@ -366,16 +378,20 @@ export async function writeListing(input: {
       category: raw.category,
       keywords: (raw.keywords ?? []).filter((k): k is string => typeof k === "string"),
       tips: (raw.tips ?? []).filter((t): t is string => typeof t === "string"),
-      generatedBy: `${res.provider}:${res.model}`,
+      generatedBy: provider,
       generatedAt: new Date().toISOString(),
     };
   } catch {
     listing = {
       title: input.identification.title.slice(0, 80),
-      description: `Item draft. Price: ${formatMoney(input.price.expected)}.`,
+      description:
+        `Draft written without a model, from what the scan already knew: ${input.identification.title}` +
+        `${input.identification.condition ? `, ${input.identification.condition} condition` : ""}. ` +
+        `Estimated resale ${formatMoney(input.price.expected)}. ` +
+        `Add your own condition notes and measurements before posting.`,
       price: round2(input.price.expected),
       keywords: input.identification.keywords,
-      generatedBy: `${res.provider}:${res.model}`,
+      generatedBy: "template",
       generatedAt: new Date().toISOString(),
     };
   }
@@ -384,8 +400,8 @@ export async function writeListing(input: {
     listing,
     ran: {
       step: "listing",
-      provider: `${res.provider}:${res.model}`,
-      locality: res.local ? "device" : "cloud",
+      provider,
+      locality: local ? "device" : "cloud",
       ms: Date.now() - t0,
       ok: listing.description.length > 0,
       detail: listing.title,

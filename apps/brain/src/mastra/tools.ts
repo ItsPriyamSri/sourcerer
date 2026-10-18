@@ -1,7 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import type { Identification } from "@sourcerer/shared";
-import { defaultCostModel, formatMoney, maxOfferFor, computeEconomics } from "@sourcerer/shared";
+import { defaultCostModel, formatMoney, maxOfferFor, computeEconomics, decideVerdict } from "@sourcerer/shared";
 import { findComps } from "../core/steps.ts";
 import { HeuristicPricingEngine } from "../providers/pricing.ts";
 import { similarItems, embed } from "../providers/vector.ts";
@@ -16,6 +16,32 @@ import { saveItem, listItems } from "../core/store.ts";
  */
 
 const heuristic = new HeuristicPricingEngine();
+
+/**
+ * Small instruct models are sloppy about JSON types in a way that is purely mechanical.
+ *
+ * `llama3.2:3b` calls `feeMath` correctly and then sends `{"resalePrice":"215"}` — a
+ * perfectly good tool call wearing a string where a number belongs. A strict `z.number()`
+ * rejects it, the agent gets a validation error back instead of a price, and it improvises:
+ * the first version of this produced a reply that was a raw tool-call object printed as
+ * prose. None of that is a reasoning failure and none of it is the model's fault. The
+ * schema was simply stricter than the wire format deserves.
+ *
+ * So the inputs coerce. This costs nothing and removes a whole class of behaviour that
+ * looks like the model being confused and is actually the types being wrong.
+ */
+const num = () => z.coerce.number();
+
+/** `"levis, denim, jacket"` where a list belongs is the same problem as the numbers. */
+const listOf = () =>
+  z.preprocess(
+    (v) => (typeof v === "string" ? v.split(",").map((s) => s.trim()).filter(Boolean) : v),
+    z.array(z.string()),
+  );
+
+/** Note the explicit string handling: `z.coerce.boolean()` reads the string "false" as true. */
+const bool = () =>
+  z.preprocess((v) => (typeof v === "string" ? v.trim().toLowerCase() === "true" : v), z.boolean());
 
 function toIdentification(raw: {
   title: string;
@@ -116,20 +142,29 @@ export const feeMathTool = createTool({
   id: "feeMath",
   description:
     "The real money math for a flip: platform fees, payment fees, shipping and supplies. " +
-    "Returns the most you should pay, and the profit at a given asking price.",
+    "Give it the expected resale price and, if the reseller said it, what the seller is asking. " +
+    "It returns the verdict (BUY / MAYBE / PASS), the most they should pay (maxOffer), the profit, " +
+    "and a written explanation. " +
+    "LEAVE shippingCost, targetMultiple and marketplace OUT unless the reseller states them — the " +
+    "tool already knows their saved defaults, and inventing a value here silently changes the answer.",
   inputSchema: z.object({
-    resalePrice: z.number().describe("Expected resale price"),
-    askingPrice: z.number().optional().describe("What the seller is asking; omit to get just the max offer"),
+    resalePrice: num().describe("Expected resale price"),
+    askingPrice: num().optional().describe("What the seller is asking; omit to get just the max offer"),
     marketplace: z.enum(["ebay", "mercari", "poshmark", "depop", "etsy", "facebook"]).optional(),
-    targetMultiple: z.number().optional().describe("Desired resale-to-cost multiple, default 3"),
-    shippingCost: z.number().optional(),
+    targetMultiple: num().optional().describe("Desired resale-to-cost multiple, default 3"),
+    shippingCost: num().optional().describe("Only if the reseller states one; otherwise omit"),
   }),
   outputSchema: z.object({
     maxOffer: z.number(),
+    verdict: z.enum(["BUY", "MAYBE", "PASS"]).optional(),
+    reason: z.string().optional(),
+    assumptions: z.string(),
     expectedProfit: z.number().optional(),
     netProceeds: z.number(),
     multiple: z.number().optional(),
     roi: z.number().optional(),
+    /** The finished sentence. The advisor route sends this, not the model's paraphrase. */
+    answer: z.string(),
     explanation: z.string(),
   }),
   execute: async (input) => {
@@ -137,27 +172,57 @@ export const feeMathTool = createTool({
     if (input.targetMultiple) cost.targetMultiple = input.targetMultiple;
     if (input.shippingCost != null) cost.shippingCost = input.shippingCost;
 
+    // Stated in every reply, because the surprising thing about a fee model is which
+    // assumptions it made — and because a reseller who disagrees with the shipping estimate
+    // needs to see the number the answer was built on before they trust it.
+    const assumptions =
+      `${cost.marketplace}: ${(cost.platformFeePct * 100).toFixed(1)}% + ${formatMoney(cost.paymentFlat)} platform fees, ` +
+      `${formatMoney(cost.shippingCost)} shipping, ${formatMoney(cost.suppliesCost)} supplies, ${cost.targetMultiple}× target.`;
+
     const maxOffer = maxOfferFor(input.resalePrice, cost);
     if (input.askingPrice == null) {
+      const net = computeEconomics(0, input.resalePrice, cost).netProceeds;
+      const answer = `At a ${formatMoney(input.resalePrice)} resale on ${cost.marketplace} you clear about ${formatMoney(net)}. Most I would pay is ${formatMoney(maxOffer)}.`;
       return {
         maxOffer,
-        netProceeds: computeEconomics(0, input.resalePrice, cost).netProceeds,
-        explanation: `At a ${formatMoney(input.resalePrice)} resale on ${cost.marketplace} you clear about ${formatMoney(
-          computeEconomics(0, input.resalePrice, cost).netProceeds,
-        )} after fees and shipping. To keep a ${cost.targetMultiple}× multiple, pay no more than ${formatMoney(maxOffer)}.`,
+        assumptions,
+        netProceeds: net,
+        answer,
+        explanation: `${answer} (Assumes ${assumptions})`,
       };
     }
     const e = computeEconomics(input.askingPrice, input.resalePrice, cost);
+
+    // The verdict is decided here, in code, by exactly the function the scan route uses — and
+    // so is the sentence, for a reason that took a few runs to accept.
+    //
+    // Letting the model write the reply after the tool ran produced answers whose numbers were
+    // right and whose recommendation was backwards. Asked about the $150 snare with a $58.82
+    // ceiling, one run said "the asking price ($150) is below maxOffer ($58.82), the verdict is
+    // BUY"; another said "the item should be bought"; another got it right. Three runs, three
+    // different verdicts, all from the same tool output. A number a language model paraphrased
+    // is a number you cannot audit, and this app's entire claim is that its numbers are
+    // auditable. So the money sentence is composed here and sent as the reply; the model's job
+    // is the part it is actually good at, which is understanding "shipping cross-country, put
+    // it at $35" and calling this function with the right arguments.
+    const v = decideVerdict(input.askingPrice, input.resalePrice, cost, 0.75);
+    const profitWord = e.expectedProfit >= 0 ? "make" : "lose";
+    const answer =
+      `${v.label}. Most I would pay is ${formatMoney(maxOffer)}. ` +
+      `At ${formatMoney(input.askingPrice)} you would ${profitWord} ${formatMoney(Math.abs(e.expectedProfit))} ` +
+      `if it resells at ${formatMoney(input.resalePrice)}.`;
+
     return {
       maxOffer,
+      verdict: v.label,
+      reason: v.reason,
+      assumptions,
       expectedProfit: e.expectedProfit,
       netProceeds: e.netProceeds,
       multiple: e.multiple,
       roi: e.roi,
-      explanation:
-        `Pay ${formatMoney(input.askingPrice)} and resell at ${formatMoney(input.resalePrice)}: ` +
-        `net ${formatMoney(e.netProceeds)}, profit ${formatMoney(e.expectedProfit)}, ${e.multiple.toFixed(1)}× your money. ` +
-        `Max offer is ${formatMoney(maxOffer)}.`,
+      answer,
+      explanation: `${answer} ${v.reason} (Assumes ${assumptions})`,
     };
   },
 });
@@ -167,8 +232,8 @@ export const saveItemTool = createTool({
   description: "Save an item to the reseller's sourcing queue so they can generate a listing later.",
   inputSchema: z.object({
     title: z.string(),
-    buyPrice: z.number().optional(),
-    estimatedResale: z.number().optional(),
+    buyPrice: num().optional(),
+    estimatedResale: num().optional(),
     verdict: z.enum(["BUY", "MAYBE", "PASS"]).optional(),
     note: z.string().optional(),
   }),
@@ -213,7 +278,7 @@ export const similarItemsTool = createTool({
   id: "similarItems",
   description:
     "Search the reseller's own inventory and sold history for similar items — 'have I bought one of these before, and what did it sell for?'",
-  inputSchema: z.object({ query: z.string(), limit: z.number().optional() }),
+  inputSchema: z.object({ query: z.string(), limit: num().optional() }),
   outputSchema: z.object({
     found: z.number(),
     items: z.array(

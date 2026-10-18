@@ -19,7 +19,7 @@ import {
 } from "@sourcerer/shared";
 import { config, modelRoute } from "./env.ts";
 import { mastra, sourcingAdvisor } from "./mastra/index.ts";
-import { brainSummary } from "./mastra/agents.ts";
+import { brainSummary, toolModelThinks } from "./mastra/agents.ts";
 import { runScan, writeListing, identify, findComps, estimatePrice, makeVerdict } from "./core/steps.ts";
 import {
   listItems,
@@ -201,15 +201,51 @@ app.post("/advisor", async (c) => {
   const { message, threadId, resourceId } = parsed.data;
 
   try {
+    // Filled in by onStepFinish below, whenever the agent asks for the money math. An array
+    // rather than a variable because TypeScript will not let a `let` assigned inside a closure
+    // keep its narrowed type at the read site, and because "the last money answer of this turn"
+    // is the honest description of what we want.
+    const moneyAnswers: { answer?: string }[] = [];
+
     const res = await sourcingAdvisor.generate(message, {
       memory: {
         thread: threadId ?? `thread-${nanoid(8)}`,
         resource: resourceId ?? "local-reseller",
       },
       maxSteps: 6,
+      // Ollama's AI SDK provider defaults `think` to false, and for a reasoning model that
+      // is the wrong default in a way that is hard to see: Qwen 3 thinks regardless of the
+      // flag, and with it off the deliberation comes back inside `content` — so the agent's
+      // answer was several paragraphs of the model arguing with itself about what a tool
+      // call is, instead of a recommendation. Turning it on lets Ollama put the reasoning
+      // in `thinking`, which the provider surfaces separately, and leaves `res.text` as the
+      // actual answer.
+      //
+      // It has to be derived rather than set, because a model with no thinking mode rejects
+      // the flag outright, and because the key is matched against the provider id, which is
+      // `ollama` — the model object reports `provider: "ollama.responses"`, and using that
+      // string here silently does nothing, which is how this stayed broken through a first
+      // round of debugging.
+      providerOptions: (await toolModelThinks()) ? { ollama: { think: true } } : undefined,
+
+      // A money answer is the tool's own sentence, not the model's retelling of it.
+      //
+      // `mastra/tools.ts` has the long version of why; the short version is three runs of the
+      // same question that produced three different verdicts from one tool result. This catches
+      // that sentence as the loop runs and prefers it below. A turn that never calls a money
+      // tool — "what was I looking at?" — still answers in the model's own words.
+      onStepFinish: (event) => {
+        for (const chunk of event.toolResults ?? []) {
+          const payload = chunk?.payload;
+          if (payload?.toolName === "feeMath" && !payload.isError && payload.result) {
+            moneyAnswers.push(payload.result as { answer?: string });
+          }
+        }
+      },
     });
+    const moneyAnswer = moneyAnswers.at(-1)?.answer;
     return c.json({
-      text: res.text,
+      text: moneyAnswer ?? res.text,
       threadId: threadId ?? null,
       agent: "sourcing-advisor",
       model: brainSummary(),
@@ -403,9 +439,10 @@ app.post("/demo/seed", async (c) => {
   // and that is exactly the offline path this app claims to have.
   const seeded: CapturedItem[] = [];
   for (const [i, h] of history.entries()) {
+    const compsMedian = h.compsMedian ?? h.price;
     const identification: Identification = {
       title: h.title,
-      category: h.category,
+      category: h.category ?? "unknown",
       brand: h.brand,
       attributes: {},
       condition: h.condition as Identification["condition"],
@@ -417,7 +454,7 @@ app.post("/demo/seed", async (c) => {
     const cost = mergeCostModel(defaultCostModel("ebay"));
     // Bought at roughly a third of the eventual sale — a margin a person would take,
     // not a number that flatters the portfolio stats.
-    const buyPrice = round2(h.compsMedian * 0.34);
+    const buyPrice = round2(compsMedian * 0.34);
     const item: CapturedItem = {
       id: nanoid(10),
       createdAt: new Date(Date.now() - (history.length - i) * 36 * 3600_000).toISOString(),

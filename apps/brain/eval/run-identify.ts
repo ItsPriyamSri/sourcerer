@@ -135,6 +135,23 @@ async function callModel(item: EvalItem, v: Variant): Promise<{ text: string; ms
   return null;
 }
 
+/**
+ * Fold away the differences that are not identification failures.
+ *
+ * The first run scored "Dr Martens 1460 Boots" as a miss against a label of
+ * "Dr. Martens" — the model was right and the scorer was wrong. Punctuation and
+ * spacing are not part of getting the brand right, so they are normalised before
+ * comparison. Case, word order and ampersands are folded too.
+ */
+function norm(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[.,'’`]/g, "")
+    .replace(/\s*&\s*/g, " and ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function score(item: EvalItem, text: string, ms: number, attempts: number): Row {
   const base = { itemId: item.id, text: item.text, ms, attempts };
 
@@ -151,26 +168,31 @@ function score(item: EvalItem, text: string, ms: number, attempts: number): Row 
   }
 
   if (!parsed) {
-    return { ...base, parseOk: false, brandOk: false, typeOk: false, inventedBrand: false, got: {}, raw: text.slice(0, 300) };
+    return { ...base, parseOk: false, brandOk: false, typeOk: false, inventedBrand: false, got: {}, raw: text.slice(0, 2000) };
   }
 
-  const haystack =
-    `${parsed.title ?? ""} ${parsed.category ?? ""} ${Object.values(parsed.attributes ?? {}).join(" ")}`.toLowerCase();
-  const brandField = (parsed.brand ?? "").toString().trim().toLowerCase();
+  const haystack = norm(
+    `${parsed.title ?? ""} ${parsed.category ?? ""} ${Object.values(parsed.attributes ?? {}).join(" ")}`,
+  );
+  const brandField = norm((parsed.brand ?? "").toString()).trim();
 
   let brandOk: boolean;
   let inventedBrand = false;
   if (item.brand) {
-    brandOk = haystack.includes(item.brand.toLowerCase());
+    // The brand must show up somewhere in what the model returned — title, category,
+    // or a named attribute — because those are the fields a listing is built from.
+    brandOk = haystack.includes(norm(item.brand));
   } else {
     // Ground truth: no brand. Correct = did not assert one in the `brand` field.
     // The title may legitimately say "Eames style" — that is a description, not a claim.
-    const claimed = brandField && !["null", "none", "unknown", "unbranded", "n/a", "-"].includes(brandField);
+    // "Eames (Style)" in the *brand field* is a claim, and that is the failure this
+    // whole experiment exists to catch.
+    const claimed = brandField.length > 0 && !["null", "none", "unknown", "unbranded", "na", "-", ""].includes(brandField);
     brandOk = !claimed;
     inventedBrand = Boolean(claimed);
   }
 
-  const typeOk = item.type.some((t) => haystack.includes(t.toLowerCase()));
+  const typeOk = item.type.some((t) => haystack.includes(norm(t)));
 
   return {
     ...base,
@@ -179,6 +201,10 @@ function score(item: EvalItem, text: string, ms: number, attempts: number): Row 
     typeOk,
     inventedBrand,
     got: { title: parsed.title, brand: parsed.brand ?? undefined, category: parsed.category },
+    // Keep the full reply, not just the failures. It costs a few kilobytes and it is
+    // what makes the scoring re-runnable against the recorded answers instead of
+    // against the model, which is the difference between an experiment and an anecdote.
+    raw: text.slice(0, 2000),
   };
 }
 

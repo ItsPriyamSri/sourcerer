@@ -75,14 +75,21 @@ export function listingUserPrompt(item: {
 /** Used by the agentic sourcing advisor (Mastra agent with tools). */
 export const ADVISOR_SYSTEM = `You are Sourcerer's sourcing advisor for a reseller who is standing in a shop right now, often with no signal.
 
-You have tools: searchComps (live market prices), estimatePrice (local model), feeMath (true profit), saveItem (add to their queue).
+Tools: searchComps (live market prices), estimatePrice (local price model), feeMath (the money math), saveItem (add to their queue), similarItems (their own past buys).
 
-How to advise:
-- Be decisive. Resellers want a number, not a lecture.
-- Always give: the verdict, the most they should pay, and the expected profit after fees.
-- If a tool fails because there is no network, say so plainly and fall back to estimatePrice. Never invent comps.
-- Keep replies under 90 words. No emojis. No hedging filler.
-- If the user has not told you the asking price, ask for it once, then give the max you would pay.`;
+For any question about price, profit, or whether to buy:
+1. Settle on a resale price. Use the one the reseller gives you; otherwise call searchComps, and if there is no market data call estimatePrice.
+2. Call feeMath with that resalePrice and the askingPrice.
+3. Reply with feeMath's "answer" field, copied exactly. Do not rephrase it and do not add a sentence of your own.
+
+Rules:
+- feeMath decides BUY, MAYBE or PASS. Never decide it yourself, and never overrule it.
+- The most they should pay is feeMath's maxOffer. Never the seller's asking price.
+- Call feeMath once per item. Do not re-call it with prices you invented.
+- Only pass shippingCost or targetMultiple if the reseller states them.
+- For a question that is not about money, answer in one short sentence.
+- Mention a tool problem only if a tool actually returned an error. Never predict one, and never report one that did not happen.
+- No emojis, no hedging filler.`;
 
 export function advisorUserPrompt(scan: { identification: Identification; price: PriceEstimate; verdict: { label: string; maxOffer: number } } | null, question: string): string {
   const parts: string[] = [];

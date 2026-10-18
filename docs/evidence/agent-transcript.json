@@ -1,0 +1,40 @@
+{
+  "brain": "http://127.0.0.1:8787",
+  "threadId": "eval-mve5k6mg",
+  "generatedAt": "2026-10-18T18:22:24.813Z",
+  "observations": {
+    "said215": true,
+    "shippingChangedTheCeiling": true,
+    "ceilingTurn1": 58.82,
+    "ceilingTurn2": 49.82,
+    "recalledItem": true,
+    "recalledPrice": true,
+    "anyDegraded": false
+  },
+  "turns": [
+    {
+      "id": "t1",
+      "message": "I'm at an estate sale and there's a Ludwig Acrolite snare drum for $150. I sell on eBay. What's my true profit if it resells for $215, and should I buy it?",
+      "needsTool": true,
+      "reply": "PASS. Most I would pay is $58.82. At $150 you would make $26.46 if it resells at $215.",
+      "ms": 1877,
+      "degraded": false
+    },
+    {
+      "id": "t2",
+      "message": "I'm shipping cross-country, so put shipping at $35 instead. Does the answer change?",
+      "needsTool": true,
+      "reply": "PASS. Most I would pay is $49.82. At $150 you would lose $0.54 if it resells at $215.",
+      "ms": 7442,
+      "degraded": false
+    },
+    {
+      "id": "t3",
+      "message": "What did I tell you I was looking at? And remind me of the asking price I mentioned.",
+      "needsTool": false,
+      "reply": "You told me you were at an estate sale and were looking at a Ludwig Acrolite snare drum, with an asking price of $150.",
+      "ms": 6711,
+      "degraded": false
+    }
+  ]
+}
