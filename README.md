@@ -7,7 +7,7 @@ open-weight model running *on your own machine* identifies it, prices it against
 market, and tells you the most you should pay — in a thrift-store basement, in the back
 room of an estate sale, in a warehouse with no bars on your phone.
 
-<img src="docs/media/verdict.buy.light.png" alt="The Sourcerer verdict card on a phone: a Levi's 501 Big E Selvedge Denim Jacket, verdict BUY, max offer $35.32, estimated resale $133.40, a chip reading your sold history, and header chips reading Online, Local · gemma3:4b and heuristic pricing" width="330">
+<img src="docs/media/verdict.buy.light.png" alt="The Sourcerer verdict card on a phone: a Levi's 501 Big E Selvedge Denim Jacket, verdict BUY, max offer $35.32, estimated resale $133.40, chips reading your sold history and 57% confidence, and header chips reading Online, Local · gemma3:4b and heuristic pricing" width="330">
 
 ![license: MIT](https://img.shields.io/badge/license-MIT-blue)
 ![node: >=22.18](https://img.shields.io/badge/node-%3E%3D22.18-brightgreen)
@@ -58,8 +58,8 @@ the design, not an error path.
 <table>
 <tr>
 <td width="33%"><img src="docs/media/verdict.buy.light.png" alt="Verdict card: BUY, max offer $35.32, estimated resale $133.40, and a basis line reading 6 similar items you have already sold"><br><sub><b>The verdict.</b> One dominant signal, the max offer in the largest type on the screen, and the range it came from.</sub></td>
-<td width="33%"><img src="docs/media/ranlog.light.png" alt="An expanded What ran where receipt: Identify (ollama:gemma3:1b, on this device, 4646 ms), Comps (local_history, 6 listings), Price (comps_median, $133.40), each shown running locally"><br><sub><b>The receipt.</b> Every scan records which provider ran each step and whether anything left the device. "Photos never leave your machine" is a field you can read, not a promise.</sub></td>
-<td width="33%"><img src="docs/media/listings.queue.light.png" alt="The listings queue: Pendleton shirt PASS max $8.13, Pyrex bowl MAYBE max $18.35, Levi's jacket BUY max $35.32"><br><sub><b>The other half.</b> Captures land here priced, each with its own verdict; one tap writes the title, description, tags and price with the local model.</sub></td>
+<td width="33%"><img src="docs/media/ranlog.light.png" alt="An expanded What ran where receipt: Identify (ollama:gemma3:1b, on this device, about six seconds), Comps (local_history, 6 listings), Price (comps_median, $133.40), each shown running locally"><br><sub><b>The receipt.</b> Every scan records which provider ran each step and whether anything left the device. "Photos never leave your machine" is a field you can read, not a promise.</sub></td>
+<td width="33%"><img src="docs/media/listings.queue.light.png" alt="The listings queue: Griswold skillet PASS max $20.22, Pendleton shirt PASS max $8.13, Pyrex bowl PASS max $14.92, Levi's jacket BUY max $35.32"><br><sub><b>The other half.</b> Captures land here priced, each with its own verdict; one tap writes the title, description, tags and price with the local model.</sub></td>
 </tr>
 </table>
 
@@ -105,7 +105,7 @@ so the numbers can never disagree.
 <p align="center">
 <img src="docs/media/insights.light.png" alt="The Insights screen: realised profit $70.96 from 2 logged sales, spend $79 across 4 buys, revenue $119.96, an unrealised tile reading $0 on a dashed border, sell-through 50%, and best flips listing the Griswold skillet (+$40.96) and the Pendleton shirt (+$30)" width="300">
 </p>
-<p align="center"><sub><b>Computed here, from your records.</b> Realised profit comes only from sales you logged; unrealised is a projected number, so it gets a dashed tile and says so. The tile reads $0 here because the two items still held were captured but not yet bought — a deliberate line between "sourced" and "owned".</sub></p>
+<p align="center"><sub><b>Computed here, from your records.</b> Realised profit comes only from sales you logged; unrealised is a projected number, so it gets a dashed tile and says so. The tile reads <b>$0</b> because the rollup counts only items marked <code>bought</code> or <code>listed</code>, and these two are still marked <code>sourced</code> — while the Listings screen reports <b>$120.71</b> of expected profit from the same two held items. The tile's own label, "expected, on what you still hold", does not match that definition. This cross-screen disagreement is a known defect in the rollup, recorded in <a href="docs/media/CAPTIONS.md">the captions</a> rather than papered over.</sub></p>
 
 ---
 
@@ -133,13 +133,20 @@ local comps from your own sold history, and local heuristic pricing. To see it w
 immediately without owning anything, load the sample data:
 
 ```bash
-curl -X POST http://127.0.0.1:8787/demo/seed
+curl -X POST "http://127.0.0.1:8787/demo/seed?reset=1"
 ```
 
-That reads [`fixtures/sold.json`](fixtures/sold.json) — twelve **synthetic** records,
+That reads [`fixtures/sold.json`](fixtures/sold.json) — thirty-two **synthetic** records,
 labelled as sample data everywhere they appear, so a clean clone can exercise the
 offline pricing path and the Insights screen. They are not real sales and not market
-data.
+data. The four items the evidence capture scans each have several sales behind them, so
+the demo shows the app with enough history to be sure of itself rather than one lonely
+comparable.
+
+The `reset=1` is load-bearing. Without it the endpoint appends, so every call leaves a
+longer history than the last and the same scan prices differently — which is how the
+screenshots in this repo spent a while showing a comp set that grew from six rows to
+fifteen across otherwise identical runs.
 
 ### Then, sharpen it
 
@@ -240,7 +247,7 @@ left the device. The UI renders those fields directly, which is why the privacy 
 inspectable rather than aspirational.
 
 <p align="center">
-<img src="docs/media/comps.expanded.light.png" alt="The expanded Comparables panel: six comps from the user's own sold history, each row tagged sold with a price of $145, above low/median/mean/high tiles all reading $145 and a note that the mean is trimmed 10%" width="360">
+<img src="docs/media/comps.expanded.light.png" alt="The expanded Comparables panel: six comps from the user's own sold history, each row tagged sold and priced between $136 and $155, above low/median/mean/high tiles reading $139, $145, $145.17 and $151.50 and a note that the mean is trimmed 10%" width="360">
 </p>
 <p align="center"><sub><b>Every comp is tagged.</b> With no market key configured, comps come from your own sold history and each row is labelled <code>sold</code>; the panel says so in words. Point it at a live-comps key and the same rows read <code>asking</code>, with the haircut stated on the panel — never silently relabelled as a sale.</sub></p>
 
@@ -302,7 +309,7 @@ crash window observable, which is how the claim above was produced.
 Reproduce both:
 
 ```bash
-pnpm test                              # 47 unit tests, no model, no network
+pnpm test                              # 60 unit tests, no model, no network
 pnpm evidence:identify                 # the identification eval (needs Ollama)
 bash scripts/temporal-durability-demo.sh   # the crash-and-resume proof
 pnpm evidence:capture                  # every screenshot in docs/media, from the real app
@@ -313,7 +320,7 @@ pnpm evidence:capture                  # every screenshot in docs/media, from th
 ## Tests
 
 ```bash
-pnpm test          # 47 tests
+pnpm test          # 60 tests
 pnpm typecheck     # all three packages
 ```
 
@@ -323,12 +330,26 @@ listing, clamping of hostile cost-model input — plus the JSON salvage that kee
 answering in prose from taking a whole scan down with it. No model is mocked, because
 none of these need one.
 
-The newest group covers something the others structurally cannot: the exact request the
-app sends to SerpApi. That is the only code in this repo that needs a paid key *and* a
-live eBay, so "the tests pass" said nothing about it, and a parameter that SerpApi rejects
-would have shipped silently. (`_ipg` did, until it was checked against the docs: it accepts
-25, 50, 100 or 200, and the configured 60 is not one of them.) Those tests pin the
-parameters against the published contract instead of pretending to exercise the service.
+Twenty-four of them cover the two integrations that no local run can reach, because both
+need a key: the search request the app sends to SerpApi, and the message body it sends to
+Backboard. "The tests pass" had said nothing about either, and both had already shipped a
+defect that only a live call would have surfaced.
+
+- SerpApi's `_ipg` accepts exactly 25, 50, 100 or 200 — it is not an arbitrary maximum.
+  The configured 60 was not one of them, so the first live search would have failed outright.
+- Backboard's per-turn instructions field is `system_prompt`. The first version folded the
+  system prompt into `content` and sent the JSON schema in an `instructions` key, which
+  Backboard does not define. An unknown field is ignored rather than rejected, so the call
+  would have returned `200` and identified the item from the text *"Produce the JSON now."*
+
+Neither defect was reachable by a typecheck, a build or a local scan — which is the point.
+These tests pin the requests against the published contracts, so connecting a key is the
+boring step rather than the debugging step.
+
+Four more pin something the keyed group cannot: what the local matcher is allowed to call
+a comparable. It used to accept any single shared word, so "wool" pulled a Woolrich
+mountain parka into a Pendleton wool shirt's comp set and priced the shirt off a different
+garment. It now requires two shared tokens, and the parka is a test case.
 
 ---
 

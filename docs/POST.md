@@ -77,7 +77,7 @@ cannot drift from the evidence the way a hand-typed statistic would.
 That script also found a bug worth admitting to: the asking price you typed on the capture
 form was being silently discarded by the verdict card, because the card kept a private copy
 of the price, initialised to zero. Every screenshot in that first capture came back priced
-as if the item were free. It survived every typecheck, every build and all forty-seven
+as if the item were free. It survived every typecheck, every build and all sixty
 passing unit tests, and it was visible the moment something rendered the screen and wrote
 the result to a file. A screenshot is a test you cannot lie to.
 
@@ -427,14 +427,17 @@ whole thing, including the kill; the raw worker and client logs are committed in
 Every figure here is measured on the machine described above, and each one is traceable to
 a file in the repository.
 
-- **47 unit tests pass** (`pnpm test`, no model, no network). Eighteen live in
+- **60 unit tests pass** (`pnpm test`, no model, no network). Eighteen live in
   `packages/shared` and cover the parts that decide whether someone makes money: eBay's fee
   arithmetic, the max-offer solve, the verdict thresholds, and trimmed-mean robustness to a
-  single seller asking ten times the going rate. Twenty-nine live in `apps/brain` and cover
-  the two seams where a model meets code — the JSON salvage that stops a prose answer taking
-  a whole scan down, and the verdict wrapper — plus, newest, the request the app sends to
-  SerpApi, which is the one piece of this repo that needs a paid key and a live eBay and so
-  had no coverage at all until I read its parameters against the published docs.
+  single seller asking ten times the going rate. Forty-two live in `apps/brain`: the two
+  seams where a model meets code — the JSON salvage that stops a prose answer taking a whole
+  scan down, and the verdict wrapper — plus the requests sent to the two integrations that
+  need a key, SerpApi and Backboard. Both of those had shipped a defect that only a live call
+  would have found: an `_ipg` value SerpApi rejects, and a JSON schema sent in an
+  `instructions` field Backboard does not define and would therefore have silently ignored.
+  Four more pin what the local matcher is allowed to count as a comparable, which is how the
+  Woolrich parka stopped pricing the Pendleton shirt.
 - **Warm identification: 8.3–8.8 seconds median**, depending on the prompt, measured across
   120 real model calls in the eval above. A photo costs roughly 30–40 s, because the vision
   encoder is doing far more work per token. The first scan after a restart pays about 75 s
