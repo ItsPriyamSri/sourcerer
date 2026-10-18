@@ -302,7 +302,7 @@ crash window observable, which is how the claim above was produced.
 Reproduce both:
 
 ```bash
-pnpm test                              # 32 unit tests, no model, no network
+pnpm test                              # 47 unit tests, no model, no network
 pnpm evidence:identify                 # the identification eval (needs Ollama)
 bash scripts/temporal-durability-demo.sh   # the crash-and-resume proof
 pnpm evidence:capture                  # every screenshot in docs/media, from the real app
@@ -313,15 +313,22 @@ pnpm evidence:capture                  # every screenshot in docs/media, from th
 ## Tests
 
 ```bash
-pnpm test          # 32 tests
+pnpm test          # 47 tests
 pnpm typecheck     # all three packages
 ```
 
 They cover the parts that decide whether someone makes money — fee arithmetic, the
 max-offer solve, the verdict thresholds, trimmed-mean robustness to a single absurd
 listing, clamping of hostile cost-model input — plus the JSON salvage that keeps a model
-answering in prose from taking a whole scan down with it. No mocking a model is required,
-which is what makes these tests evidence rather than hygiene.
+answering in prose from taking a whole scan down with it. No model is mocked, because
+none of these need one.
+
+The newest group covers something the others structurally cannot: the exact request the
+app sends to SerpApi. That is the only code in this repo that needs a paid key *and* a
+live eBay, so "the tests pass" said nothing about it, and a parameter that SerpApi rejects
+would have shipped silently. (`_ipg` did, until it was checked against the docs: it accepts
+25, 50, 100 or 200, and the configured 60 is not one of them.) Those tests pin the
+parameters against the published contract instead of pretending to exercise the service.
 
 ---
 

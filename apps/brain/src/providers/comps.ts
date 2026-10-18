@@ -47,6 +47,18 @@ const EBAY_CONDITION: Record<Condition, number | undefined> = {
   unknown: undefined,
 };
 
+/**
+ * SerpApi's `_ipg` is not an arbitrary maximum — it accepts exactly 25, 50, 100 or 200.
+ * The configured default is 60, which is not one of them, so passing the config value
+ * straight through would have made the first live comps call fail on a parameter that
+ * no test could have caught and no local run would ever exercise.
+ */
+const IPG_ALLOWED = [25, 50, 100, 200] as const;
+
+export function snapIpg(max: number): number {
+  return IPG_ALLOWED.find((n) => n >= max) ?? 200;
+}
+
 export function compsQueryFor(id: Identification): string {
   const brand = id.brand?.trim();
   const kw = id.keywords.slice(0, 3).join(" ");
@@ -75,7 +87,8 @@ export class SerpApiCompsProvider implements CompsProvider {
     url.searchParams.set("engine", "ebay");
     url.searchParams.set("ebay_domain", "ebay.com");
     url.searchParams.set("_nkw", query);
-    url.searchParams.set("_ipg", String(Math.min(200, config.serpapi.maxResults)));
+    // SerpApi accepts only 25/50/100/200 here; snap up rather than send an illegal value.
+    url.searchParams.set("_ipg", String(snapIpg(config.serpapi.maxResults)));
     url.searchParams.set("_sop", "12"); // Best match
     // Seller pays shipping in our cost model, so free-shipping listings are the
     // closest comparable to the price we are estimating.
