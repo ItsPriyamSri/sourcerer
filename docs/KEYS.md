@@ -86,7 +86,7 @@ source. This is deliberate — the working offline behaviour *is* the pitch.
 ### `ELEVENLABS_API_KEY` — voice in, verdict out
 | | |
 |---|---|
-| **Unlocks** | Dictate an item while your hands are full (`POST /transcribe`) and hear the verdict read back (`POST /speak`). |
+| **Unlocks** | Dictate an item while your hands are full (`POST /transcribe`) and hear the verdict read back (`POST /speak`). Both routes exist and are live; the mic and play controls are not in the UI yet. |
 | **Where** | <https://elevenlabs.io/app/settings/api-keys> |
 | **Without it** | The voice surfaces return `501` and the UI simply doesn't offer them. |
 | **Scopes** | New keys are created **scoped**, and a scoped key answers `401` on routes it was not granted — `user_read` included. The app needs `speech_to_text` and `text_to_speech`. `pnpm keys:check` reads the scope off the error body and then probes the app's real voice-in call, so a valid-but-scoped key is not misreported as broken. |

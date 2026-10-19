@@ -594,8 +594,13 @@ the code, is what stopped them.
   throws, so `llmChat` falls through the provider chain to local Gemma and the scan comes back
   correct with no credit anywhere — which is a better result than the demo I was hoping for.
   Raw responses before and after: `docs/evidence/backboard-credit-wall.json`.
-- **Best Use of ElevenLabs** — dictate an item while both hands are full, or hear the verdict
-  read back. Voice **in** is verified live: `POST /v1/speech-to-text` with `scribe_v2`
+- **Best Use of ElevenLabs** — the plan was to let you dictate a condition note with both
+  hands full on a rack, and hear the verdict back, and the brain routes for both are built
+  and reachable (`POST /transcribe`, `POST /speak`) with the capability in the registry. I
+  should be straight about the rest: the mic and play controls are **not** in the UI yet, so
+  this is an integration with a live key rather than a button you can press in the capture
+  below, which was recorded before any key existed. Voice **in** is verified live:
+  `POST /v1/speech-to-text` with `scribe_v2`
   returns HTTP 200 against a real key. Voice **out** is blocked by the plan rather than the
   code — ElevenLabs refuses library voices over the API for free accounts with
   `402 paid_plan_required`, including the default voice, which is why `ELEVENLABS_TTS_VOICE`
