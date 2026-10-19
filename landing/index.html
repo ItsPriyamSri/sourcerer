@@ -242,9 +242,9 @@
         <h2>Honest limits</h2>
         <div class="limits">
           <ul>
-            <li><b>It is slow on CPU.</b> Roughly nine seconds per item once the model is warm, and about forty seconds on the very first photo of a session while the weights load. A GPU changes this; this laptop's doesn't.</li>
+            <li><b>It is slow on CPU.</b> About nine seconds per item from a typed note once the model is warm, and thirty to forty seconds from a photo, with roughly seventy-five seconds on the very first scan of a session while the weights load. A GPU changes this; this laptop's doesn't.</li>
             <li><b>eBay's real sold prices are not available.</b> eBay moved completed listings behind a login and the search API's sold filter went with them. The app returns live <em>asking</em> prices, labels them as asking, and applies a visible 14% haircut. It is a range, not a promise.</li>
-            <li><b>Gemma 3 4B cannot call tools.</b> Identification and writing work; the tool-using advisor needs a different open model beside it. The app says so instead of failing quietly.</li>
+            <li><b>Reading and tool-calling are different models.</b> Gemma 3 4B is a reader — vision and completion — and has no <code>tools</code> capability, so the advisor loop runs on a small tool-capable open model beside it. The app reports which is installed rather than failing quietly.</li>
             <li><b>The price model needs your data.</b> With no sold history it falls back to condition-adjusted comps and a deliberately pessimistic guess. It gets personal only after you log sales.</li>
           </ul>
         </div>
