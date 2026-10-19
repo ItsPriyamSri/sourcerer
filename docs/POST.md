@@ -122,7 +122,7 @@ So the system is split, permanently:
 
 The consequence is that the verdict the browser shows you offline and the verdict the server computes online are *the same code*. [`decideVerdict`](https://github.com/ItsPriyamSri/sourcerer/blob/master/packages/shared/src/economics.ts) is pure and takes no I/O, so a reseller typing a price in a dead zone gets an answer that agrees with the server's to the cent. That is not a nicety; it's why the tool can be trusted with money.
 
-### Two changes, and neither did the job I built it for
+### What the two changes actually did
 
 The honest engineering story is that I expected prompt work to be the lever and it mostly wasn't.
 
@@ -139,15 +139,11 @@ Every experiment in this section is the same 30 hand-labelled items run through 
 Model `gemma3:4b`, temperature 0.1, 30 items, one machine, one afternoon.
 <!-- EVAL_TABLE_END -->
 
-What comes out of that table surprised me, and the honest version of the story is narrower and more useful than the one I expected to write.
-
-**Both levers turned out to be different levers than I thought.** I built the JSON-extraction path braced for a fight — fenced code blocks, prose wrappers, objects truncated mid-string — and the naive prompt produced a parseable object on the first try, **30 times out of 30**, by wrapping it in a `json` fence that the extractor was written to handle. Prompt craft never bought me a single point of parseability on this model, because there was nothing to buy. But the prompt did do something for me, and the schema did something else entirely. Neither of them was "accuracy".
-
-That sounds abstract until you look at the one row that failed.
+**Both levers were different levers than I expected.** I built the JSON-extraction path braced for a fight — fenced code blocks, prose wrappers, objects truncated mid-string — and the naive prompt produced a parseable object on the first try, **30 times out of 30**, by wrapping it in a `json` fence the extractor already handled. Prompt craft bought exactly zero points of parseability on this model, because there was nothing to buy. The prompt did one job, the schema did another, and neither of them was "accuracy". The single row that failed is where that becomes concrete.
 
 ### The failure I am leaving in
 
-Item 21 in the labelled set is *"Eames style lounge chair, rosewood, no labels anywhere."* Ground truth: **no brand.** Here is that same item, from the same model, as the prompt and the schema change. Nothing else differs — same temperature, same 30-item set:
+Item 21 in the labelled set is *"Eames style lounge chair, rosewood, no labels anywhere."* Ground truth: **no brand.** Same model, same 30 items, same temperature — only the prompt and the schema change:
 
 | Configuration | `brand` field | `confidence` | `caveats` |
 |---|---|---|---|
@@ -156,90 +152,44 @@ Item 21 in the labelled set is *"Eames style lounge chair, rosewood, no labels a
 | + full rules prompt | *(omitted)* | 0.85 | — |
 | + explicit anti-invention rules | *(omitted)* | **0.6** | *"No visible labels, condition is based on visual assessment only."* |
 
-Read the first row carefully, because it is the reason this project is shaped the way it is. The model did not produce garbage. It produced a clean, well-formed, **confident** record with a fabricated brand in a machine-readable field, plus a keyword list containing "Eames". Nothing about that output looks wrong. It would have become the title of a listing and the basis of a price, and the person reading it at the counter would have had no reason to doubt it.
+The first row is why this project is shaped the way it is. The model did not produce garbage; it produced a clean, well-formed, **confident** record with a fabricated brand in a machine-readable field. Nothing about it looks wrong, it would have become a listing title and the basis of a price, and the person reading it at the counter had no reason to doubt it. It failed on *exactly one item* — the other three unbranded items came back `"Unknown"` — so the error is not diffuse but **optimistic, on unbranded goods that resemble something valuable**: exactly what a flipper overpays for, and the error they are least likely to catch.
 
-It also failed on *exactly one item*. On the naive prompt, the other three unbranded items in the set — a teak tray, a quilt, a brass lamp — came back `"Unknown"`, and with a schema present the field was omitted cleanly on all four. So the failure is not diffuse. This model fails **optimistically, on unbranded goods that resemble something valuable**, which is precisely the population a flipper is most likely to overpay for. An error that concentrates in the profitable-looking cases is much worse than an error that spreads evenly, because it is the error you were least likely to catch.
+Two fixes, two different jobs:
 
-And the two changes did different jobs, which took all four columns to see:
+- **The schema removed the fabrication.** `brand` is typed `["string", "null"]`, so "I don't know" became a legal answer and the model took it. Inventions on the set: **1 → 0**.
+- **The prompt changed calibration, not accuracy.** Accuracy was already 100% by the second column. What the anti-invention rules moved was stated confidence on the one item that is unverifiable by design — 0.95 to 0.6 — and they made the model volunteer a caveat without being asked for one. A better answer for being the same answer, because it tells you how far to trust it.
 
-- **The schema removed the fabrication.** `brand` is typed `["string", "null"]`, so "I don't know" became a legal answer, and the model took it. Inventions on the set: **1 → 0**.
-- **The prompt did not change accuracy. It changed calibration.** Accuracy was already 100% by the second column. What the anti-invention instructions moved was *stated confidence on the one item that is unverifiable by design* — 0.95 down to 0.6 — and they made the model volunteer a caveat about the missing label without being asked for one. That is a better answer even though it is the same answer, because it tells you how far to trust it.
+**What is still wrong.** In column four the title still reads *"Eames Lounge Chair Rosewood"*. The doubt left `brand`, which carried the most weight, but the title still names a designer — and the title is what gets pasted into a listing. The money is unaffected, because the verdict is anchored to comps rather than the title, but the listing writer should refuse a designer's name whenever `brand` is null, and that is the next thing I would build. My scorer does not penalise an overclaiming title either: it catches `"Eames (Style)"` mechanically and cannot catch `"Eames Lounge Chair"`, and I left it that way rather than tuning it until the number looked better.
 
-**What is still wrong.** Look at column four's title: the model still called it an "Eames Lounge Chair Rosewood". It moved the doubt out of the `brand` field, which was the field carrying the most weight, but the title still names the designer — and the title is what a reseller would paste into a marketplace listing. In the app the estimate and the verdict are anchored to comps rather than to the title, so the money is not affected; but someone copying that title would be making a claim the evidence does not support. The honest fix is to make the listing writer refuse a designer's name whenever `brand` is null, and that is the next thing I would build.
+Two notes on defence in depth. Below 0.5 confidence the verdict can never say BUY, whatever the arithmetic says — but on this item the model settled at 0.6, so the caveat is what protects the user here, not the threshold. And the risk was never in the price: the arithmetic is pure, deterministic and unit-tested, which is exactly why it is allowed anywhere near the money. The risk was one string field from a 4B model, and the fix for the worst version of it turned out to be a type annotation, not a paragraph of instructions.
 
-There is also a limitation in *this eval* worth naming. My scorer checks the `brand` field and the item type. It does not penalise a title that overclaims. `"Eames (Style)"` is a hard failure I could catch mechanically; `"Eames Lounge Chair"` in a title is a softer one I could not, so I left the scorer alone rather than tuning it until the number looked better.
+### One model reads, a second one calls tools
 
-**What I got wrong about my own project.** I assumed the interesting engineering was in the prompt and that the interesting risk was in the price. The second half was backwards: the arithmetic is deterministic, pure and unit-tested, and has been the least surprising part of this build since the first day — which is exactly why it is allowed anywhere near the money. The risk was one string field, produced by a 4B model, that a reseller would never think to question. The fix for the worst version of it turned out to be a type annotation, not a paragraph of instructions.
+The sourcing advisor is a Mastra agent with five tools — search comps, estimate a price, do the fee math, save the item, look up similar past purchases — each wrapping the *same deterministic function* the pipeline uses, so the agent physically cannot invent a number it would have to fetch.
 
-The UI carries a second line of defence — below 0.5 confidence the verdict can never say BUY, whatever the arithmetic says. It is worth being precise that on this item the model settled at 0.6, above that floor. The caveat is what protects the user here, not the threshold.
-
-### A real bug from a real run: Gemma 3 cannot call tools
-
-I built the sourcing advisor as a Mastra agent with five tools — search comps, estimate a price, do the fee math, save the item, look up similar past purchases — each wrapping the *same deterministic function* the pipeline uses, so the agent physically cannot invent a number it would have to fetch.
-
-Then it failed on the first request:
+It runs on a different model from the one that reads the photo, and that is a capability boundary rather than a surprise. Ollama reports Gemma 3's capabilities as `completion, vision`: vision is exactly what makes it the right reader, and tool calling is simply not part of the model.
 
 ```
-$ curl -s localhost:8787/advisor -d '{"message":"…Ludwig Acrolite snare for $150…"}'
-{"error":"registry.ollama.ai/library/gemma3:4b does not support tools"}
-
 $ ollama show gemma3:4b
   Capabilities
     completion
     vision
 ```
 
-No `tools`. Gemma 3 in Ollama will do vision and completion and nothing else, so the model that reads your photograph is not the model that can run an advise loop. The replacement had to be a second open model, and choosing it took three tries.
-
-**Try one: Qwen 3 4B.** It calls tools correctly — I verified that directly against Ollama, where it produced a clean `estimate_profit` call from a `thinking` field and no content at all — and it has a reasoning mode:
-
-```
-$ ollama show qwen3:4b
-  Capabilities
-    completion
-    tools
-    thinking
-```
-
-That `thinking` field was the first trap. The interesting tokens arrive there, before any content is emitted, so an early probe with a tight `num_predict` budget came back with an empty `content` and a perfectly good answer upstream in the response. That run is where I concluded "the model can't call tools", and I was wrong: I was reading the wrong field and the budget I had set was 20 tokens.
-
-**The second trap was quieter, and it was not mine.** Ollama's AI SDK provider resolves its `think` flag to `false` when nothing sets it:
+So the agent loop runs beside it on `llama3.2:3b` — `tools`, no reasoning mode, and the same money question answered in about two seconds:
 
 ```ts
-function resolveOllamaThinkFlag({ reasoning, ollamaThink, warnings }) {
-  if (ollamaThink !== void 0) return ollamaThink;
-  if (isCustomReasoning(reasoning)) { /* … */ return reasoning !== "none"; }
-  return false;   // ← the default
-}
-```
-
-Qwen 3 thinks whether or not the flag is set. With it off, Ollama does not separate the reasoning out, and it arrives inside `content` — so the agent's answer was several paragraphs of the model arguing with itself about what a tool call is, with the actual recommendation somewhere in the middle. Turning it on fixes that:
-
-```ts
-providerOptions: { ollama: { think: true } }
-```
-
-Getting the key right matters more than it should. Provider options are matched against the provider id, and the model object reports `provider: "ollama.responses"`. Using that string in place of `ollama` does nothing at all, silently, with no warning — which is how the bug survived a first round of debugging and a second round of false conclusions.
-
-**And then the flag showed me the bill.** With reasoning correctly separated it was finally visible how much of it there was: roughly 35 KB of `thinking` per step, and with the agent configured for up to six steps that is over four minutes to answer a question about a $215 sale. The arithmetic was right. The wait was not survivable, and no prompt change touches it, because the deliberation is what the model is.
-
-So the tool model is now `llama3.2:3b`: `tools`, no thinking mode, same question answered in about two seconds.
-
-So the shape of it settled. Gemma keeps the jobs it is genuinely good at — reading items, writing listings — and the agent loop runs beside it on a tool-capable open model that does not stop to think about it first:
-
-```ts
-// Ollama reports Gemma 3 as `completion, vision` — no tool calling,
-// and a reasoning model spends minutes deciding to call one.
+// Gemma 3 reports `completion, vision`; the agent needs `tools`.
 model: toolModel(),   // llama3.2:3b
 ```
 
-Two mechanical details earned their keep along the way. The tool schemas coerce now: `llama3.2:3b` sends `{"resalePrice":"215"}`, a string where a number belongs, and a strict `z.number()` turns a perfectly good tool call into a validation error the model then tries to apologise for. And `think` is read from the model's reported capabilities rather than hard-coded, because a model with no thinking mode does not ignore the flag — it rejects the entire request with `"llama3.2:3b" does not support thinking`.
+The reasoning models are the obvious candidate and were the wrong trade here. Qwen 3 4B calls tools correctly, but it deliberates before every step: roughly 35 KB of `thinking` per step across a six-step budget is over four minutes to answer a question about a $215 sale. The arithmetic was right; the wait was not survivable. Two details follow from the same boundary — `think` is read from the model's own reported capabilities rather than hard-coded, because a non-reasoning model rejects the request outright rather than ignoring the flag, and the tool schemas coerce, because this model sends `{"resalePrice":"215"}`, a string where a number belongs.
 
-### The model got the numbers right and the answer wrong
+Gemma keeps the jobs it is good at: reading items and writing listings. `GET /capabilities` reports the tool model separately, and the advisor route degrades to a deterministic answer built from the same numbers rather than returning a 500.
 
-That should have been the end of it. The loop worked, the transcript was clean, and I nearly shipped it — which is when I noticed the same question giving different answers.
+### The money sentence is not the model's to write
 
-A model that small will restate your numbers correctly and then invert the conclusion. Asked about a $150 snare with a $58.82 ceiling, one run reported that the asking price was *below* the ceiling and the verdict was BUY — both numbers right, the comparison backwards. Another said "the item should be bought". Another said PASS. Same tool, same output, three runs, three verdicts:
+The loop worked and the transcript was clean, which is when I noticed the same question giving different answers. A model that small will restate your numbers correctly and then invert the conclusion: asked about a $150 snare with a $58.82 ceiling, one run said the asking price was *below* the ceiling and the verdict was BUY — both numbers right, the comparison backwards. Three runs, three verdicts:
 
 ```
 run 1  PASS. Most I would pay is $58.82.
@@ -247,17 +197,13 @@ run 2  The item should be bought.
 run 3  The reseller should pass on the snare drum.
 ```
 
-A number a language model paraphrased is a number you cannot audit, and auditable numbers are this app's whole claim. So the money sentence is no longer the model's to write. `feeMath` composes the reply — the verdict, the ceiling, the profit, every figure straight out of the same `decideVerdict()` the scan screen uses — and the route sends that instead of the model's version of it. The same question, five times, now produces one answer, character for character:
+A number a language model paraphrased is a number you cannot audit, and auditable numbers are this app's whole claim. So the money sentence is no longer the model's to write: `feeMath` composes the reply — verdict, ceiling, profit, every figure straight out of the same `decideVerdict()` the scan screen uses — and the route sends that instead of the model's version. The same question, five times, one answer, character for character:
 
 ```
 PASS. Most I would pay is $58.82. At $150 you would make $26.46 if it resells at $215.
 ```
 
-What is left to the agent is the part it is genuinely good at: understanding the request and calling the tool with the right arguments. It does that well, and the three-turn transcript in [`docs/evidence/agent-transcript.json`](https://github.com/ItsPriyamSri/sourcerer/blob/master/docs/evidence/agent-transcript.json) is the proof rather than the assertion. *"I'm shipping cross-country, so put shipping at $35"* becomes `shippingCost: 35`, the ceiling moves from $58.82 to $49.82, and the third turn still knows what the first one was about.
-
-The rule this project started with was *the model reads the item, plain code decides the price*. Running a small model in a loop is what convinced me to hold the agent loop to it as well. The advisor picks the tool. It does not get to pick a number.
-
-`GET /capabilities` reports the tool model separately, with `Run: ollama pull llama3.2:3b (Gemma 3 cannot call tools)` as its detail string when it is missing, and the advisor route degrades to a deterministic answer built from the same numbers rather than returning a 500.
+What is left to the agent is what it is genuinely good at: understanding the request and calling the tool with the right arguments. The three-turn transcript in [`docs/evidence/agent-transcript.json`](https://github.com/ItsPriyamSri/sourcerer/blob/master/docs/evidence/agent-transcript.json) is the proof rather than the assertion — *"I'm shipping cross-country, so put shipping at $35"* becomes `shippingCost: 35`, the ceiling moves from $58.82 to $49.82, and the third turn still knows what the first one was about. The advisor picks the tool. It does not get to pick a number.
 
 ### The comps problem I couldn't engineer around
 
@@ -308,7 +254,7 @@ Every figure here is measured on the machine described above, and each one is tr
 - **Zero bytes uploaded** on a local scan. Photos are downscaled on-device before anything else happens, and with live comps off there is nothing to upload *to*. The run log on each scan states this as a field rather than a promise.
 - **12 items, 3 + 9, 0 duplicates.** A `SIGKILL` mid-sweep in the durable reprice job cost the run time and nothing else; the full numbers are in the Temporal section above.
 
-Pointing real services at this code found three more defects, two of them silent. **Ollama 0.40 removed `POST /api/embeddings`** in favour of `POST /api/embed`, so `embed()` returned null on every single call: every upsert stored a NULL vector, "have I bought this before?" quietly degraded to keyword matching, and the vector column stayed empty forever with no error raised anywhere. Then a 32-item demo seed, firing all its embeds at once, blew the request timeout on every one of them, because Ollama answers one request per model at a time — the writes are serialised now. And the comps step logged a *network* call as `provider: cache` / `locality: device`, because SerpApi sits behind an on-disk cache that describes itself as local; that is the one line in the UI whose job is to tell you whether your query left the machine, and it said it had not. It reads the result's own `source` now.
+Pointing real services at this code found three more defects, two of them silent. **Ollama 0.40 removed `POST /api/embeddings`** in favour of `POST /api/embed`, so every upsert stored a NULL vector: "have I bought this before?" degraded to keyword matching with no error raised anywhere. A 32-item seed then blew the request timeout on every embed, because Ollama answers one request per model at a time; the writes are serialised now. And the comps step logged a network call as `provider: cache` / `locality: device` — the one line whose job is to say whether your query left the machine — because SerpApi sits behind an on-disk cache that describes itself as local. It reads the result's own `source` now.
 
 ---
 
@@ -322,7 +268,7 @@ Being open-weight is what makes that possible at all. I can ship a 3.3 GB vision
 
 **The model is load-bearing, not a garnish.** A reseller cannot price an item she cannot name, and naming it is the part that used to need a person who knows the category: the query that finds comps is *big e levi's jacket*, not *denim jacket*. That step belongs to the model, and when it fails it fails quietly — which is why so much of this post is about how it fails rather than how fast it is.
 
-**What it costs to run.** Zero, per item, forever. For the flipper this is built for — 20–40 items a month, plus the ones she picks up and puts back down — that is a few hundred scans a year, so a cent or two per call would come to single-digit dollars annually. Cost is not really the argument. The round trip is: a cent is cheap right up until the moment there is no signal, which is the exact moment this tool exists for. Electricity is the whole running cost, and it is what makes a $5/month price even arguable — though see the limits below, where nobody has paid it yet.
+**What it costs to run.** Zero, per item, forever. The flipper this is built for does 20–40 items a month plus the ones she puts back on the shelf — a few hundred scans a year, so a cent or two per call would be single-digit dollars annually. Cost is not really the argument; the round trip is. A cent is cheap right up until there is no signal, which is the exact moment this tool exists for. Electricity is the whole running cost, and it is what makes a $5/month price even arguable — though nobody has paid it yet.
 
 **Where a closed model would genuinely be better.** I'll say this plainly: a frontier model has a larger world-knowledge base for genuinely obscure collectibles, and no quantisation loss on fine label detail. This 4B model is confident about Levi's and Pyrex and shaky on a mid-century chair with no marks — which is exactly the row I left in the table above. If you're appraising a single $4,000 item, call a proper model. Sourcerer optimises for the other case: forty $12 items and ten seconds each.
 

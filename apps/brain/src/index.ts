@@ -98,13 +98,12 @@ app.get("/capabilities", async (c) => {
         provider: "ollama (tools)",
         model: config.ollama.toolModel,
         local: true,
-        // Ollama reports Gemma 3 as `completion, vision` — no tool calling. The agent
-        // loop needs a tool-capable model, and this is the honest report of whether
-        // one is installed.
+        // The agent loop needs a model with the `tools` capability, which the vision
+        // reader does not have. This is the honest report of whether one is installed.
         available: ollamaStatus.models.includes(config.ollama.toolModel),
         detail: ollamaStatus.models.includes(config.ollama.toolModel)
           ? "Powers the advisor's tool loop."
-          : `Run: ollama pull ${config.ollama.toolModel} (Gemma 3 cannot call tools).`,
+          : `Run: ollama pull ${config.ollama.toolModel} (the advisor needs a tool-capable model).`,
       },
       {
         provider: "backboard",

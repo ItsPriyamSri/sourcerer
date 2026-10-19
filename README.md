@@ -429,9 +429,9 @@ reasoning.
   that once per session.
 - **eBay's real sold prices are not available.** See the section above. The 0.86 haircut
   is a judgement call and it is labelled as one everywhere it is applied.
-- **Gemma 3 4B cannot call tools.** Ollama reports its capabilities as
-  `completion, vision` — no `tools`. The tool-using advisor needs a second open model
-  beside it. `GET /capabilities` reports this rather than pretending otherwise.
+- **Two models, by necessity.** Gemma 3 4B is a reader — Ollama reports it as
+  `completion, vision` — and has no `tools` capability, so the agent loop runs on
+  `llama3.2:3b` beside it. `GET /capabilities` reports which is installed.
 - **The price model is empty on day one.** With no sold history it falls back to
   condition-adjusted comps and a deliberately pessimistic guess, so the first week's
   verdicts lean PASS.
