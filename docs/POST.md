@@ -1,6 +1,6 @@
 ---
 title: "Sourcerer: the model reads the thrift find, plain code decides the price"
-published: false
+published: true
 description: "An offline-first sourcing copilot for resellers. A local open-weight model reads the item; plain arithmetic decides the most you should pay."
 tags: devchallenge, hf26challenge, ai, opensource
 cover_image: https://raw.githubusercontent.com/ItsPriyamSri/sourcerer/master/docs/media/cover.png
