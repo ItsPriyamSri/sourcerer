@@ -1,6 +1,25 @@
-# Sourcerer: the model reads the thrift find, plain code decides the price
+---
+title: "Sourcerer: the model reads the thrift find, plain code decides the price"
+published: false
+description: "An offline-first sourcing copilot for resellers. A local open-weight model reads the item; plain arithmetic decides the most you should pay."
+tags: devchallenge, hf26challenge, ai, opensource
+cover_image: https://raw.githubusercontent.com/ItsPriyamSri/sourcerer/master/docs/media/verdict.buy.light.png
+---
 
 *This is a submission for the [Hacktoberfest Open-Source AI Challenge, Week 2: Side Hustle](https://dev.to/challenges/hacktoberfest-week2-2026-10-12).*
+
+> **The short version.** A reseller holds an item she doesn't recognise and has ten seconds
+> to decide. Sourcerer reads it with a local open-weight model and answers one question:
+> **what is the most I should pay, right now?** The reading is AI. The number is arithmetic.
+> It runs with no internet and no API keys, because that's where the decision actually
+> happens.
+>
+> **Who it's for:** a weekend flipper doing 20–40 items a month, standing in a thrift-store
+> basement with no signal and $8 in her hand.
+>
+> **Try it:** [landing page](https://sourcerer-ochre.vercel.app) ·
+> [source on GitHub](https://github.com/ItsPriyamSri/sourcerer) · 101 tests,
+> seven integrations verified against live services.
 
 ---
 
