@@ -15,20 +15,58 @@ import { config } from "../env.ts";
 
 let pool: pg.Pool | null = null;
 let schemaReady = false;
+/** When schema init fails, back off instead of stalling every call for 4s. */
+let schemaFailedAt = 0;
+const SCHEMA_RETRY_MS = 60_000;
 
 export function hasVectorDb(): boolean {
   return Boolean(config.db.url);
 }
 
+/**
+ * Connection parameters for the pool.
+ *
+ * `pg-connection-string` *replaces* an explicit `ssl` object whenever the URL
+ * carries `sslmode`, and since pg 8.23 `sslmode=require` means verify-full. Tiger
+ * Cloud hands you `...?sslmode=require`, and its free services present a
+ * self-signed certificate, so leaving that in the URL kills the very first query at
+ * the TLS handshake (`self-signed certificate`) — after which schema init fails,
+ * every upsert no-ops and `/similar` quietly returns nothing, forever.
+ * So: strip the parameter and decide TLS ourselves.
+ * https://node-postgres.com/features/ssl
+ * https://www.tigerdata.com/docs/deploy/tiger-cloud/tiger-cloud-aws/security/strict-ssl
+ */
+export function dbConnection(raw: string): {
+  connectionString: string;
+  ssl?: { rejectUnauthorized: boolean };
+} {
+  try {
+    const url = new URL(raw);
+    const needsTls = url.searchParams.has("sslmode") || /timescale\.com$/.test(url.hostname);
+    url.searchParams.delete("sslmode");
+    return {
+      connectionString: url.toString(),
+      ssl: needsTls ? { rejectUnauthorized: false } : undefined,
+    };
+  } catch {
+    // Not a URL we can parse (exotic forms, unix socket) — hand it over untouched.
+    return {
+      connectionString: raw,
+      ssl: /sslmode=|timescale\.com/.test(raw) ? { rejectUnauthorized: false } : undefined,
+    };
+  }
+}
+
 function getPool(): pg.Pool {
   if (!pool) {
     pool = new pg.Pool({
-      connectionString: config.db.url,
-      // Tiger Cloud and most managed PG need TLS; local containers usually do not.
-      ssl: /sslmode=require|timescale\.com/.test(config.db.url) ? { rejectUnauthorized: false } : undefined,
+      ...dbConnection(config.db.url),
       max: 4,
       connectionTimeoutMillis: 4000,
     });
+    // An idle client the server drops (Tiger resets connections when it swaps a
+    // certificate in) emits `error` on the pool; unhandled, node crashes.
+    pool.on("error", (err) => console.warn("[vector] idle client error:", err.message));
   }
   return pool;
 }
@@ -36,6 +74,7 @@ function getPool(): pg.Pool {
 export async function ensureSchema(): Promise<boolean> {
   if (!hasVectorDb()) return false;
   if (schemaReady) return true;
+  if (schemaFailedAt && Date.now() - schemaFailedAt < SCHEMA_RETRY_MS) return false;
   const dim = config.db.embedDim;
   try {
     await getPool().query("CREATE EXTENSION IF NOT EXISTS vector");
@@ -58,8 +97,10 @@ export async function ensureSchema(): Promise<boolean> {
     );
     await getPool().query(`CREATE INDEX IF NOT EXISTS items_tsv_gin ON items USING gin (tsv)`);
     schemaReady = true;
+    schemaFailedAt = 0;
     return true;
   } catch (err) {
+    schemaFailedAt = Date.now();
     console.warn("[vector] schema init failed:", err instanceof Error ? err.message : err);
     return false;
   }
@@ -166,4 +207,5 @@ export async function closeVector(): Promise<void> {
   if (pool) await pool.end().catch(() => {});
   pool = null;
   schemaReady = false;
+  schemaFailedAt = 0;
 }

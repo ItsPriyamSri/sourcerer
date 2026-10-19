@@ -35,7 +35,7 @@ import {
 } from "./core/store.ts";
 import { hasVectorDb, similarItems, embed, ensureSchema } from "./providers/vector.ts";
 import { hasVoice, transcribe, speak } from "./providers/voice.ts";
-import { initTracing, tracingEnabled, captureError } from "./providers/tracing.ts";
+import { initTracing, tracingEnabled, captureError, shutdownTracing } from "./providers/tracing.ts";
 import { llmProviders } from "./providers/llm.ts";
 import { TabPfnPricingEngine } from "./providers/pricing.ts";
 import { HeuristicPricingEngine } from "./providers/pricing.ts";
@@ -507,6 +507,15 @@ app.post("/reprice", async (c) => {
 // ── boot ───────────────────────────────────────────────────────────────────
 
 const tracing = initTracing();
+
+// Sentry batches spans on a ~5s timer, so a hard exit silently drops the last
+// window's worth. Close the client on the way out; with no DSN this returns
+// immediately and the signal behaves exactly as it did before.
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.on(signal, () => {
+    void shutdownTracing().finally(() => process.exit(0));
+  });
+}
 console.log(`[sourcerer] tracing: ${tracing ? "Sentry on" : "off (no SENTRY_DSN)"}`);
 
 serve({ fetch: app.fetch, port: config.port }, (info) => {

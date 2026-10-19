@@ -44,7 +44,7 @@ the money.** Everything below follows from that split.
 |---|---|---|
 | `identify` | Photo and/or text → `Identification` (title, brand, category, attributes, condition, keywords, confidence, caveats) | Falls through the provider chain (Ollama → Backboard); if a model returns prose instead of JSON, the prose becomes a low-confidence title rather than a 500 |
 | `findComps` | Keywords → comparable listings | SerpApi → comps cache → the user's own sold history → `estimate` |
-| `estimatePrice` | `Identification` + comps → `PriceEstimate` (expected / low / high / days-to-sell) | TabPFN → condition-adjusted comps median → conservative heuristic |
+| `estimatePrice` | `Identification` + comps → `PriceEstimate` (expected / low / high / confidence) | TabPFN → condition-adjusted comps median → conservative heuristic |
 | `decideVerdict` | `buyPrice` + expected resale + `CostModel` → `Verdict` | Pure function; cannot fail |
 | `writeListing` | item → `ListingDraft` | Model → a clearly-labelled template built from what we already know |
 

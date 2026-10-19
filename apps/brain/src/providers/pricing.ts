@@ -57,6 +57,12 @@ export interface TrainingRow {
   compsCount?: number;
 }
 
+interface TabpfnUpload {
+  train_set_upload_id: string;
+  x_train_info?: { signed_urls: string[]; required_headers: Record<string, string> };
+  y_train_info?: { signed_urls: string[]; required_headers: Record<string, string> };
+}
+
 export function featuresFor(ctx: PriceContext): PriceFeatures {
   const s = ctx.comps.summary;
   return {
@@ -82,6 +88,28 @@ export function evidenceConfidence(ctx: PriceContext): number {
   const fromSpread = clamp(1 - spread, 0, 1);
   const fromId = clamp(ctx.identification.confidence, 0, 1);
   return round2(0.45 * fromCount + 0.25 * fromSpread + 0.3 * fromId);
+}
+
+/**
+ * Read the three regression quantiles out of a `predict` response.
+ *
+ * Prior Labs' SDK contract is "one array per quantile", i.e. quantile-major, so a
+ * single test row comes back as `[[p10], [p50], [p90]]`. This file used to read it
+ * row-major: `prediction[0]` is then `[p10]`, which fails the `length >= 3` check and
+ * drops into the ±20% fallback *around p10* — about 20% low, every time, with no
+ * error anywhere. Both nestings are accepted here instead of assumed.
+ */
+export function readQuantiles(prediction: unknown): [number, number, number] {
+  const outer = Array.isArray(prediction) ? (prediction as unknown[]) : [];
+  const inner = outer.map((v) => (Array.isArray(v) ? (v as unknown[]).map(Number) : null));
+  const quantileMajor = inner.length >= 3 && inner.every((q) => q !== null);
+  // quantile-major [[p10],[p50],[p90]] · row-major [[p10,p50,p90]] · flat [p10,p50,p90]
+  const flat: number[] = quantileMajor
+    ? (inner as number[][]).map((q) => q[0] ?? 0)
+    : (inner[0] ?? outer.map(Number));
+  if (flat.length >= 3) return [flat[0]!, flat[1]!, flat[2]!];
+  const only = Number.isFinite(flat[0]) ? (flat[0] as number) : 0;
+  return [only * 0.8, only, only * 1.2];
 }
 
 /**
@@ -184,14 +212,24 @@ export class TabPfnPricingEngine implements PricingEngine {
       headers: this.headers(),
       body: JSON.stringify({ x_train_info: { format: "csv" }, y_train_info: { format: "csv" } }),
     });
-    if (!prepRes.ok) throw new Error(`tabpfn prepare_train_set_upload ${prepRes.status}`);
-    const prep = (await prepRes.json()) as {
-      train_set_upload_id: string;
-      x_train_info: { signed_urls: string[]; required_headers: Record<string, string> };
-      y_train_info: { signed_urls: string[]; required_headers: Record<string, string> };
-    };
-    await this.putSigned(prep.x_train_info, xCsv);
-    await this.putSigned(prep.y_train_info, yCsv);
+    let prep: TabpfnUpload;
+    if (prepRes.ok) {
+      prep = (await prepRes.json()) as TabpfnUpload;
+      await this.putSigned(prep.x_train_info!, xCsv);
+      await this.putSigned(prep.y_train_info!, yCsv);
+    } else if (prepRes.status === 409) {
+      // The docs' documented meaning of 409 here is "duplicate upload — reuse the
+      // returned ID". Failing on it would make a re-train of unchanged history
+      // impossible without manual cleanup, so reuse it and skip the re-upload.
+      const body = (await prepRes.json().catch(() => ({}))) as { train_set_upload_id?: string };
+      if (!body.train_set_upload_id) {
+        throw new Error("tabpfn prepare_train_set_upload 409 with no reusable id");
+      }
+      prep = { train_set_upload_id: body.train_set_upload_id };
+    } else {
+      const detail = await prepRes.text().catch(() => "");
+      throw new Error(`tabpfn prepare_train_set_upload ${prepRes.status}: ${detail.slice(0, 200)}`);
+    }
 
     const fitRes = await fetch(`${this.baseUrl}/tabpfn/fit`, {
       method: "POST",
@@ -202,7 +240,16 @@ export class TabPfnPricingEngine implements PricingEngine {
       }),
     });
     if (!fitRes.ok) throw new Error(`tabpfn fit ${fitRes.status}: ${(await fitRes.text()).slice(0, 200)}`);
-    const fit = (await fitRes.json()) as { fitted_train_set_id: string };
+    // The quickstart reads the id straight off this response — a long fit streams
+    // keepalive whitespace rather than returning early — but the schema also carries
+    // a status. Anything other than `completed` would 404 every predict, and the
+    // chained engine would swallow that and price from the heuristic: looking
+    // successful while quietly ignoring the model. Say so instead of pretending.
+    const fit = (await fitRes.json()) as { fitted_train_set_id?: string; status?: string };
+    if (fit.status && fit.status !== "completed") {
+      throw new Error(`tabpfn fit status "${fit.status}" — not usable yet`);
+    }
+    if (!fit.fitted_train_set_id) throw new Error("tabpfn fit returned no fitted_train_set_id");
 
     this.fittedId = fit.fitted_train_set_id;
     this.rows = rows.length;
@@ -245,10 +292,7 @@ export class TabPfnPricingEngine implements PricingEngine {
     });
     if (!predRes.ok) throw new Error(`tabpfn predict ${predRes.status}`);
     const pred = (await predRes.json()) as { prediction: number[] | number[][] };
-
-    // Regression quantiles come back per-row; be liberal about the exact nesting.
-    const row = Array.isArray(pred.prediction[0]) ? (pred.prediction[0] as number[]) : (pred.prediction as number[]);
-    const [p10, p50, p90] = row.length >= 3 ? row : [row[0]! * 0.8, row[0]!, row[0]! * 1.2];
+    const [p10, p50, p90] = readQuantiles(pred.prediction);
 
     return {
       expected: round2(p50 ?? 0),
@@ -257,7 +301,7 @@ export class TabPfnPricingEngine implements PricingEngine {
       method: "tabpfn",
       confidence: clamp(0.5 + Math.min(this.rows, 60) / 200, 0.5, 0.85),
       features: f as unknown as Record<string, string | number>,
-      note: `TabPFN-3.5 fitted on your last ${this.rows} sold items.`,
+      note: `TabPFN (${this.modelPath}) fitted on your last ${this.rows} sold items.`,
     };
   }
 }

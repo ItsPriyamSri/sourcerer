@@ -2,6 +2,7 @@ import { fileURLToPath } from "node:url";
 import { NativeConnection, Worker } from "@temporalio/worker";
 import * as activities from "./activities.ts";
 import { config } from "../env.ts";
+import { initTracing, shutdownTracing } from "../providers/tracing.ts";
 
 /**
  * The reprice worker. Run it next to the brain:
@@ -12,6 +13,9 @@ import { config } from "../env.ts";
  * sits there waiting for runs — including runs it will resume after a restart.
  */
 async function run() {
+  // The activities call `withSpan`/`note`, but those are no-ops unless tracing was
+  // initialised in *this* process. Without this line the worker emits nothing.
+  initTracing();
   const connection = await NativeConnection.connect({ address: config.temporal.address });
   const worker = await Worker.create({
     connection,
@@ -24,7 +28,8 @@ async function run() {
   await worker.run();
 }
 
-run().catch((err) => {
+run().catch(async (err) => {
   console.error("[reprice-worker] fatal:", err);
+  await shutdownTracing();
   process.exit(1);
 });

@@ -7,7 +7,9 @@ capability and the app tells you whether it's live on the *What runs where* shee
 Free partner credits for several of these are at
 <https://hacktoberfest.com/my/promos> (Tinker, Render, Backboard, a .tech domain).
 
-Copy `apps/brain/.env.example` → `apps/brain/.env` and fill in what you have.
+Copy `apps/brain/.env.example` → `apps/brain/.env` and fill in what you have — or let
+`pnpm keys:setup` prompt you through it and `pnpm keys:check` confirm each one is live.
+See [`SETUP-KEYS.md`](./SETUP-KEYS.md) for the one-page version.
 
 ---
 
@@ -37,11 +39,11 @@ source. This is deliberate — the working offline behaviour *is* the pitch.
 ### `TABPFN_TOKEN` — your own price model
 | | |
 |---|---|
-| **Unlocks** | A price + days-to-sell model trained on *your* sold history (quantile output from the Prior Labs REST API). The offline number stops being generic. |
+| **Unlocks** | A price model trained on *your* sold history (regression quantiles from the Prior Labs REST API), so the offline number stops being generic. Price only — sale speed is recorded but not modelled. |
 | **Where** | <https://platform.priorlabs.ai/account/api-keys> (free non-commercial key) |
-| **Code** | `apps/brain/src/providers/pricing.ts` → `TabPfnPricingEngine`; endpoint `POST /train` |
+| **Code** | `apps/brain/src/providers/pricing.ts` → `TabPfnPricingEngine`; the documented flow `POST /tabpfn/prepare_train_set_upload` → `PUT` → `POST /tabpfn/fit` → `POST /tabpfn/prepare_test_set_upload` → `PUT` → `POST /tabpfn/predict` |
 | **Without it** | `HeuristicPricingEngine`: condition-adjusted comps median. Solid, just not personal. |
-| **Try it** | `POST /demo/seed` then `POST /train` — 12 historical sales are enough to fit. |
+| **Try it** | `POST /demo/seed?reset=1` then `POST /train` — the demo fixture ships 32 historical sales, and 8 is the minimum a fit will accept. |
 
 ---
 
@@ -50,7 +52,7 @@ source. This is deliberate — the working offline behaviour *is* the pitch.
 ### `SENTRY_DSN` — agent tracing
 | | |
 |---|---|
-| **Unlocks** | `@sentry/node` v11 auto-instruments Mastra: a `gen_ai.*` span per agent step and model call, with token counts, latency and cost. Also captures pipeline errors with the route that produced them. |
+| **Unlocks** | `@sentry/node` spans around the pipeline — identify, comps, price — so one run becomes a real waterfall, plus error capture that attaches the route it came from. The framework's own `gen_ai.*` spans (token counts, per-model-call cost) are **not** wired: that integration needs `@mastra/observability` installed and `Sentry.init` preloaded, which this repo does not do. |
 | **Where** | <https://sentry.io> → create a Node project → copy the DSN |
 | **Code** | `apps/brain/src/providers/tracing.ts` (`initTracing`, `withSpan`, `captureError`) |
 | **Without it** | Everything works; you just have no traces. `/health` reports `tracing: false`. |
@@ -119,26 +121,39 @@ isn't running — the app never pretends a background job exists when it doesn't
 ## Summary table
 
 Hand this to whoever is supplying credentials. **Nothing in this table is required** to
-run Sourcerer, and the last column states plainly whether the integration has been
-exercised against a live account or merely implemented, typechecked and observed to
-degrade correctly when absent.
+run Sourcerer.
 
-| Env var | Service | Required | Buys you | Verified against a live account? |
-|---|---|---|---|---|
-| — | Ollama + Gemma 3 | **no (but assumed for the full experience)** | identification + listing writing, entirely local | **Yes — measured**, see `docs/evidence/identify-results.json` |
-| — | Temporal | no | crash-proof background reprice | **Yes — a `SIGKILL` mid-sweep, `docs/evidence/temporal/`** |
-| `SERPAPI_API_KEY` | SerpApi | no | live eBay comps | Not yet — implemented, falls back cleanly |
-| `TABPFN_TOKEN` | Prior Labs | no | personal price + days-to-sell model | Not yet — implemented, falls back cleanly |
-| `SENTRY_DSN` | Sentry | no | agent tracing | Not yet — implemented, falls back cleanly |
-| `BACKBOARD_API_KEY` | Backboard | no | hosted open-weight brain (GPU-less demo) | Not yet — implemented, falls back cleanly |
-| `DATABASE_URL` | Tiger Data / pgvector | no | vector memory | Not yet — implemented; local container path available |
-| `ELEVENLABS_API_KEY` | ElevenLabs | no | voice in and out | Not yet — implemented, returns `501` and hides the UI |
-| `SENTRY_RECORD_INPUTS` | Sentry | no | set `1` only to debug with inputs recorded | — |
-| `MODEL_PROVIDER` | — | no | force `ollama` or `backboard` | — |
+Two different things can be meant by "it works", so they are two separate columns:
 
-**What "implemented, falls back cleanly" means precisely:** the code path exists, is
-typechecked, is wired into the capability registry, and `GET /capabilities` reports it as
-unavailable with a reason. What it does *not* mean is that a paid account has been billed
-or a live response parsed. Those are different claims and only the first one is being
-made. If you supply the key, the integration is one `.env` line from live — and
-`GET /capabilities` is the switch that tells the UI to start using it.
+- **Request verified** — the HTTP request or connection this code builds has been checked
+  against the provider's *published* contract (current docs, and its OpenAPI where one
+  exists), and pinned by a test wherever the contract can be pinned. This is the class of
+  bug that only shows up once someone finally connects a real key: a parameter the API
+  rejects, a model id that was retired last month, a TLS default that silently overrides
+  your own settings.
+- **Live account** — a real, billed account called it and got a real answer back. Nothing
+  in this table is in that column yet. Supplying a key is what moves a row there, and
+  `pnpm keys:check` is the command that does it.
+
+| Env var | Service | Required | Buys you | Request verified | Live account |
+|---|---|---|---|---|---|
+| — | Ollama + Gemma 3 | no ¹ | identification + listing writing, entirely local | **yes** | **yes — measured**, `docs/evidence/identify-results.json` |
+| — | Temporal | no | crash-proof background reprice | **yes** | **yes — a `SIGKILL` mid-sweep**, `docs/evidence/temporal/` |
+| `SERPAPI_API_KEY` | SerpApi | no | live eBay asking-price comps | **yes** — the `_ipg` cap snaps to an allowed size (25/50/100/200); 15 tests | not yet |
+| `TABPFN_TOKEN` | Prior Labs | no | price model fitted on your own sales | **yes** — quantile-major output read as documented; 7 tests | not yet |
+| `SENTRY_DSN` | Sentry | no | a span per pipeline stage, plus error capture | **yes** — v11 `dataCollection`, `isEnabled`, flush-on-exit | not yet |
+| `BACKBOARD_API_KEY` | Backboard | no | hosted open-weight brain (GPU-less demo) | **yes** — per-turn text goes in `system_prompt`, not the undocumented `instructions`; 9 tests | not yet |
+| `DATABASE_URL` | Tiger Data / pgvector | no | vector memory ("have I bought this before?") | **yes** — `sslmode` is stripped so it cannot override our TLS; 7 tests | not yet |
+| `ELEVENLABS_API_KEY` | ElevenLabs | no | voice in and out | **yes** — `scribe_v2` (`scribe_v1` was retired 2026-07-09) and `eleven_flash_v2_5` | not yet |
+| `SENTRY_RECORD_INPUTS` | Sentry | no | set `1` only to debug with inputs recorded | — | — |
+| `MODEL_PROVIDER` | — | no | force `ollama` or `backboard` | — | — |
+
+¹ Assumed for the full experience, but not required: with no model at all the app falls
+back to on-device heuristics.
+
+**What "request verified" does not mean:** it does not mean the integration has been
+billed, quota-capped, rate-limited, or has seen a real payload. Each of those is a
+live-account question and the honest answer for every keyed row is "not yet". What it does
+mean is that the defects which would have failed on the *first* live call were found and
+fixed before a key was ever connected — several of them by reading the published contract
+instead of assuming it. Run `pnpm keys:check` to prove the rest, live, in one command.

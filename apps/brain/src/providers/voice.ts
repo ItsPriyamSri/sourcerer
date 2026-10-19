@@ -23,7 +23,9 @@ export async function transcribe(audio: Blob | Buffer, filename = "note.webm"): 
   const blob =
     audio instanceof Blob ? audio : new Blob([new Uint8Array(audio)], { type: "audio/webm" });
   form.append("file", blob, filename);
-  form.append("model_id", "scribe_v1");
+  // scribe_v1 was deprecated with a removal date of 2026-07-09 — it is past that
+  // date now, so the first live transcription would fail on the model id alone.
+  form.append("model_id", "scribe_v2");
 
   const res = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
     method: "POST",
@@ -51,7 +53,9 @@ export async function speak(text: string): Promise<Buffer> {
       },
       body: JSON.stringify({
         text,
-        model_id: "eleven_turbo_v2_5",
+        // Deprecated in favour of the flash tier, which is the current
+        // recommendation for low-latency generation.
+        model_id: "eleven_flash_v2_5",
         voice_settings: { stability: 0.4, similarity_boost: 0.75 },
       }),
     },

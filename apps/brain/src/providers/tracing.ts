@@ -4,10 +4,15 @@ import { config } from "../env.ts";
 /**
  * Tracing.
  *
- * @sentry/node 11 auto-instruments Mastra (agent runs, tool calls, model calls)
- * and emits gen_ai.* spans with token usage and cost. That means we get a real
- * waterfall of "identify took 4.2s on Gemma, comps took 900ms, TabPFN took 300ms"
- * without hand-instrumenting the framework.
+ * The pipeline is hand-instrumented: `withSpan` wraps identify, comps and price, so a
+ * run produces a real waterfall ("identify 4.2s on Gemma, comps 900ms, price 300ms")
+ * and `captureError` attaches the route that produced a failure.
+ *
+ * What we do *not* claim: @sentry/node's Mastra integration, which emits the
+ * framework's own gen_ai.* spans with token counts. That integration needs
+ * `@mastra/observability` installed and Sentry preloaded before Mastra loads
+ * (https://docs.sentry.io/platforms/javascript/guides/mastra/). Until it is wired up,
+ * the spans here are ours — and every number in them is measured, not inferred.
  *
  * With no DSN this is a no-op: the app runs identically, it just is not observed.
  */
@@ -20,18 +25,27 @@ export function initTracing(): boolean {
     return false;
   }
   try {
-    const opts = {
+    Sentry.init({
       dsn: config.sentry.dsn,
       tracesSampleRate: config.sentry.tracesSampleRate,
       environment: process.env.NODE_ENV ?? "local",
-      release: "sourcerer@0.1.0",
-      // Photos and bids are personal. Keep them out of traces unless asked.
-      recordInputs: config.sentry.recordInputs,
-      recordOutputs: config.sentry.recordInputs,
-      sendDefaultPii: false,
-    } as unknown as Sentry.NodeOptions;
-    Sentry.init(opts);
-    enabled = true;
+      release: process.env.SENTRY_RELEASE,
+      /**
+       * Photos and bids are personal, and v11 flipped the default the wrong way:
+       * `sendDefaultPii` was removed, and an unset `dataCollection` now collects
+       * genAI inputs/outputs and user info by default. The v10 `recordInputs`/
+       * `recordOutputs` options used to sit here cast to `unknown`, so v11 ignored
+       * them silently — meaning the first identify call would have shipped prompt
+       * and image content to Sentry while the comment promised the opposite.
+       */
+      dataCollection: {
+        genAI: { inputs: config.sentry.recordInputs, outputs: config.sentry.recordInputs },
+        userInfo: false,
+      },
+    });
+    // `init` does not throw on a malformed DSN, so "did not throw" is not the same
+    // as "enabled". Ask the SDK.
+    enabled = Sentry.isEnabled();
   } catch (err) {
     console.warn("[sentry] init failed:", err instanceof Error ? err.message : err);
     enabled = false;
@@ -54,10 +68,15 @@ export async function withSpan<T>(
   return Sentry.startSpan({ name, op, attributes: attrs as never }, fn);
 }
 
-/** Record a metric-ish breadcrumb without a full span. */
+/**
+ * Record a note about work that does not warrant a span.
+ *
+ * Deliberately not a breadcrumb: streamed spans carry no breadcrumbs, and a
+ * breadcrumb only leaves the SDK attached to an error. A log arrives on its own.
+ */
 export function note(message: string, data?: Record<string, unknown>): void {
   if (!enabled) return;
-  Sentry.addBreadcrumb({ category: "sourcerer", message, level: "info", data });
+  Sentry.logger.info(message, data ?? {});
 }
 
 export function captureError(err: unknown, context?: Record<string, unknown>): void {
@@ -66,4 +85,16 @@ export function captureError(err: unknown, context?: Record<string, unknown>): v
     if (context) scope.setContext("sourcerer", context);
     Sentry.captureException(err);
   });
+}
+
+/**
+ * Flush anything still buffered and disable the SDK.
+ *
+ * v11 sends spans on a ~5s timer, so a hard exit drops whatever finished inside the
+ * last window. Returns immediately when tracing is off, which is the zero-key case.
+ */
+export async function shutdownTracing(timeoutMs = 2000): Promise<void> {
+  if (!enabled) return;
+  await Sentry.close(timeoutMs).catch(() => {});
+  enabled = false;
 }

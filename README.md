@@ -155,10 +155,10 @@ Each of these is additive, and each degrades gracefully when absent:
 | Add | You get | File |
 |---|---|---|
 | `SERPAPI_API_KEY` | live eBay listing comps instead of your own history | [`docs/KEYS.md`](docs/KEYS.md) |
-| `TABPFN_TOKEN` | a price + days-to-sell model fitted on *your* sales | [`docs/KEYS.md`](docs/KEYS.md) |
+| `TABPFN_TOKEN` | a price model fitted on *your* sales | [`docs/KEYS.md`](docs/KEYS.md) |
 | `DATABASE_URL` (pgvector) | "have I bought one of these before?" | [`docs/KEYS.md`](docs/KEYS.md) |
 | `ELEVENLABS_API_KEY` | dictate an item; hear the verdict | [`docs/KEYS.md`](docs/KEYS.md) |
-| `SENTRY_DSN` | `gen_ai.*` traces per agent step | [`docs/KEYS.md`](docs/KEYS.md) |
+| `SENTRY_DSN` | a trace per pipeline stage, plus error capture | [`docs/KEYS.md`](docs/KEYS.md) |
 | `BACKBOARD_API_KEY` | the same agent on open weights, hosted, for machines with no GPU | [`docs/KEYS.md`](docs/KEYS.md) |
 
 `GET /capabilities` always tells the truth about what is live right now, and the app
@@ -309,7 +309,7 @@ crash window observable, which is how the claim above was produced.
 Reproduce both:
 
 ```bash
-pnpm test                              # 60 unit tests, no model, no network
+pnpm test                              # 86 unit tests, no model, no network
 pnpm evidence:identify                 # the identification eval (needs Ollama)
 bash scripts/temporal-durability-demo.sh   # the crash-and-resume proof
 pnpm evidence:capture                  # every screenshot in docs/media, from the real app
@@ -320,7 +320,7 @@ pnpm evidence:capture                  # every screenshot in docs/media, from th
 ## Tests
 
 ```bash
-pnpm test          # 60 tests
+pnpm test          # 86 tests
 pnpm typecheck     # all three packages
 ```
 
@@ -350,6 +350,29 @@ Four more pin something the keyed group cannot: what the local matcher is allowe
 a comparable. It used to accept any single shared word, so "wool" pulled a Woolrich
 mountain parka into a Pendleton wool shirt's comp set and priced the shirt off a different
 garment. It now requires two shared tokens, and the parka is a test case.
+
+### The four integrations that only a live key can reach
+
+The same exercise was then run against the rest of the keyed integrations, on the rule that
+the published contract gets read rather than assumed. It found four more defects that a
+typecheck, a build and a local scan had all passed over, plus two retired model ids:
+
+- **TabPFN** returns regression quantiles quantile-major. Read row-major, `prediction[0]` is
+  `[p10]`, which fails the "three values" check and drops into a ±20% band *around p10* —
+  roughly 20% low on every prediction, with no error raised anywhere. Seven tests.
+- **Tiger Data** hands you `...?sslmode=require`, and `pg` discards an explicit `ssl` object
+  whenever the URL carries that parameter. Since pg 8.23 `require` means *verify-full*, so
+  the connection dies at the TLS handshake against Tiger's self-signed free-tier certificate
+  — before a single query runs, after which schema init fails and `/similar` quietly returns
+  nothing forever. The parameter is now stripped and TLS decided explicitly. Seven tests.
+- **ElevenLabs** retired `scribe_v1` on 2026-07-09, so the first transcription would have
+  failed on the model id rather than on the audio; and `eleven_turbo_v2_5` is deprecated in
+  favour of the flash tier. Two one-line corrections, no test needed.
+- **Sentry** v11 removed `sendDefaultPii` and made an unset `dataCollection` collect genAI
+  inputs, outputs and user info by default — the exact opposite of what the file's own
+  privacy comment promised. The v10 options it used were being ignored silently.
+
+Twelve further tests cover `pnpm keys:check`, which is what proves any of this live.
 
 ---
 

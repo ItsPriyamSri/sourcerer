@@ -64,7 +64,7 @@ Generated ideas:
 2. Voice capture while hands are full.
 3. Margin math: platform fees + shipping + target margin → **max offer price**. **core**
 4. Batch listing writer. **core**
-5. Local "price memory": predict price + days-to-sell from comp features. **core**
+5. Local "price memory": predict price from comp features. **core** *(a days-to-sell model was considered and not built)*
 6. Similar-item / "have I bought this?" search. **core-lite**
 7. Profit & sell-through dashboard. **core-lite**
 8. Offline heuristics from the user's own sold history.
@@ -156,8 +156,8 @@ the reader can see what was considered and dropped, not because we claim it.
 | **Temporal** | Durable nightly reprice: refresh stale comps with retry/backoff, survive a worker crash, resume from history. | **Implemented, verified** — a `SIGKILL` mid-sweep is proven in `docs/evidence/temporal/` |
 | **Mastra** | Agent runtime: five tools wrapping the deterministic pipeline functions, a memory-backed sourcing advisor, a listing-writer agent, a four-step typed scan workflow, LibSQL storage. | **Implemented** — workflow + tools + memory wired; the tool loop needs a tool-capable model beside Gemma (see below) |
 | **SerpApi** | Live eBay *asking* prices for market grounding, with condition and free-shipping filters and a JSON restrictor. Sold comps no longer exist; see the README. | **Implemented, not verified with a live key** |
-| **TabPFN** | Price + days-to-sell fitted on the user's own sold history via the Prior Labs REST API; makes the offline number personal instead of generic. | **Implemented, not verified with a live token** |
-| **Sentry** | `@sentry/node` auto-instruments Mastra into `gen_ai.*` spans; input recording off so photos never enter a trace. | **Implemented, not verified with a live DSN** |
+| **TabPFN** | Price fitted on the user's own sold history via the Prior Labs REST API; makes the offline number personal instead of generic. Sale speed is recorded on sold items but no engine models it. | **Implemented, not verified with a live token** |
+| **Sentry** | `@sentry/node` spans around identify, comps and price, plus error capture; genAI input recording explicitly off, so photos never enter a trace. The framework's own `gen_ai.*` spans need `@mastra/observability`, which is not installed. | **Implemented, not verified with a live DSN** |
 | **Tiger Data** | Postgres + pgvector for "have I bought this before?" hybrid retrieval and duplicate detection, with a local pgvector container as the zero-cloud option. | **Implemented, not verified with a live database** |
 | **ElevenLabs** | Speak a note while your hands are full; hear the verdict read back. | **Implemented, not verified with a live key** |
 | **Backboard** | The hosted brain path: the same agent against open-weight models through one key, which is what makes a GPU-less demo possible. | **Implemented, not verified with a live key** |

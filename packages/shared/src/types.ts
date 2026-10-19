@@ -71,7 +71,13 @@ export interface PriceEstimate {
   expected: number;
   low: number;
   high: number;
-  /** Estimated days until it sells at `expected`. */
+  /**
+   * Estimated days until it sells at `expected`.
+   *
+   * Nothing populates this. Sale speed is recorded on sold items and shown in
+   * Insights, but neither pricing engine predicts it, so it stays absent rather
+   * than being filled with a plausible-looking number.
+   */
   daysToSell?: number;
   method: PriceMethod;
   confidence: number;
