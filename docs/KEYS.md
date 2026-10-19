@@ -56,7 +56,8 @@ source. This is deliberate — the working offline behaviour *is* the pitch.
 | **Where** | <https://sentry.io> → create a Node project → copy the DSN |
 | **Code** | `apps/brain/src/providers/tracing.ts` (`initTracing`, `withSpan`, `captureError`) |
 | **Without it** | Everything works; you just have no traces. `/health` reports `tracing: false`. |
-| **Note** | `SENTRY_RECORD_INPUTS=0` by default — photos and prompts stay out of traces. |
+| **Note** | `SENTRY_RECORD_INPUTS=0` by default — photos and prompts stay out of traces. v11 removed `sendDefaultPii`, and an unset `dataCollection` collects genAI inputs/outputs and user info by default, so the option is set explicitly rather than left to a default that flipped the wrong way. |
+| **Live status** | Verified against a real project. `keys:check` captures the SDK's own delivery receipt (`HTTP 200`), and a real scan emits `sourcerer.scan` with `sourcerer.identify` / `sourcerer.comps` / `sourcerer.price` beneath it. `GET /health` → `tracing: true`. |
 
 ### `BACKBOARD_API_KEY` — the hosted brain
 | | |
@@ -145,7 +146,7 @@ Two different things can be meant by "it works", so they are two separate column
 | — | Temporal | no | crash-proof background reprice | **yes** | **yes — a `SIGKILL` mid-sweep**, `docs/evidence/temporal/` |
 | `SERPAPI_API_KEY` | SerpApi | no | live eBay asking-price comps | **yes** — the `_ipg` cap snaps to an allowed size (25/50/100/200); 15 tests | **yes — live**, 51 real eBay listings for `brass bottle opener nautical` (`docs/evidence/serpapi-live.json`) |
 | `TABPFN_TOKEN` | Prior Labs | no | price model fitted on your own sales | **yes** — quantile-major output read as documented; 7 tests | not yet |
-| `SENTRY_DSN` | Sentry | no | a span per pipeline stage, plus error capture | **yes** — v11 `dataCollection`, `isEnabled`, flush-on-exit | not yet |
+| `SENTRY_DSN` | Sentry | no | a span per pipeline stage, plus error capture | **yes** — v11 `dataCollection`, `isEnabled`, flush-on-exit | **yes** — live: `keys:check` receives a real delivery receipt (`HTTP 200`), `initTracing()` returns `true`, and a real scan ships its span envelope (`Sending span envelope for trace 39adcde767214022a621b3b5d60e6792 with 2 spans`) |
 | `BACKBOARD_API_KEY` | Backboard | no | hosted open-weight brain (GPU-less demo) | **yes** — per-turn text goes in `system_prompt`, not the undocumented `instructions`; 13 tests | **partly** — authenticated live, but this account's free credit is reserved for Memory & RAG and cannot cover LLM chat: a real run returns HTTP 200 with `status: FAILED`. Detected now, so the chain falls through to local Gemma (`docs/evidence/backboard-credit-wall.json`) |
 | `DATABASE_URL` | Tiger Data / pgvector | no | vector memory ("have I bought this before?") | **yes** — `sslmode` is stripped so it cannot override our TLS; 7 tests | **yes — pgvector**, a local container (no cloud account): 32 items embedded and a semantic search that shares no keywords with the answer |
 | `ELEVENLABS_API_KEY` | ElevenLabs | no | voice in and out | **yes** — `scribe_v2` (`scribe_v1` was retired 2026-07-09) and `eleven_flash_v2_5` | **yes — voice in**: `POST /v1/speech-to-text` with `scribe_v2` returns HTTP 200 live. Voice *out* is blocked by the ElevenLabs **plan**, not by this code: the free plan refuses library voices over the API with 402 `paid_plan_required` |

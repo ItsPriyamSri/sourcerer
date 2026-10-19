@@ -576,13 +576,23 @@ are different claims and I am not going to blur them to widen a list.
   mixing bowls and a Griswold skillet — no shared keywords with the query, which is the whole
   point. The same code talks to Tiger Cloud by connection string; the local container is
   there so the answer to "do I have to hand over a database?" is no.
+- **Best Use of Sentry Agent Tracing** — `@sentry/node` spans around identify, comps and
+  price, so one scan becomes a waterfall instead of a wall clock reading, plus error capture
+  that carries the route it came from. Verified against a real project: `pnpm keys:check`
+  reads the SDK's own delivery receipt back (`HTTP 200`), a real scan ships its span envelope
+  (`Sending span envelope for trace 39adcde… with 2 spans`), and `GET /health` reports
+  `tracing: true`. genAI input recording is explicitly off, because v11 removed
+  `sendDefaultPii` and an unset `dataCollection` collects prompt and image content by
+  default — so photos do not enter a trace. The framework's own `gen_ai.*` spans are *not*
+  wired: that needs `@mastra/observability`, and I would rather say that than let a span name
+  imply token accounting that is not there.
 
 ### Wired, and exercised as far as the free tiers allow
 
 These are genuinely integrated — in the capability registry, called by the running app, and
-what the UI falls back *from* when the key is absent. Each has now also been pointed at a
-real account. What I am not going to do is call them "demonstrated" when the provider, not
-the code, is what stopped them.
+what the UI falls back *from* when the key is absent. Where a key exists, it has also been
+pointed at a real account. What I am not going to do is call them "demonstrated" when the
+provider, not the code, is what stopped them.
 
 - **Best Use of Backboard** — the second brain: the same agents against open-weight models
   through one key, which is what makes a GPU-less hosted demo possible. Live against a real
@@ -607,12 +617,6 @@ the code, is what stopped them.
   is documented as needing a voice the account owns. The key here was also created *scoped*,
   and answered `401` on the read-only route the checker had chosen — a valid key reported as
   broken by my own honesty tool, which now probes the app's real call instead.
-- **Best Use of Sentry Agent Tracing** — `@sentry/node` spans around identify, comps and
-  price, so one scan becomes a waterfall, plus error capture that carries the route it
-  came from. genAI input recording is explicitly off, so photos never enter a trace. The
-  framework's own `gen_ai.*` spans are *not* wired: that needs `@mastra/observability` and
-  a preloaded `Sentry.init`, and I would rather say that than let a span name imply token
-  accounting that is not there.
 - **Best Use of TabPFN** — a price model fitted on the user's own sold history via the
   Prior Labs REST API, which is what makes the offline number personal rather than
   generic. It predicts price; sale speed is recorded on sold items but is not modelled,

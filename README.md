@@ -376,8 +376,8 @@ Twelve further tests cover `pnpm keys:check`, which is what proves any of this l
 
 ### Verified live, not just wired
 
-Six integrations have now been pointed at something real rather than a contract: Gemma and
-Temporal as documented above, plus four more.
+Seven integrations have now been pointed at something real rather than a contract: Gemma and
+Temporal as documented above, plus five more.
 
 - **SerpApi** — against a real account. The raw `POST /scan` response is committed at
   [`docs/evidence/serpapi-live.json`](docs/evidence/serpapi-live.json): **51 live eBay
@@ -386,6 +386,10 @@ Temporal as documented above, plus four more.
 - **pgvector** — a local container, no cloud account needed. 32 items embedded through the
   real pipeline, then *"something to cook with in the kitchen"* returned Pyrex mixing bowls
   and a Griswold skillet. No shared keywords with the query, which is the whole point.
+- **Sentry** — a real project. `keys:check` reads the SDK's delivery receipt back
+  (`HTTP 200`), `/health` reports `tracing: true`, and a real scan emits `sourcerer.scan`
+  with `sourcerer.identify` / `sourcerer.comps` / `sourcerer.price` beneath it, so a run is
+  a waterfall rather than a single latency number.
 - **Backboard** — authenticated against a real account, which is where it got interesting:
   a Backboard run that fails returns **HTTP 200** with `status: "FAILED"` and the reason in
   `content`. This account's free credit is reserved for Memory & RAG, so every LLM run fails
