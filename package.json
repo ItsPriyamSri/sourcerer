@@ -26,6 +26,8 @@
     "typecheck": "pnpm -r typecheck",
     "model:pull": "bash scripts/pull-model.sh",
     "db:up": "bash scripts/db-up.sh",
+    "keys:setup": "bash scripts/keys-setup.sh",
+    "keys:check": "pnpm --filter @sourcerer/brain keys:check",
     "evidence:identify": "pnpm --filter @sourcerer/brain exec tsx eval/run-identify.ts",
     "evidence:memory": "pnpm --filter @sourcerer/brain exec tsx eval/run-memory.ts",
     "evidence:tables": "tsx scripts/emit-eval-table.ts",
