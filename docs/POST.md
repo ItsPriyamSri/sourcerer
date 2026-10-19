@@ -54,21 +54,47 @@ descriptions for a pile of items she bought that morning.
 ## Demo
 
 The demo video is an unedited run of the real thing on this laptop:
-**[`docs/media/sourcerer-demo.webm`](docs/media/sourcerer-demo.webm)** — capture screen →
-all four pipeline stages → the verdict → the tag price changed by hand and the verdict
-re-priced with the model untouched → the run log opened → Insights.
+**[watch the capture (webm)](https://github.com/ItsPriyamSri/sourcerer/blob/master/docs/media/sourcerer-demo.webm)**
+— capture screen → all four pipeline stages → the verdict → the tag price changed by hand
+and the verdict re-priced with the model untouched → the run log opened → Insights.
+
+![A phone screenshot of Sourcerer's verdict card for a Levi's 501 Big E Selvedge Denim Jacket. The header chips read Online, Local · gemma3:4b and heuristic pricing, and the item chips read Jeans and good. A green check and the word BUY sit above two panels: MAX OFFER $35.32, and RESALE $133.40 with a range from $126.73 to $140.07 — above "$105.96 net ÷ 3× target = $35.32" and "Asking $12 sits 66% under your ceiling." Below them a range bar marks the comps median; a chip reads "your sold history", a second reads "57% confidence", and the basis line reads "6 similar items you have already sold. Real realised prices, on this device." In the rail beneath, the asking price is $12, the marketplace is eBay, and the profit at that price is $93.96 (8.8×).](https://raw.githubusercontent.com/ItsPriyamSri/sourcerer/master/docs/media/verdict.buy.light.png)
+
+*The verdict card. One dominant signal, the maximum offer in the largest type on the screen,
+the resale range it came from, and a chip that says where the number came from. The asking
+price is editable, and the whole card re-prices on-device as you type.*
 
 The run log is the part worth pausing on. It is not an overlay; it is a field in the scan
 response, and it reads *"Nothing in this scan left your device."* next to a per-stage list
-of which provider executed each step. Screenshots are in
-[`docs/media/`](docs/media/), with captions and alt text in
-[`docs/media/CAPTIONS.md`](docs/media/CAPTIONS.md).
+of which provider executed each step.
+
+![A phone screenshot of an expanded panel headed "What ran where", reading "Nothing in this scan left your device. The photo, the identification and the pricing all ran locally." Under it, three rows — Identify (ollama:gemma3:1b, on this device, 6047 ms), Comps (local_history, on this device, 6 listings, 2 ms) and Price (comps_median, on this device, $133.40 at 0.57 confidence, 1 ms) — each marked with a monitor icon rather than a cloud, and a total of 6051 ms. Above the panel the rail records the same run: asking price $12, profit $93.96, multiple 8.8×, net $105.96, fees $18.44.](https://raw.githubusercontent.com/ItsPriyamSri/sourcerer/master/docs/media/ranlog.light.png)
+
+*What ran where. Every scan records which provider executed each stage, how long it took,
+and whether anything left the device. This is what makes the privacy claim checkable instead
+of aspirational: it is a field in the response, rendered.*
+
+![An expanded Comparables panel headed "Comparables (6)": all six are the user's own sold history, each row tagged sold, priced from $136 to $155, under summary tiles reading low $139, median $145, mean $145.17 and high $151.50, with a note that the mean is trimmed 10%. The panel states "6 similar items you have already sold. Real realised prices, on this device." and records that it searched "Levi's 501 Big E".](https://raw.githubusercontent.com/ItsPriyamSri/sourcerer/master/docs/media/comps.expanded.light.png)
+
+*The comparables, each one tagged with where it came from. Every row here is a real price
+this user realised, not an asking price scraped from a stranger.*
+
+![A dark-theme phone screenshot taken with the browser's network disabled: the header chips read "Offline · local only" and "Brain asleep". The app says "Your brain isn't running. I'll price from your own sold history instead — open Settings to point me at it.", and the capture screen — photograph, describe, asking price — is fully rendered from the service-worker cache.](https://raw.githubusercontent.com/ItsPriyamSri/sourcerer/master/docs/media/offline.shell.dark.png)
+
+*Network genuinely off, taken in the browser with the connection disabled. The chip says so,
+the brain is unreachable, and the app still boots and still offers the capture screen out of
+the service-worker cache — because a dead spot in a charity shop is where this thing is meant
+to be used.*
+
+All 21 screenshots, with captions and alt text, are in
+[`docs/media/`](https://github.com/ItsPriyamSri/sourcerer/tree/master/docs/media), catalogued in
+[`docs/media/CAPTIONS.md`](https://github.com/ItsPriyamSri/sourcerer/blob/master/docs/media/CAPTIONS.md).
 
 Everything in that folder was produced by
-[`scripts/capture-evidence.ts`](scripts/capture-evidence.ts), which drives the actual app
-in a real browser against a real brain, seeds the sample data from the committed fixture
-first so two runs produce the same frames, and writes the screenshots and the video in one
-pass. They are not mockups and they are not retouched.
+[`scripts/capture-evidence.ts`](https://github.com/ItsPriyamSri/sourcerer/blob/master/scripts/capture-evidence.ts),
+which drives the actual app in a real browser against a real brain, seeds the sample data
+from the committed fixture first so two runs produce the same frames, and writes the
+screenshots and the video in one pass. They are not mockups and they are not retouched.
 
 The public landing page is live at **<https://sourcerer-ochre.vercel.app>** — the same claims
 in one page, with its headline numbers read out of the eval's JSON at capture time so they
@@ -77,8 +103,8 @@ cannot drift from the evidence the way a hand-typed statistic would.
 That script also found a bug worth admitting to: the asking price you typed on the capture
 form was being silently discarded by the verdict card, because the card kept a private copy
 of the price, initialised to zero. Every screenshot in that first capture came back priced
-as if the item were free. It survived every typecheck, every build and all sixty
-passing unit tests, and it was visible the moment something rendered the screen and wrote
+as if the item were free. It survived every typecheck, every build and the entire test
+suite, and it was visible the moment something rendered the screen and wrote
 the result to a file. A screenshot is a test you cannot lie to.
 
 Hardware, for every timing claim in this post: 8-core CPU, 15.4 GB RAM, an NVIDIA GTX 1650
@@ -124,7 +150,7 @@ So the system is split, permanently:
 | Decide the money | **Plain functions** — `packages/shared/src/economics.ts` | Deterministic, unit-tested, identical offline. |
 
 The consequence is that the verdict the browser shows you offline and the verdict the
-server computes online are *the same code*. [`decideVerdict`](packages/shared/src/economics.ts)
+server computes online are *the same code*. [`decideVerdict`](https://github.com/ItsPriyamSri/sourcerer/blob/master/packages/shared/src/economics.ts)
 is pure and takes no I/O, so a reseller typing a price in a dead zone gets an answer that
 agrees with the server's to the cent. That is not a nicety; it's why the tool can be
 trusted with money.
@@ -136,10 +162,10 @@ mostly wasn't.
 
 Every experiment in this section is the same 30 hand-labelled items run through four
 configurations, with
-[`apps/brain/eval/run-identify.ts`](apps/brain/eval/run-identify.ts). Ground truth is
+[`apps/brain/eval/run-identify.ts`](https://github.com/ItsPriyamSri/sourcerer/blob/master/apps/brain/eval/run-identify.ts). Ground truth is
 what I wrote in the `text` field — a brand and an item type — so the scoring is
 mechanical and every failure below can be checked by reading the row. Full output:
-[`docs/evidence/identify-results.json`](docs/evidence/identify-results.json).
+[`docs/evidence/identify-results.json`](https://github.com/ItsPriyamSri/sourcerer/blob/master/docs/evidence/identify-results.json).
 
 <!-- EVAL_TABLE_START -->
 | Configuration | Emitted parseable JSON | Brand correct | Type correct | **Both** | Invented a brand | Median |
@@ -352,7 +378,7 @@ PASS. Most I would pay is $58.82. At $150 you would make $26.46 if it resells at
 
 What is left to the agent is the part it is genuinely good at: understanding the request and
 calling the tool with the right arguments. It does that well, and the three-turn transcript in
-[`docs/evidence/agent-transcript.json`](docs/evidence/agent-transcript.json) is the proof
+[`docs/evidence/agent-transcript.json`](https://github.com/ItsPriyamSri/sourcerer/blob/master/docs/evidence/agent-transcript.json) is the proof
 rather than the assertion. *"I'm shipping cross-country, so put shipping at $35"* becomes
 `shippingCost: 35`, the ceiling moves from $58.82 to $49.82, and the third turn still knows
 what the first one was about.
@@ -420,7 +446,7 @@ that the first three activities already completed, and starts at item four. The 
 that matters is `items refreshed twice: 0` — no item was priced twice, so the crash cost
 wall-clock time and nothing else. `bash scripts/temporal-durability-demo.sh` reproduces the
 whole thing, including the kill; the raw worker and client logs are committed in
-[`docs/evidence/temporal/`](docs/evidence/temporal/).
+[`docs/evidence/temporal/`](https://github.com/ItsPriyamSri/sourcerer/tree/master/docs/evidence/temporal).
 
 ### Numbers
 
@@ -567,7 +593,7 @@ are different claims and I am not going to blur them to widen a list.
   `comps.source` can become `live` instead of `local_history`, and it is now verified against
   a real account: a scan for a brass narwhal bottle opener returned **51 real eBay listings**
   for the query `brass bottle opener nautical`, and the raw response is committed at
-  [`docs/evidence/serpapi-live.json`](docs/evidence/serpapi-live.json). The scan log names the
+  [`docs/evidence/serpapi-live.json`](https://github.com/ItsPriyamSri/sourcerer/blob/master/docs/evidence/serpapi-live.json). The scan log names the
   query it actually sent, and the network step is marked `cloud` while the two model steps
   stay `device`.
 - **Best Use of Tiger Data** — Postgres + pgvector for "have I bought one of these before?"
@@ -628,6 +654,6 @@ vector memory that Tiger Data already provides, and building both to widen a cat
 is exactly the slide-deck thinking I am trying to avoid). *Arduino* was not entered because
 there is no hardware here.
 
-[`docs/KEYS.md`](docs/KEYS.md) states the verification status of every integration in one
+[`docs/KEYS.md`](https://github.com/ItsPriyamSri/sourcerer/blob/master/docs/KEYS.md) states the verification status of every integration in one
 table, and `GET /capabilities` reports the same thing at runtime — so nothing above has to
 be taken on trust.

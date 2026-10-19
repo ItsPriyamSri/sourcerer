@@ -1,5 +1,7 @@
 {
   "name": "@sourcerer/shared",
+  "description": "Shared types and the deterministic economics.",
+  "license": "MIT",
   "version": "0.1.0",
   "private": true,
   "type": "module",

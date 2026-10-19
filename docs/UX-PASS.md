@@ -83,7 +83,7 @@ sketched and rejected on a principle, not on taste):
 | Cut | Reason |
 |---|---|
 | **Delete-confirmation modal on queue rows** | Adds a step to a high-frequency action to protect a low-cost mistake. The cost of a mis-delete (one item, retypable) is lower than the cost of a modal at every delete. Rejected on §4.3 thumb-first / speed. |
-| **Voice capture UI** | `ElevenLabs` is *implemented, not verified with a live key* (`DESIGN.md §7`). A microphone button that produces nothing is a dead end — §4.6 *"no dead ends"*. The `Note` disclosure stays as the honest manual path. |
+| **Voice capture UI** | The `ElevenLabs` routes are built and voice-in is verified live, but the mic and play controls are not in the UI. A microphone button backed by a paid-plan-only voice path is a dead end — §4.6 *"no dead ends"*. The `Note` disclosure stays as the honest manual path. |
 | **Animated bar fills on Insights** | Delays reading a number under motion for a purely decorative gain. Rejected on §4.1 speed-is-the-feature and §4.10 delight-with-restraint. |
 | **Confetti on BUY** | Namesake of the §4.10 anti-pattern ("No confetti spam"). |
 | **Number count-up on the verdict** | Delays truthful comprehension by ~600ms on the single screen where speed *is* the product. Rejected on §4.1. |

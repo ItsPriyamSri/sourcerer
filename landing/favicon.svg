@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Sourcerer">
+  <!-- The product in one mark: a ceiling, and an offer that rises to meet it. -->
+  <rect width="32" height="32" rx="7" fill="#14120E"/>
+  <path d="M7 8.5h18" stroke="#d98b12" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M16 25.5V14.5" stroke="#d98b12" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M10.5 20 16 14.5 21.5 20" fill="none" stroke="#d98b12" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

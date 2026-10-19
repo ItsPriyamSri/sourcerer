@@ -1,5 +1,7 @@
 {
   "name": "@sourcerer/brain",
+  "description": "The brain: identification, comps, pricing, agents, durable jobs.",
+  "license": "MIT",
   "version": "0.1.0",
   "private": true,
   "type": "module",

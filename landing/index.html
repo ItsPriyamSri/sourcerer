@@ -10,6 +10,21 @@
     />
     <meta name="theme-color" content="#14120E" />
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Sourcerer — Know what it's worth. Anywhere." />
+    <meta
+      property="og:description"
+      content="An offline-first sourcing copilot for resellers, running an open-weight model on your own machine. Photograph the item, get the most you should pay."
+    />
+    <meta property="og:image" content="https://sourcerer-ochre.vercel.app/img/03-verdict.png" />
+    <meta property="og:url" content="https://sourcerer-ochre.vercel.app" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Sourcerer — Know what it's worth. Anywhere." />
+    <meta
+      name="twitter:description"
+      content="An offline-first sourcing copilot for resellers. A local open-weight model reads the item; plain arithmetic decides the most you should pay."
+    />
+    <meta name="twitter:image" content="https://sourcerer-ochre.vercel.app/img/03-verdict.png" />
     <style>
       :root {
         --bg: #f7f3ea;
@@ -237,20 +252,20 @@
 
       <section>
         <h2>Built with</h2>
-        <p class="sub">Open weights at the core, open source around it. Every one of these sits behind a fallback, so removing any of them degrades the app instead of breaking it.</p>
+        <p class="sub">Open weights at the core, open source around it. Every one of these sits behind a fallback, so removing any of them degrades the app instead of breaking it. Where a key exists, the integration has been verified against the live service — <a href="https://github.com/ItsPriyamSri/sourcerer/blob/master/docs/KEYS.md">one table records the status of all of them</a>, including the ones that are wired but not demonstrated.</p>
         <div class="stack">
           <div class="s"><b>Gemma 3</b><span>Local multimodal identification and listing copy</span></div>
           <div class="s"><b>Ollama</b><span>On-device inference runtime</span></div>
           <div class="s"><b>Mastra</b><span>Agent runtime, tools, memory, workflow</span></div>
           <div class="s"><b>SerpApi</b><span>Live market listings when there's signal</span></div>
-          <div class="s"><b>TabPFN</b><span>Price and days-to-sell from your own sales</span></div>
-          <div class="s"><b>Sentry</b><span>Agent tracing, per step and per token</span></div>
+          <div class="s"><b>TabPFN</b><span>Price model fitted on your own sold history</span></div>
+          <div class="s"><b>Sentry</b><span>One trace per scan, stage by stage</span></div>
           <div class="s"><b>Temporal</b><span>Durable nightly reprice that survives a crash</span></div>
           <div class="s"><b>Tiger Data</b><span>pgvector memory: "have I bought this before?"</span></div>
-          <div class="s"><b>ElevenLabs</b><span>Speak the item, hear the verdict</span></div>
-          <div class="s"><b>Backboard</b><span>Hosted open-weight brain for demo machines</span></div>
-          <div class="s"><b>Render</b><span>Hosting for the hosted path</span></div>
-          <div class="s"><b>.tech</b><span>This domain</span></div>
+          <div class="s"><b>ElevenLabs</b><span>Voice in and out — API verified, UI pending</span></div>
+          <div class="s"><b>Backboard</b><span>Hosted open-weight brain for a GPU-less machine</span></div>
+          <div class="s"><b>Render</b><span>Blueprint for the hosted path</span></div>
+          <div class="s"><b>.tech</b><span>Landing-page domain — currently on vercel.app</span></div>
         </div>
       </section>
 

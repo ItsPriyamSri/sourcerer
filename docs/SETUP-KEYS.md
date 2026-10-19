@@ -186,8 +186,9 @@ free services present a self-signed certificate.
 
 ### 6. Prior Labs / TabPFN — the fitted price model (optional, last)
 
-TabPFN is not one of the prize tracks, which is why it sits last: it makes the
-pricing claim stronger, not the submission broader.
+TabPFN sits last because it is the least essential of the six: it makes the pricing
+number personal and measurably more accurate, but nothing else in the app depends on
+it and every other path works without it.
 
 1. <https://platform.priorlabs.ai> — sign in.
 2. Complete account setup.
