@@ -446,7 +446,7 @@ async function main() {
     console.log(`  video: sourcerer-demo.webm (${(statSync(dest).size / 1024 / 1024).toFixed(1)} MB)`);
   }
 
-  // ── pass 6: the landing page, for the .tech category ──────────────────────
+  // ── pass 6: the landing page ──────────────────────────────────────────────
   // Copy the captures in first: the landing page embeds them, and a hero with broken
   // image placeholders is a worse screenshot than no screenshot.
   const imgDir = resolve(process.cwd(), "landing/img");

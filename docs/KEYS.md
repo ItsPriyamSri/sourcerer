@@ -5,7 +5,7 @@ capability and the app tells you whether it's live on the *What runs where* shee
 (and via `GET /capabilities`). Nothing here is required to demo the core loop.
 
 Free partner credits for several of these are at
-<https://hacktoberfest.com/my/promos> (Tinker, Render, Backboard, a .tech domain).
+<https://hacktoberfest.com/my/promos> (Tinker, Render, Backboard, and others).
 
 Copy `apps/brain/.env.example` → `apps/brain/.env` and fill in what you have — or let
 `pnpm keys:setup` prompt you through it and `pnpm keys:check` confirm each one is live.
@@ -97,7 +97,6 @@ source. This is deliberate — the working offline behaviour *is* the pitch.
 | | |
 |---|---|
 | **Render** | Account + Blueprint deploy from `infra/render.yaml`. Free web tier, no GPU, so the hosted brain uses Backboard. |
-| **.tech domain** | Free via the Hacktoberfest promos page. Point it at the Render static site. |
 | **Temporal** | No key — `temporal server start-dev`. See *Durable jobs* below. |
 
 ---

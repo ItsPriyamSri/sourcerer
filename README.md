@@ -68,7 +68,7 @@ there. Everything after the first three rows is optional and degrades rather tha
 | **Sentry** | One trace per scan, stage by stage, plus error capture | Cloud, optional |
 | **ElevenLabs** | Voice in and out: dictate a note, hear the verdict | Cloud, optional |
 | **Backboard** | The same brain on hosted open weights, for a machine with no GPU | Cloud, optional |
-| **Vercel + `.tech`** | The public landing page | Cloud |
+| **Vercel** | The public landing page | Cloud |
 
 Full failure behaviour per layer is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) §7, and
 [`docs/KEYS.md`](docs/KEYS.md) records the verification status of every keyed integration in
@@ -89,7 +89,7 @@ one table.
 <p align="center">
 <img src="docs/media/landing.light.png" alt="The Sourcerer landing page: the headline Know what it's worth. Anywhere., a framed phone showing the BUY verdict card, and a stats row reading 0 photos uploaded, 0 API keys, 8.3 s per identification and 100% items read correctly" width="760">
 </p>
-<p align="center"><sub><b>The public page</b> for the <code>.tech</code> category — live at <a href="https://sourcerer-ochre.vercel.app">sourcerer-ochre.vercel.app</a>. It embeds these same captures and reads its headline numbers from <code>landing/evidence.json</code>, which the capture writes straight from the eval — so the page cannot drift from the evidence the way a hand-typed statistic would.</sub></p>
+<p align="center"><sub><b>The public page</b> — live at <a href="https://sourcerer-ochre.vercel.app">sourcerer-ochre.vercel.app</a>. It embeds these same captures and reads its headline numbers from <code>landing/evidence.json</code>, which the capture writes straight from the eval — so the page cannot drift from the evidence the way a hand-typed statistic would.</sub></p>
 
 ---
 
@@ -400,7 +400,10 @@ Twelve further tests cover `pnpm keys:check`, which is what proves any of this l
 ### Verified live, not just wired
 
 Seven integrations have been pointed at a real account rather than a contract — Gemma and
-Temporal above, plus:
+Temporal above, plus five more below. Six integrations are demonstrated end to end in the
+write-up; Backboard and ElevenLabs reached a plan limit before a full demonstration, and
+[`docs/KEYS.md`](https://github.com/ItsPriyamSri/sourcerer/blob/master/docs/KEYS.md) marks
+every one's status.
 
 | Integration | What live testing showed |
 |---|---|
