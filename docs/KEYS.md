@@ -27,7 +27,7 @@ source. This is deliberate — the working offline behaviour *is* the pitch.
 | | |
 |---|---|
 | **Unlocks** | Live eBay asking prices instead of only your own sold history. Turns `comps.source` from `local_history` into `live`. |
-| **Where** | <https://serpapi.com/manage-api-key> (100 free searches/month; more on paid plans) |
+| **Where** | <https://serpapi.com/manage-api-key> (250 free searches/month; more on paid plans) |
 | **Code** | `apps/brain/src/providers/comps.ts` → `SerpApiCompsProvider` |
 | **Without it** | Falls back to `LocalHistoryCompsProvider`, then to a clearly-labelled `estimate`. |
 
@@ -131,19 +131,20 @@ Two different things can be meant by "it works", so they are two separate column
   bug that only shows up once someone finally connects a real key: a parameter the API
   rejects, a model id that was retired last month, a TLS default that silently overrides
   your own settings.
-- **Live account** — a real, billed account called it and got a real answer back. Nothing
-  in this table is in that column yet. Supplying a key is what moves a row there, and
-  `pnpm keys:check` is the command that does it.
+- **Live account** — a real, billed account called it and got a real answer back. Rows marked
+  *yes* here have been exercised for real and the response is committed under
+  `docs/evidence/`. Supplying a key is what moves a row there, and `pnpm keys:check` is the
+  command that reports it.
 
 | Env var | Service | Required | Buys you | Request verified | Live account |
 |---|---|---|---|---|---|
 | — | Ollama + Gemma 3 | no ¹ | identification + listing writing, entirely local | **yes** | **yes — measured**, `docs/evidence/identify-results.json` |
 | — | Temporal | no | crash-proof background reprice | **yes** | **yes — a `SIGKILL` mid-sweep**, `docs/evidence/temporal/` |
-| `SERPAPI_API_KEY` | SerpApi | no | live eBay asking-price comps | **yes** — the `_ipg` cap snaps to an allowed size (25/50/100/200); 15 tests | not yet |
+| `SERPAPI_API_KEY` | SerpApi | no | live eBay asking-price comps | **yes** — the `_ipg` cap snaps to an allowed size (25/50/100/200); 15 tests | **yes — live**, 51 real eBay listings for `brass bottle opener nautical` (`docs/evidence/serpapi-live.json`) |
 | `TABPFN_TOKEN` | Prior Labs | no | price model fitted on your own sales | **yes** — quantile-major output read as documented; 7 tests | not yet |
 | `SENTRY_DSN` | Sentry | no | a span per pipeline stage, plus error capture | **yes** — v11 `dataCollection`, `isEnabled`, flush-on-exit | not yet |
 | `BACKBOARD_API_KEY` | Backboard | no | hosted open-weight brain (GPU-less demo) | **yes** — per-turn text goes in `system_prompt`, not the undocumented `instructions`; 9 tests | not yet |
-| `DATABASE_URL` | Tiger Data / pgvector | no | vector memory ("have I bought this before?") | **yes** — `sslmode` is stripped so it cannot override our TLS; 7 tests | not yet |
+| `DATABASE_URL` | Tiger Data / pgvector | no | vector memory ("have I bought this before?") | **yes** — `sslmode` is stripped so it cannot override our TLS; 7 tests | **yes — pgvector**, a local container (no cloud account): 32 items embedded and a semantic search that shares no keywords with the answer |
 | `ELEVENLABS_API_KEY` | ElevenLabs | no | voice in and out | **yes** — `scribe_v2` (`scribe_v1` was retired 2026-07-09) and `eleven_flash_v2_5` | not yet |
 | `SENTRY_RECORD_INPUTS` | Sentry | no | set `1` only to debug with inputs recorded | — | — |
 | `MODEL_PROVIDER` | — | no | force `ollama` or `backboard` | — | — |
@@ -153,7 +154,8 @@ back to on-device heuristics.
 
 **What "request verified" does not mean:** it does not mean the integration has been
 billed, quota-capped, rate-limited, or has seen a real payload. Each of those is a
-live-account question and the honest answer for every keyed row is "not yet". What it does
-mean is that the defects which would have failed on the *first* live call were found and
-fixed before a key was ever connected — several of them by reading the published contract
-instead of assuming it. Run `pnpm keys:check` to prove the rest, live, in one command.
+live-account question, and for every keyed row except SerpApi and pgvector the honest
+answer is still "not yet". What it does mean is that the defects which would have failed
+on the *first* live call were found and fixed before a key was ever connected — several of
+them by reading the published contract instead of assuming it. Run `pnpm keys:check` to
+prove the rest, live, in one command.

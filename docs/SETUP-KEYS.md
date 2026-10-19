@@ -44,10 +44,10 @@ something you *did* configure is broken. An absent key is never a failure.
 
 | Env var | Service | What it unlocks | Where to get it | Paid account? |
 |---|---|---|---|---|
-| `SERPAPI_API_KEY` | SerpApi | live eBay comps instead of only your own sold history | <https://serpapi.com/manage-api-key> | No — free tier (100 searches/mo); paid for volume |
+| `SERPAPI_API_KEY` | SerpApi | live eBay comps instead of only your own sold history | <https://serpapi.com/manage-api-key> | No — free tier (250 searches/mo); paid for volume |
 | `BACKBOARD_API_KEY` | Backboard | the same agent against open-weight models with no GPU (hosted demo) | <https://app.backboard.io> | No — free credit to start |
 | `TABPFN_TOKEN` | Prior Labs | a price model fitted on *your* sold history | <https://platform.priorlabs.ai/account/api-keys> | No — free non-commercial key |
-| `DATABASE_URL` | Tiger Data | vector memory: "have I bought this before?" and similar-item search | <https://console.cloud.timescale.com/> (free tier) — or locally `bash scripts/db-up.sh` | No — free tier |
+| `DATABASE_URL` | Tiger Data | vector memory: "have I bought this before?" and similar-item search | <https://console.cloud.tigerdata.com/signup> (free tier) — or locally `bash scripts/db-up.sh` | No — free tier |
 | `ELEVENLABS_API_KEY` | ElevenLabs | dictate an item hands-free and hear the verdict read back | <https://elevenlabs.io/app/settings/api-keys> | No — free tier available |
 | `SENTRY_DSN` | Sentry | agent tracing: a span per pipeline stage (identify, comps, price) | <https://sentry.io> → new Node project → copy the DSN | No — free developer tier |
 
@@ -73,6 +73,121 @@ Related, all optional and already in `.env.example`:
 `MODEL_PROVIDER=ollama|backboard` forces the model provider,
 `PREFER_BACKBOARD=1` prefers Backboard when a key exists, and
 `BACKBOARD_BASE_URL` defaults to `https://app.backboard.io/api`.
+
+---
+
+## The exact click path, one service at a time
+
+Every one of these needs a human to create an account — that part cannot be
+scripted, automated, or done on someone's behalf. Everything on the other side of
+the account (the code, the wiring, the probe, the tests) is already done. So each
+entry below is deliberately only: **open this URL, click these things, copy this
+one value.**
+
+Ordered by what it buys. Stop wherever you like; `keys:check` will tell you
+exactly where you stopped.
+
+### 1. SerpApi — live eBay comps
+
+1. <https://serpapi.com/users/sign_up> — sign up (free tier: 250 searches/month).
+2. The dashboard shows **Your API Key** at the top.
+3. Copy it → `SERPAPI_API_KEY`.
+
+What it changes: comps stop being only your own sold history and become live eBay
+listings. Asking prices, not sold — the app says so in `comps.basis` and applies
+the disclosed 14% adjustment rather than pretending they are sold prices.
+
+### 2. Backboard — the same agent, no GPU
+
+1. <https://app.backboard.io> — sign up with GitHub, Google, or email.
+2. Left sidebar → **Settings** → **API Keys**.
+3. **Create New API Key** → copy it **now**.
+4. Paste → `BACKBOARD_API_KEY`.
+
+Backboard only shows the key once, at creation. This is the one key that lets the
+whole pipeline run on a machine with no GPU and no Ollama, against the same
+open-weight Gemma weights.
+
+### 3. ElevenLabs — voice in, voice out
+
+1. <https://elevenlabs.io/app/sign-up> — sign up (free monthly credits).
+2. Bottom-left avatar → **API Keys** (direct link:
+   <https://elevenlabs.io/app/settings/api-keys>).
+3. **Create API key** → copy it (starts with `sk_`).
+4. Paste → `ELEVENLABS_API_KEY`.
+
+What it changes: you can dictate a condition note instead of typing it, and the
+verdict can be read back to you — which matters when both hands are holding a
+bowl. Transcription uses `scribe_v2`, speech uses `eleven_flash_v2_5`.
+
+### 4. Sentry — see what the agent actually did
+
+1. <https://sentry.io/signup/> — sign up (free Developer tier).
+2. Create a project → platform **Node.js** → name it `sourcerer`.
+3. Copy the **DSN** from the setup snippet — or **Settings → Projects →
+   sourcerer → Client Keys (DSN)**.
+4. Paste → `SENTRY_DSN`.
+
+The DSN looks like `https://<public-key>@o<org>.ingest.<region>.sentry.io/<id>`
+and is safe to paste (it is a write-mostly ingest key, not an auth token).
+
+What it changes: identify / comps / price get wrapped in real spans, so you can
+see "identify 4.2 s on Gemma, comps 900 ms, price 300 ms" instead of guessing.
+The spans are ours and every number in them is measured. What is *not* claimed:
+Sentry's Mastra integration, which emits the framework's own `gen_ai.*` spans —
+that needs `@mastra/observability` and Sentry preloading, and neither is wired.
+
+### 5. Tiger Data — vector memory (optional)
+
+Only needed if you want the **cloud** version. The local one needs no account at
+all:
+
+```bash
+bash scripts/db-up.sh   # starts pgvector on 127.0.0.1:5433, prints the .env line
+```
+
+If you do want Tiger Cloud:
+
+1. <https://console.cloud.tigerdata.com/signup> → **Start your free trial**.
+2. Confirm the emailed link, then pick a plan.
+3. **Create service** → the free/shared tier → name it `sourcerer` → create.
+4. Copy the connection string (`postgresql://…?sslmode=require`) →
+   `DATABASE_URL`.
+
+What it changes: "have I bought this before?" and similar-item search go from
+keyword matching to real pgvector similarity. The code strips `sslmode` and sets
+TLS itself, because `sslmode=require` means verify-full as of pg 8.23 and Tiger's
+free services present a self-signed certificate.
+
+### 6. Prior Labs / TabPFN — the fitted price model (optional, last)
+
+TabPFN is not one of the prize tracks, which is why it sits last: it makes the
+pricing claim stronger, not the submission broader.
+
+1. <https://platform.priorlabs.ai> — sign in.
+2. Complete account setup.
+3. **API Keys** page → create → copy.
+4. Paste → `TABPFN_TOKEN`.
+
+What it changes: `POST /train` fits a model on your own sold history instead of
+using the condition-adjusted comps heuristic. It does **not** predict
+days-to-sell — nothing populates that field.
+
+---
+
+## If you would rather not paste keys into a terminal
+
+Paste the values anywhere and they can be written for you. The mechanism is the
+same either way:
+
+```bash
+pnpm keys:setup    # one prompt per key, Enter to skip, secrets never echoed
+pnpm keys:check    # live probes; proves which ones are real
+```
+
+If you hand the values over in chat, `pnpm keys:setup` and `pnpm keys:check` are
+run for you and the results in [`KEYS.md`](./KEYS.md) are updated to match what
+the live probe actually returned.
 
 ---
 

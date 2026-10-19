@@ -195,7 +195,7 @@ still answers: `apps/web/src/lib/offline.ts` prices the item from your own sold 
 | Listing draft | local model, template if it is down | local model | local model |
 | Advisor | local tool-using model, deterministic answer if it is down | same | same, or the same agent on Backboard's hosted open weights |
 | Voice | — | — | ElevenLabs in/out |
-| Tracing | — | — | Sentry `gen_ai.*` spans |
+| Tracing | — | — | Sentry spans around identify/comps/price |
 | Similar items | — | — | pgvector, when `DATABASE_URL` is set |
 | Background reprice | — | needs Temporal running | same |
 
@@ -309,7 +309,7 @@ crash window observable, which is how the claim above was produced.
 Reproduce both:
 
 ```bash
-pnpm test                              # 86 unit tests, no model, no network
+pnpm test                              # 91 unit tests, no model, no network
 pnpm evidence:identify                 # the identification eval (needs Ollama)
 bash scripts/temporal-durability-demo.sh   # the crash-and-resume proof
 pnpm evidence:capture                  # every screenshot in docs/media, from the real app
@@ -320,7 +320,7 @@ pnpm evidence:capture                  # every screenshot in docs/media, from th
 ## Tests
 
 ```bash
-pnpm test          # 86 tests
+pnpm test          # 91 tests
 pnpm typecheck     # all three packages
 ```
 
@@ -330,7 +330,7 @@ listing, clamping of hostile cost-model input — plus the JSON salvage that kee
 answering in prose from taking a whole scan down with it. No model is mocked, because
 none of these need one.
 
-Twenty-four of them cover the two integrations that no local run can reach, because both
+Twenty-eight of them cover the two integrations that no local run can reach, because both
 need a key: the search request the app sends to SerpApi, and the message body it sends to
 Backboard. "The tests pass" had said nothing about either, and both had already shipped a
 defect that only a live call would have surfaced.
@@ -373,6 +373,36 @@ typecheck, a build and a local scan had all passed over, plus two retired model 
   privacy comment promised. The v10 options it used were being ignored silently.
 
 Twelve further tests cover `pnpm keys:check`, which is what proves any of this live.
+
+### Verified live, not just wired
+
+Four integrations have now been exercised against something real rather than a contract:
+Gemma and Temporal as documented above, plus two more.
+
+- **SerpApi** — against a real account. The raw `POST /scan` response is committed at
+  [`docs/evidence/serpapi-live.json`](docs/evidence/serpapi-live.json): **51 live eBay
+  listings** for the query `brass bottle opener nautical`, and the scan log names the query
+  it actually sent.
+- **pgvector** — a local container, no cloud account needed. 32 items embedded through the
+  real pipeline, then *"something to cook with in the kitchen"* returned Pyrex mixing bowls
+  and a Griswold skillet. No shared keywords with the query, which is the whole point.
+
+Doing that found three more defects, two of them silent:
+
+- **Ollama moved its embeddings route.** `POST /api/embeddings` (`{prompt}` → `{embedding}`)
+  was removed in Ollama 0.40 in favour of `POST /api/embed` (`{input}` →
+  `{embeddings: [[…]]}`). The old request failed at the transport level, `embed()` returned
+  null for every call, and every upsert stored a NULL vector — so "have I bought this
+  before?" quietly fell back to keyword matching and the vector column stayed empty forever,
+  with no error anywhere. Both shapes are read now.
+- **Thirty-two concurrent embeds all timed out.** Ollama answers one request per model at a
+  time, so the demo seed's simultaneous batch queue-jumped itself past the 8 s request
+  timeout on every item and stored 32 NULL vectors. Embedding writes are serialised now.
+- **The comps log mislabelled the network.** SerpApi sits behind the on-disk cache, and the
+  cache describes itself as local — so a cache *miss*, which does go to the network, was
+  logged as `provider: cache` / `locality: device`. That is the one line in the UI whose job
+  is to say whether a query left the machine, and it said it had not. The result's own
+  `source` decides the label now.
 
 ---
 

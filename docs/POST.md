@@ -427,10 +427,10 @@ whole thing, including the kill; the raw worker and client logs are committed in
 Every figure here is measured on the machine described above, and each one is traceable to
 a file in the repository.
 
-- **86 unit tests pass** (`pnpm test`, no model, no network). Eighteen live in
+- **91 unit tests pass** (`pnpm test`, no model, no network). Eighteen live in
   `packages/shared` and cover the parts that decide whether someone makes money: eBay's fee
   arithmetic, the max-offer solve, the verdict thresholds, and trimmed-mean robustness to a
-  single seller asking ten times the going rate. The other sixty-eight live in `apps/brain`,
+  single seller asking ten times the going rate. The other seventy-three live in `apps/brain`,
   and most of them pin the places this project cannot reach locally: the seams where a model
   meets code — the JSON salvage that stops a prose answer taking a whole scan down, and the
   verdict wrapper — and the exact request sent to each of the four integrations that need a
@@ -440,6 +440,24 @@ a file in the repository.
   `sslmode=require` that silently overrode the code's own TLS settings. Four more pin what
   the local matcher is allowed to count as a comparable, which is how the Woolrich parka
   stopped pricing the Pendleton shirt, and twelve cover the key-checker itself.
+- **Four integrations are verified live, not merely wired.** Gemma and Temporal as above;
+  **SerpApi** against a real free-tier account, where a scan for a brass narwhal bottle opener
+  returned 51 live eBay listings and the raw response is committed at
+  `docs/evidence/serpapi-live.json`; and **pgvector** in a local container with no cloud
+  account, where 32 items were embedded through the real pipeline and *"something to cook with
+  in the kitchen"* came back with Pyrex mixing bowls and a Griswold skillet — no shared
+  keywords with the query, which is the entire point of a vector index.
+
+  Pointing real services at this code found three more defects, two of them silent. **Ollama
+  0.40 removed `POST /api/embeddings`** in favour of `POST /api/embed`, so `embed()` returned
+  null on every single call: every upsert stored a NULL vector, "have I bought this before?"
+  quietly degraded to keyword matching, and the vector column stayed empty forever with no
+  error raised anywhere. Then a 32-item demo seed, firing all its embeds at once, blew the
+  request timeout on every one of them, because Ollama answers one request per model at a
+  time — the writes are serialised now. And the comps step logged a *network* call as
+  `provider: cache` / `locality: device`, because SerpApi sits behind an on-disk cache that
+  describes itself as local; that is the one line in the UI whose job is to tell you whether
+  your query left the machine, and it said it had not. It reads the result's own `source` now.
 - **Warm identification: 8.3–8.8 seconds median**, depending on the prompt, measured across
   120 real model calls in the eval above. A photo costs roughly 30–40 s, because the vision
   encoder is doing far more work per token. The first scan after a restart pays about 75 s
@@ -543,12 +561,23 @@ paid account. Those are different claims and I am not going to blur them to wide
   out of the eval's own JSON at capture time, so the page cannot drift from the evidence. The
   `.tech` domain itself is on the Hacktoberfest promo list and has not arrived yet, so the
   page is currently served from a `.vercel.app` host.
+- **Best Use of SerpApi** — live eBay listing search with the condition filter, free-shipping
+  filter, result cap and a JSON restrictor to pull only the fields needed. It is the reason
+  `comps.source` can become `live` instead of `local_history`, and it is now verified against
+  a real account: a scan for a brass narwhal bottle opener returned **51 real eBay listings**
+  for the query `brass bottle opener nautical`, and the raw response is committed at
+  [`docs/evidence/serpapi-live.json`](docs/evidence/serpapi-live.json). The scan log names the
+  query it actually sent, and the network step is marked `cloud` while the two model steps
+  stay `device`.
+- **Best Use of Tiger Data** — Postgres + pgvector for "have I bought one of these before?"
+  hybrid retrieval, exercised live against **pgvector 0.8.7**: 32 items embedded through the
+  real pipeline, then a search for *"something to cook with in the kitchen"* returned Pyrex
+  mixing bowls and a Griswold skillet — no shared keywords with the query, which is the whole
+  point. The same code talks to Tiger Cloud by connection string; the local container is
+  there so the answer to "do I have to hand over a database?" is no.
 
 ### Implemented and wired; not yet exercised against a live account
 
-- **Best Use of SerpApi** — live eBay listing search with the condition filter, free-shipping
-  filter, result cap and a JSON restrictor to pull only the fields needed. It is the reason
-  `comps.source` can become `live` instead of `local_history`.
 - **Best Use of TabPFN** — a price model fitted on the user's own sold history via the
   Prior Labs REST API, which is what makes the offline number personal rather than
   generic. It predicts price; sale speed is recorded on sold items but is not modelled,
@@ -559,8 +588,6 @@ paid account. Those are different claims and I am not going to blur them to wide
   framework's own `gen_ai.*` spans are *not* wired: that needs `@mastra/observability` and
   a preloaded `Sentry.init`, and I would rather say that than let a span name imply token
   accounting that is not there.
-- **Best Use of Tiger Data** — Postgres + pgvector for "have I bought one of these before?"
-  hybrid retrieval, with a local pgvector container for anyone who wants no cloud at all.
 - **Best Use of ElevenLabs** — dictate an item while both hands are full, or hear the
   verdict read back.
 - **Best Use of Backboard** — the second brain: the same agents against open-weight models

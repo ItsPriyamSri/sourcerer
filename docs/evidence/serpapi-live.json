@@ -1,0 +1,629 @@
+{
+  "_provenance": {
+    "what": "Raw POST /scan response from the Sourcerer brain against a live SerpApi account. Not a fixture.",
+    "capturedAt": "2026-10-19T04:36:27.347Z",
+    "endpoint": "POST http://127.0.0.1:8787/scan",
+    "request": {
+      "text": "brass narwhal bottle opener nautical vintage",
+      "buyPrice": 8
+    },
+    "provider": "serpapi (live eBay)",
+    "account": "SerpApi free plan, 250 searches/month, key supplied via apps/brain/.env",
+    "honesty": [
+      "SerpApi retired its eBay Sold filter, so these are ASKING prices tagged kind='asking'.",
+      "The disclosed ASKING_TO_SOLD_FACTOR = 0.86 (14%) adjustment is applied to the summary, and comps.basis says so in the response.",
+      "The query string SerpApi actually received is recorded in comps.queryUsed, not guessed."
+    ],
+    "modelRoute": "ollama:gemma3:1b for the identify step (device), comps over the network, price on device"
+  },
+  "scan": {
+    "id": "vKwYWuZUHg",
+    "createdAt": "2026-10-19T04:36:27.347Z",
+    "identification": {
+      "title": "Brass Narwhal Bottle Opener",
+      "category": "Kitchenware",
+      "attributes": {},
+      "condition": "good",
+      "keywords": [
+        "brass",
+        "bottle opener",
+        "nautical",
+        "vintage",
+        "silverware"
+      ],
+      "confidence": 0.7,
+      "caveats": [
+        "Image quality is slightly blurry.  Difficult to determine exact style.  Possible damage to the finish.  The label is partially obscured.  The bottle opener appears to be a standard design, but details are unclear."
+      ]
+    },
+    "comps": {
+      "comps": [
+        {
+          "title": "VINTAGE SOLID BRASS DOLPHIN BOTTLE OPENER NAUTICAL DECOR BARWARE GIFT",
+          "price": 32.99,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/377290846315?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGMVXXH59XKMVT0K2CE&hash=item57d849706b%3Ag%3ASmgAAeSw0Q9qOup9&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde9kDPoHcJXHU%2BALuKzxXWCAnXmadQKOqQVD4UvQOES1WzzsJJu6SWN63hSk060ONdnruNCQQAqy9I8LahVSGmdKbCzvoJUk9VJ3iWOaJMfoGmhVYhsCf6b0%2FyPOgEAHYtSbr933D9hMPGtP7sdgoCoCzg8sxR9WMOJome9%2Bplb9j31Tvtm%2FRMVIrMupsDf6ANuU2Vw3%2BFSV%2Bx8M1o9zTT6l9hs7SDmqe8s7jq%2B1QVlAn1lv1mJBv9S66r6O%2B9ny7ghzt31AF30YMWBlbw31EeS%2F%7Ctkp%3ABk9SR8rIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Solid Brass Seal Bottle Opener Figurine Statuette Heavy Nautical Decor",
+          "price": 84.99,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/157982262144?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGM9MXJHT8RTCP7KR5N&hash=item24c87a0380%3Ag%3AeN4AAeSwwy5qJ0bp&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2BfVGO%2BcuQbO%2F2Pw98hiWWjtZcZa7qsZ3PyB0wlLpJRKYhm2RYvYXZonzDU4JeZ4KYnQYNKSNdlalKVoHpwDhCysP%2FPR9CAMVRU64BNKhqNiHlXPu%2FuHpZlBPDQqW%2FC8oyAsqz2SdNQyytbFAhOkrwW%2Baf5wf6y5UgHYFD65%2F8GPPOukF7T6v9C35aPEtMtDOVjXQUGBBWPG3XSO3a7HpW6kA1splGyVqm7v10AMnj4FSgObvUGDX%2FCIudfmUzGsYO%2FUH%2FVRZpw%2FYFBWfJhtfteLn38b5DYFn%2BKPJr36Q9wgq1Gm3UQvf71Lr3HsrFwB%2Bo%3D%7Ctkp%3ABFBMysiSp6po&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Canada Bottle Opener Brass Tone Metal Souvenir with Maple Leaf & Flag 4\"",
+          "price": 89.1,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/187427221553?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGN2N0GQMZMPF1R063Q&hash=item2ba3887031%3Ag%3AXDMAAeSwn69ofOtP&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde--T3Y2sTa%2FABWxqsphlJ8nmYevxwi%2Bvcct4G18yz28wlV4yaC1xoG1UKm%2BYwmBWSit2GUaIP%2FJSKefhe23fxGUQfsze%2FzOZGdqjCQeFgUuf%2F2CGRiJryf06en4fG%2B63GSk4Q%2B9bKJZBN8a69nYbeZ2C5uqWjrL6EjCwp6Bv2S0gxi6nSieYTOqeilkutLSDYZOepIY9YSAB0yV1zWPsADauV0ZX9uQ5mWWWiLlFtJtkhU%2FrGB20Z6tEpdy%2BLS5SNPxpUrBkRBAEXxJoLXU5vJsKiWTNGQuphGVWMj%2FZAsZQvgujlo7sJZ0AsIBnFLtPK4%3D%7Ctkp%3ABFBMysiSp6po&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Brass Key Shape Drink Bottle Opener Very Beautiful Collective. G47-236",
+          "price": 73.49,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/156924064975?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGNAMNQGCGH9DBT6JRJ&hash=item24896734cf%3Ag%3AktYAAOSwt0db89oB&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2BM9yhZJLE1dSb6d3otiVTdK41SaBAQp4oYCZqvzdDtTMOrDheWRof4Su2cCn3NjtqFBuluIP3rQinravu%2B2EONS2hWZIptegdm%2BFIlIUt9fFexe5RrIKYVR156JL3awuQqarBc0vBfc0SQVTF1I10p77E4nLdRmvPTPiDTtt1Umx2HLeUvuvEA%2BA1BsvGai%2Bb%2BmFDQBYLOKoKIpk9XMdvpyCoBsXGC3E6u6QQPqntlsNssDmVGx3qlCoBccVMywECoaNzK0HUBvW0cH2KCRarV8Y2DSrFD579bA4sJlppoBqu2wn6%2BI%2B0Mg01kVSt1TlQ%3D%7Ctkp%3ABFBMysiSp6po&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Brass Seal Bottle Opener",
+          "price": 90,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/305937585117?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGNW8THXE08XGK85C3K&hash=item473b4d13dd%3Ag%3A-sEAAOSwJ0NnR11w&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde9Mrzsx7yMGZtloHYE41m9sbdsB9BjqOCUy30aW1IrqyJCW2aIqmO30cs7lXQtZ9RjE0p%2Ftr--QMJ8DeM2b6YBRJRRWg0tc5UXRsNzCUkx3df7w%2BIZ8pgL576lytRWUkl%2FkzhsVyXwnYD43zV8lQbve4VUOsPE0JCkpoXjlTZQl1%2FiX5iAhC63HJFadhSO0Gnb3RPDnytQLCiRDDAXdbYFS6RRlIOjnpmDp2h5lGok9iPO83a3JyTTEGUc%2FOUDmjGrCeDZ%2B7mZdAQ9%2Foougz1QP%7Ctkp%3ABk9SR8rIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "HYSTERIC GLAMOUR YOU PAY Keychain Bottle Opener Vintage Brass Silver 2.6\u00d78.2cm",
+          "price": 75.99,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/318662505221?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGN538QS0W6KJSNGE55&hash=item4a31c3f305%3Ag%3AYiAAAeSwIX5qbZHA&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde%2FDVJwvRSG%2FZJLXQoIpCoprlxb9MfSySEyWy--7o%2BW0RnPxHuzSYD1wFijLPe1PsnphU%2BQPF8RJ4RF%2BboOCG7W%2FS%2Bo8N9027j8KwQOgpiOMmEf3T4Mi6SCz4OMXeGdccXIHG7yl%2BBRqTlYRDSFtyVNRcJlvUWlPtbAPix5avyOwqJDvBbGcrc7edarmpV1aVJLTCXNeBEmYmSOptdpP8Lypf%2BjmO%2FWg33mof0c6%2FCe0a5HXiYvjpvkTcVsjNL%2B6XwLWZ9P3Q6XrwFzmMKazn%2FaH%7Ctkp%3ABk9SR8rIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage cast brass rooster bottle opener",
+          "price": 40,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/800752264380?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGNVF99QS82QDF96X4B&hash=itemba708de4bc%3Ag%3APVcAAeSwA9VqwL1u&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde%2FLEIq%2FzSCcWNYX0alQra1ixu2V4REyE13%2FySemWvYM%2Fz8ExzSCVIqt3uw0PlSAJUSw76KCHvgujfzezz72jznDlENQJC3Mlmr5m7NSW4JnL4iNiJvVY8%2F1lErq2ihBTqb7VHx%2FJuTtudFaUUEmlonBrWKBNRj%2FpGhJTQ8Nw1VHbi%2FMUScLkak%2Fxq1IW4n%2BGl%2Fjeg9%2BMOq1atDlPJpFkDdRiBBtbKXrcdgDL8sTVcI%2FiYBW8F4P0J4GApiReDGYEEY3pxL7uUMlofyWO5hDtxy9%7Ctkp%3ABk9SR8rIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "4 CORONA Beer Bottle Openers Solid Brass Wall Mounted Heavy Duty Vintage Aged",
+          "price": 103.5,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/264664455170?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGN89105V0DPQG0RW2D&hash=item3d9f3b1802%3Ag%3AxQgAAeSwGGJqRbH6&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde9AiObz5mBgDECgbxOrQcdERlsXDSDQhY%2BOjlRN6F4jRli8c4%2FOzKBeIS0E%2BXcizuKaCLaxGQBPiM9HUUj06dZX5Dyi06Z3dVmoirICZeM8fRwdzTEcx8QR2Z%2ByXxPlACAdjTUVfnSMBoLo1tHGxUZhZKFYAFdZ6YCkMW%2FdDeYARyrjwYxShWv8pxGsGT7VURxLRd4Y1JVWav9g95ziZYDr0dqWTcyGwDYVRUUJ8dg8sQNytLVgZIPT6gzRekFs4OnFpaq18vvETZb%2FBdhsZGMS%7Ctkp%3ABk9SR8rIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Brass Stag Beetle Keychain Bottle Opener Vintage Style MIB?",
+          "price": 50.99,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/318928563058?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGPDEDN6FWRGPCZKP35&hash=item4a419fab72%3Ag%3A8UUAAeSwOJNquimk&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde8uiVeHMDWD6zx9jG8OFQlS6sAHZcJ1pBKbjOkNtUGm0sj8cA4WHtY8uZc6bQB4K4kYnTg15uz9nWdtCo9zc4HQoD00fczGPRCg41Fznhj6sSSrtkw6DjLmfuIwqO6HvceM3tg%2F3%2B53HghT81x7EVnJdINTNUjMB1zCAy%2FbHLKJKZj05QdvIK18R2LgJMP%2FwPKBedcXh%2B2zwxN0Yzqv69DsZNV%2FNrwQYpZdU1OrV67nALoG7xUjTwvsqo3f9%2FGNo6cdO%2Fufn2P1e5V%2BKDGl08oZ%7Ctkp%3ABk9SR8rIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Dolphin Bottle Opener Silver Tone Figural Barware Nautical Decor 6.5\" \"R",
+          "price": 89.1,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/178385376597?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGP6MBYZGDWZDPG5CRP&hash=item298898d555%3Ag%3AJUAAAeSwWatqdtaY&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2BQqJLddS0f8S8z9rKe7eUnCcmu%2FvMdjamxNlEomPNgHi1l7yKQ84Xhw7tXGH1vyDR0ZZ4HPoQDRn%2F7asevk4BFVH%2BB%2BSUXuND9qm1eN7AgAfP6h0h%2BKgkrinVqpi94ocaU%2BORwFDtn8s1QGnv9EyNUEi4IXnvMf4m3W7zoKM%2Bs5WdzXAZ2N6aLHditG0WXtCQCqg3czIJ%2FxlZ45X16ii%2BEiU%2BBZcw2IC3t6%2FNAFD1tlJq8Cnlf4JJBCFA3Nh7AiaiO0e2888WS0J7XGBRZvnF4lKGwbsbmpyjS2fBuwlvMo%2Fr9L%2Fq%2BXDkw5BZyqVNW1Qw%3D%7Ctkp%3ABk9SR8rIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "HYSTERIC GLAMOUR YOU PAY Keychain Bottle Opener Vintage Repro Brass Silver",
+          "price": 75.99,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/800555508174?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGPVHVZ80CQSTBX805N&hash=itemba64d3a1ce%3Ag%3AKLkAAeSwzkRqjCHu&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde9BsUFMsMeBWpDAonrTRKYkQKUaO4KZd3g%2FxK63q4S89h8c3EurVMRTffQluKFns2SwlZ7Uby4qOe%2BPRqVRB%2FWKAn9yBCDz70130nUeHhIH1B7zZnqyocGKuyoTETt7W23bmAanim18d8ZMWh%2Fih1%2Bdjv7iy8UmGwpAvtv38jeOgjsIhiwKIpJj81dLA8EhqYPfCf1sbLsckQRaSzq1xILKj2eXJLCK5IbjN9%2BqxWcVwJ0wjgYe48AGRhzNq3HOdtyjaNMwFmyBq2O5IFh%2BIzoX%7Ctkp%3ABk9SR8rIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Greek Brass Bottle Opener \u2013 Antique Style , Two colors of enamel",
+          "price": 45,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/800541562452?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGPWDM3DGVA2VQBYMAM&hash=itemba63fed654%3Ag%3AGtIAAeSwoxhqheq9&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2FqgHmqfA3DhjBTt3He1Xq7RTgYOGKEYUvUb5WFSw0xyZwyXqZYTjltghr9TJW2LB46hKmSDlIY%2FQH0stseJ6R5vicRTP30NNyo%2FpbyEFHZrv8RnLVGbet9%2FtHX4hAZw1yAkS%2FYWauVDHMmv522YrflKZTz8XKPTm4P3iuGiWgjM1WeT%2BcE6LKqnoXVsh4fDjxKpe2N%2F8r6myuGI%2BugUfK3RLNJ98Oc%2FDtVaOOgHW%2FVwMyEpO6i9xczUZfvW%2FSSCmMWn64Xfdxo7kb9egM7v%2FBYPbzcefd%2BJmtUllSmWAbQSVJHAUbe6fZNzgT5a4iEduc%3D%7Ctkp%3ABk9SR8rIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Brass Skeleton Key Corkscrew with Hidden Spiral and Ice Breaker End",
+          "price": 89.1,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/187419141774?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGPX3AM46NG9M42DTWE&hash=item2ba30d268e%3Ag%3AJOAAAeSwKfVoeJGA&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2FxUO6qhm%2BEUjOBKisGzI5V2l3Q7oC%2BKGZxCAfeLpRbG29tuC5C2D4wtEvGFtkR511ltY2ZbJAAasahQKEUGNSNv%2FPsE8eVsxzb549VIwvWbPbl8jx92JQGkSTP0tRqSx84c%2BLEvd2G1N0nxxFJSCRC7tDEm7bMYpgA1olezfbNWUBW3bRxLOgDlYq22aeY%2BMft2AlaacldmLSZnMcdXk5EQaz2AkmlP%2FwuLQcwOZncbV32BGJEGZxB1TfsZfzGsqCwTuz64o9s9zQ5OKB%2BSs6Ybhj%2BJddetQWikZVNFHoTWpIqAA5%2BSVIKW5TIChhKArI%3D%7Ctkp%3ABFBMzMiSp6po&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Heian Aritsugu Brass Gourd Shaped Bottle Opener Signed Antique",
+          "price": 210.56,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/307233506921?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGPT6V6S39C3SAAKBCG&hash=item47888b4669%3Ag%3AHSEAAeSw8d9q0WN0&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde8hWC%2BZAANXLJCUF%2BGAWokI3XREcvZLk8ds4ORfzRncE0SD0FN%2Bg4XoDnFO2HWpeMlg1C1EHhnvudL06pveQDnHkpeYgFTFJfPGt%2Fg0y0dyCO32fpJ%2FmbMDz1RV%2FUD5jEL3DSoh0QTGEyd4SfhO59sMwVGTITx8GFRF6ktnz7p1s8lGRfur%2BSfpDD9UpTGBkjE7QgLZtYQcfzxgAGUqSxC9pCwOG5ePpnyHZiJgPWY3Zu10%2ByHgizXD7wHtwP06aeOrwdlitnTqodMwFaCLlka7uZZo0eTuLfCoItH3%2BQHdQ6tkiOmMhbbUFK%2BM3auC64M%3D%7Ctkp%3ABFBMzMiSp6po&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "VINTAGE OLD BRASS KEY SHAPE CORKSCREW WINE COLA SODA BOTTLE OPENER COLLECTIBLE",
+          "price": 69.75,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/395493738886?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGPXCG5XG35JANCVPXY&hash=item5c15438986%3Ag%3A4kwAAOSwr29mevKN&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde8sPeZMfKvb9WTJM5NnRtSpk8bPeddC8JmkFFRhi50tla2qKr0sIlMtF2Ta--IdAMYxEnzvdKRL8cl0Qj1A8nuCiBppWH4CT3K74pBcYElk4a%2FoFzMdz8%2FC47wQLluiBhlOY%2Bik2Pj8O%2Fblxs40ge8KNzuLYAEBrSjkkbQOqUxSmgOmpRYqfvQgSySUkmNlCCmNs3Mn9mrhDSoIWZK3TxSr6UpCY5ObLEEvCkYDndmjw5Myv2C7LXAS9XegpgdTgDtU1WTJF2Vl9tUxqmc%2FRPcTrD0xOtp3QmTytbC9cjb1%2FGUMxpqOemcCTdECXWmYTyk%3D%7Ctkp%3ABFBMzMiSp6po&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "VINTAGE OLD ENGLISH BRASS & IRON CORKSCREW BEER WHISKY BOTTLE OPENER COLLECTIBLE",
+          "price": 187.06,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/127400055489?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGQ39NS4N5QEMPQFF56&hash=item1da9a292c1%3Ag%3ArLQAAeSwUAlo2Tym&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2FTqL%2BG3she1yL9oi68T4AffQW1TKvW8I1RXGMxbrdeUUghQW1t29Yd6jIt2VNwhNANPqKNHqVuTlq4EihWutYy1Tp4nmOJ0TLKyJmbKR7c4TMDijgBVSH5U6tekstxNCvsZ747oEMD%2FujujnzOXtc9ic9ftY3fEHv2KNA5mnWRqxCkgQ0Jv3mg8be8Xmx7bpVsg02AbAyv0Qlbzx%2BIDJRzxAxJM2omWZ5Eyibkb5xQpuvJ7B4x60tmkgg20HIJhHqATwZ3RY6bkpSitNjHYaUhw3u1vOB9ExvC9CxJ1XeU0CGSyVNBZMirX05Gz4hRDq4%3D%7Ctkp%3ABFBMzMiSp6po&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Bronze Brass Collectible Bottle Opener Barware Nude Woman Figurine Art",
+          "price": 35,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/205903671443?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGQDWWGHREDCF972S51&hash=item2ff0d0b093%3Ag%3ALSwAAeSwf5JpEdKD&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde%2BGaNEvftsq1LcmXYksH26I3DtkkfTn6sfXsQH%2B9ZmGewrF7amphy9u%2FCQDKFwpfO71%2FnjGUHpXYBODqyd0FcQKn4h%2Bp%2B0xd%2Bzvfm%2BKSJ0%2FzHHd2G3g%2FoiaErUSC3lmuFgPsDk4T9UKHUR2vhGmn3SdoDu%2Bh5Y%2Fg6zzn4YZeQyJ%2FjRZWfPZI%2B1c6z%2FRPGI71LCPfY7vo6YfjMm1rAdhtbEvO5CAmfFJbmqcIqMK5fXc5%2ByYDJ%2FDokeu51tbCa%2FPwB4jum2IG%2BuVXEHVL7PThJfQ%7Ctkp%3ABk9SR8zIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage brass bottle opener \"Owl\", for beer, soda and wine.",
+          "price": 28,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/397941052199?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGQY2YNERTDBSN4WRAC&hash=item5ca7229327%3Ag%3ApX0AAeSw4u1qA2u8&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde9k9t8qFzQNP7%2FYvLiyd6mHrBIe%2BqZKIIoafgHbamS9V0sBV0ylOotIhlxpc9scT4Td%2FQsRsDIrvlbt6jFAmwin3uReO9sGIyOKSB444bcDH%2F1uDP4JA41q552SFYdut7Yt%2FGOLt8kW7XQSsQ0q1HxaRmgPV41wB60%2Bp0%2F6k77UxBo0cF%2F7yTrkhefmSS%2F71y2V79oohVApli%2Fi3KuTUyTmiH3xtdEQ3bp15KG1Eu4iajJ%2BFyuKV3MsWSjLMlqzxe94PuEEPc8Xpl1QhpKo5VYRR1KzEOiZ0p639aoDP6v8%2FUteLVPPJX9Sje4sEaE3Lxg%3D%7Ctkp%3ABk9SR8zIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "USA Bottle & Can Opener Keychain vintage antique brass tone 6.7cm C:Type",
+          "price": 31.99,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/860023150140?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGQ8DC1NDWPF4DWBXGB&hash=itemc83d5fd63c%3Ag%3AnJEAAeSwNnNqx59r&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2BRzO9nOGbPG19pgB5S%2FpxKqOQuKHftxFwHvFPbX6B384eno%2B%2FVmTS3nY8Ty0V1GgW%2BCOYrTNR51eTEncMDJVXyHGBBv36x7dfZitePGAZ%2FruugSoT1%2Btmnu3FlluBNHk2AluXLI7Y6l3KzBQtRJUOAxJbSZwUZ%2B3Eauk4EzmpRMIOD0HRyiXwtPFI4%2FVbXWwxyekS8hpnojzVMQY62%2Fn8brmVT6zzcbtGFqzskN%2B%2BSC2BnnjVSy839jsMW6P8eRVSknTRH%2B6Vh1xE1iYq87nnoo96ElCSBcBDlLdJvA8WFQr8nbw%2BMc8mcxdAzW753br4%3D%7Ctkp%3ABk9SR8zIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Israel Brass Bottle Opener Twelve Tribes Of Israel Judaica Souvenir",
+          "price": 29.99,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/366682352730?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGQNV59T4WBT89JQ5F4&hash=item555ff8ac5a%3Ag%3ALjoAAeSwRBlq0kqL&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde9Isk%2BVHGnruYGDdOMbZe8fDDmftGs%2B9T3kMch9SRhk8AWkE6XmfTOKhITmdprfDWH7dSJ%2Fke0M9bZdadPruecuJhNe68Ra8jiTkpTGAX9vhqKEKOXUY8flQ4jQ6CYfJzUwXjyU65r4kT08lO6r2Rg2z6FZOXQHr1efATaGvErcRCcxSMYAGEZmKsh8BO%2FDiQ58WL8sXw1uzE%2FvWGlFj8uCW9ZignEov5Uc0B%2BHm1zHuPMRTVD3JfczqOT1XkvzYeOt2At%2B4GVq8po98sM4An%2B8%7Ctkp%3ABk9SR8zIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage brass corkscrew | wine bottle opener Norge",
+          "price": 23,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/167514233026?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGRX6TX53TDPSKSSCWG&hash=item2700a058c2%3Ag%3AUy4AAOSwU8hoJQ9m&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde%2B6NKUYuV%2BF9OITYlKZKQ3iPeDiSp%2BIrwW9QPsH0O1cpS6ac7ABmLWsZ%2BwBRWIfTWo6sM0PhNX6GZxJrZ70%2FqWoKT1vZ4clzSLq2lvfFUqCUNGT7ksMsj%2BB%2BT6nDxAe8XnkDd6C2ikI8VA3hQ9eI19Nf8hywdgaMYkx%2FWoc6Vx3ZZnTye1DZ1tCpMaz15DPSj0qR%2Fn8xsUpSolrvKIrfiypgSK2luJcsL28PRDat94ulLVZrKbhW6wsA3rJI0Qn45KXKNzkK5Kd09ucJtf0MU%2FM%7Ctkp%3ABk9SR8zIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Stag Beetle Brass Bottle Opener Keychain Vintage Style Molded Insect Charm 6cm",
+          "price": 54.99,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/800555419232?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGR80SWKPGTK11TR4N7&hash=itemba64d24660%3Ag%3A87oAAeSwvW9qjBvO&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde80AH6QSa3BPP%2B00ADtvx%2F0DoazvEC526Ko0U44zH8GAl1qm0L1YqsK14LS87KSjToPPuQ%2FABw8%2F2wUERARDNQYQLelxtAw2WdbVE%2Bqh2o11pJBZevhipctn8H81QhorIB9I%2F7cAZ7tAmAHDdeUmczVpTXH8D%2F2CVYqyVH3%2F%2B3NE0OTe%2FzRUqv3OLTuTdZInhvD5tOpUrQFl7a%2B9sJt0YHi%2BcGHqWlfS0d%2FWJ0D5wGxDobEFzrUHTJ26UmjWMhq6q2sI41HclqIXyq22Fxivlcq%7Ctkp%3ABk9SR8zIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Elephant Shape Old Handmade Brass Handheld Bottle Opener Rich Patina Home D\u00e9cor",
+          "price": 57,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/128039171698?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGRTJKT9S78JVF1PXEH&hash=item1dcfbab672%3Ag%3A8QoAAeSwulxpUfyk&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde%2FoKP6vBqsdh0h19Bxzwdncj337VtIw2mUeob3MGhIG4n0k3QmbUj%2FoNu2sIVgJ2c5PG9hxB2qJOKhoUTlo5T49BpBsCdN5JYbhYnCzP4Dsxh2B9BbyafcJgf%2FQf4FXXc%2BbXoQrMj1t5zwymkRSksG9KhG38xgazYWcaOO9ZPFHK%2BLaRM51k%2B8fK8rYZN3w6bnWZftTHQvifuxxarYyp%2FsE0euE2qVO4gKLlZibMn4NEKpQZB5%2B1AB6RHDHG4EiTmOPoe250JnTtVQ%2FXzBY%2FkX1%7Ctkp%3ABk9SR8zIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage 1920's Very Rare Handmade Brass Bottle Opener Whisky, Beer Rich Patina",
+          "price": 138.98,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/115258079157?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGRJ7532KYPYB7N2F3Y&hash=item1ad5eab7b5%3Ag%3AJn0AAOSwqqpiEN8X&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde8%2FFYS8GfpXmmv6lPuhJvTen44Q76ORbb2zGaPYXr3JSS0wfUpADWJRlUuRCrXYvM5qhuqhrB2wxFCofBMd3yQkQFS4tgLAGAG6hJ5IYw4TxERQrF3v2BW1Y1JSNOA14bnx2tDjqpHGraq%2BFtIUTIh5D0kSdCW8CxhjyTdiIe9EgBSIEuzsKYHyWeQLYXAWVsi0V%2FhbvWEvGzCl8sg%2F8Cgbsh%2Fnl7eb8npu%2F6h2FQh8FMO1i4NC1hLiMidBRn%2FbAhbZSeJ2%2FbE6IwigcocOrWvG3AjiGQOF5K1iirsgaCp7tempjA0yI0cW4qz3Tq6Sd1A%3D%7Ctkp%3ABk9SR8zIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Rare vintage \"GUINNESS\" advertising cut out shape bottle opener of 40's.",
+          "price": 325,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/205463322283?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGRNDXDWG1BCJPQP6GN&hash=item2fd6917eab%3Ag%3ACc0AAOSwrGhoA-UR&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde9wTJVx8Hxqtho8qRnkAWnd7fOekjqRTqA3n7V2S9p%2FRb6FeHn2UNM3LDs70NsBQQaIX%2FSfnZWH4K8yhkyGByj%2Fe1Rs8upHaou53%2B3O2Tv9LTGNlCGRBJO0HOTWAv5WJvcT5HbE5fJeIPebmbW%2Fr55pc%2BAffxshFtjoJRCzD8s1Ueaj%2F82DxSgyRQctU0q7ZIwZdUEe2JiXEW0tPgxAE58DcQSywyhNUoWUUCEfk0uB6eNK6XytY%2FhtidAAz4nLOlAbHEmMCancyWrxQHjy9dFH%7Ctkp%3ABk9SR8zIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Antique brass bottle opener set with king and queen handles (2 pieces).",
+          "price": 69,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/127815851173?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGSXAPC0WHWVRPBMTM0&hash=item1dc26b1ca5%3Ag%3AFBMAAeSw129p4ssA&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde%2B9lXcWHvxC%2BNFaCS6cXP8V0ASNVkbK8YoPsgeUrwkyMRRzldNbHhqmpwjy4Qt9oL8K37bGd3Tl%2FU5fAAI3abfsyWiCcsBjOfBF%2FqyWvn%2Fx4QvcUkGN4jlbOB5ZFIs9HpraPDrnnQqwDF2yiHpFZlDHihl%2FDS0TnwlU%2B9szfeq%2FJ5z47f6VfcFNkBDA9MlnrBFHkDFOUe0UP8Q76uqbLBSRbfUq5frV5KE4kf2tqIOs5QkAZzwFcUjABB4HyidTcFjjUzezQi2KbPkFJWr6--6H%7Ctkp%3ABk9SR8zIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage NUDE LADY Cast Iron 8\u201d Bottle Opener & Can Opener. Brass Opener Bottle.",
+          "price": 48,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/226512655232?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGSEVG7NBFG3DNYZRBQ&hash=item34bd34d380%3Ag%3AGvwAAOSwWnBna7fA&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde8yKXDjFQBWDudVwUO%2Bn%2F5bBr%2Bp9QU0Tj1%2BitW0ayro8UW8wzpd7GwdUWZQAfnv3fwFx%2BNz16rLb5srgnnFcw%2FMoUro59fiR1EP4TYb7s%2FYne157u3hNg7D3k2DPEgK%2BGMeAh3H5MjEBH7sLWBlLnGyxrIvAHeHF%2FzKGbsi64%2BLA0W7L%2BQN9v9%2Fx90fbLG2I7S2L9%2BSszN1lHFshvPsgSEOBjVHkUtsIPxRSG4KrGOXNAGjOvlIBPAsnaydsDel%2B1rT42k8aDCR3Y75o5QZUxRe7kIHAbu3NX%2FCyB7n1%2F7ls4wHbHEbFR3i2hDcWIT8mTM%3D%7Ctkp%3ABk9SR8zIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Indian Baby Elephant Shape Brass Whisky/Cold Drink Bottle Opener BRS-388",
+          "price": 249,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/277244877889?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGSNQVBVXD5EF5V19XY&hash=item408d151c41%3Ag%3AzOwAAOSw1BBnaqR2&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde8HqbKtIdcgvPuqdG9imW6NeJoslgOksv13Gq1GKfCijel2CPXu2qQ%2FH3yqjROZagIMX3Ow2%2BTgvF%2BbB5oNdRpKp9qrRYBueB9PaKbrpYU9LdXLNEnfl7Lt%2Bv8%2Bf13s%2BmTmMUoftbruB7%2FV%2F3ggzzZzfAmZNcxTbYLMVAQdCfTE7FFbVOAzKVJUSy%2FGisfNCToWIpB6ATEDGAESU%2BRsTiLoQti%2FWDIlEFlv6pxwmq3O%2FWC27tURkhyNS2BYFAImW8qkKp25HPxuMCni6Ax%2FD9WojKpnMc95fol9YRoBrnNeJ%2BFzS5MQrsXnue7T3j%2BlnA0%3D%7Ctkp%3ABk9SR8zIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Sea Horse Figurative Brass Bottle Opener beautiful collectible. G47-91",
+          "price": 96.24,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/167461043178?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGSDDSC5FY1F70NSWRX&hash=item26fd74bbea%3Ag%3AJcEAAOSwgvFbNyhh&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2FEtg425Z6951kd4ysVd%2BeO0nb4KRjNpnizyi1CPMHRFHusbAtAWfJ0Iiq8k0veRtQYAxSPEa47BBzhn13soWwmUDR0Yiq2T0znWSUnWqu6GpUwpE3Rd4cqqxO77HH8babNgBY%2BhyfBO%2F4g2ro348C0TBxjGy%2Bcu%2FRmEoIWDnpVvf4ZR2WBjz6II8zlZyuwJaftK5MPoc1X%2F0EhL%2FuhNBB3r2mEXG41FJ%2BYQkpWZ9mua2oT2X%2Bz0b%2B2k6QKmD4CEWqe1Ie%2BU%2FU5DYdkaqt47u0th7LI3ltoC6Q%2BLseevAuHLxYSMq8uzgHMQx7nhdZuFYg%3D%7Ctkp%3ABFBMzMiSp6po&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Antique, Brass Princess Lady Soda Beer Bottle Cap Opener 1940 Year",
+          "price": 60,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/314564332051?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGS8936W8MHEF43N27D&hash=item493d7eca13%3Ag%3A%7EKcAAOSwgH5kT8jh&itmprp=enc%3AAQALAAAA8CHNgUiiE%2FjQhlDTaMiAde%2BSqnZZtiywQgas0eyt7XA3PfebxV9Tkwimlmw22JfQUzqd4%2B7AextpqqUP2ALLjLV61%2BpurfOdCL094HyLaf8Aeh5O5Drk2%2Fvm4a%2FB1LoZRZCQ3ghYjFJ91afuSmikt9n34BFjRkWLzEKV%2B2CT3lQTaj1CK4OmJCCFDGTLcRcK9XLYSkFz7qt43Mg%2Fql1zWEXX2vNsL9oihYfndAmGXXuqD5ECqX0uo2VQiON3nwpY93ItOEP5eH0tdkdPAvoVgtwh0Q3bU94WxQ8PiTV4Nu5FvlP4Gi3uuudd5cGQtZUgeg%3D%3D%7Ctkp%3ABFBMzMiSp6po&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "VINTAGE ETHNIC BRASS ANIMAL LIZARD WITH GREEN EMERALD STONE EYE BOTTLE OPENER",
+          "price": 157.92,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/285359031633?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGS06CSRW677EQXF4RW&hash=item4270b94551%3Ag%3A9dMAAOSwSANkoFf-&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2F7I8qkV2ESpBmgl%2BhimBKQogCiHcScETdf5gAfrzlDRgggRp0Lk3MsrIGvCbzu0DlyQ9UWnj4EI3U49Y5Xmx3RPS%2FqZ2BJ0J%2BPnbkyEVON7UNQmpjj3lBuEy5IDt6Yq%2BTeL3lkg%2BddGrolQ5g8h75%2FPXqOnrjioUmuxKFx4m09PWMaTa4ifIcsQN6EyMQzrgR7k1rd1t57W6xmpY3RglTFK7oKSpFIh0rok4szGScY%2FHhfWZtIgXBwPcDa9Q8EpEQ0SBnjunPng5dZrLxEViiFTvoI%2FhQMyDnD21ZgQS%2BC42qkvznu5t1TpLfNOWzmeOE%3D%7Ctkp%3ABFBMzsiSp6po&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "VINTAGE ETHNIC GREEN EMERALD STONE EYE BRASS ANIMAL LIZARD BOTTLE OPENER RARE",
+          "price": 186.12,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/285364367590?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGSHYQRH1H789XFCD7Q&hash=item42710ab0e6%3Ag%3AZygAAOSwNapkpDqa&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde98beiKSSdOUL0i9WdFj%2BJtV%2BPNxiwoeu6eyvB14FygXps1269rhSCa24OgHtsyQ4GVkmFyPXuYHAXqckxJs6ZhISsmFCTd%2FeXnBlDOEN8I%2B2wg3G81Vcr0NFd51OcjrjQL3UqOPvkHtcCtwSLIs%2FzRTyjy4GwMf1BD8GbUegDD%2FJ6BpnagGsAEGxfvBt466gyvt3O6YlQD5aT0Hz2GES8XK2CWeVA30Px%2FYO3d6MjY2NlQ8VB4QKebsHGAerU91F9PHpQSA%2BhHRhxVxbxvPTdFmJODwAUMd8JEF4UfZuwjAzb7LqR6Je3uacVZ00zl9Mw%3D%7Ctkp%3ABFBMzsiSp6po&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Egyptian Hieroglyphic Brass Tone Bottle Opener",
+          "price": 79.99,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/398417455565?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGSMFXDGCB6CFYZ0BZ4&hash=item5cc387e9cd%3Ag%3AbDoAAeSw6LpqsVba&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde83d9m6IzSjHw%2BFf3R1T8Mm1eoEaA38lRHij5Xl%2FPIkuWNsP0Z9t%2Fo7cvhRhNzPfC%2FDsD1T91KhTHlnigBCNwtsFVj00sszkFwggStoziZE1KMSFPjNBys7EF1q9vzr0J3zLtwEgK%2BOD5ZSasOK3eYJMu1JQoflqMrYOUnvfjACfO0qdy90Tyi%2BTOfiV%2BqXF%2FLeBqgWfHfgyQyX9780msphxizb9YJd1JFy4qhxl%2Bp1mt8xyePTbV6UThnlSw5Gk1ePhKS3r4oTlBpdLZRLhACh%7Ctkp%3ABk9SR87IkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Silver Wallet Chain with Keychain Carabiner 52cm USA Style Brass",
+          "price": 39.99,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/860023160731?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGT9MXA9VYN7D3Y5ZNH&hash=itemc83d5fff9b%3Ag%3AZk8AAeSw1uFqx6BQ&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde8f0GlP4oXOhpK0b6BjwCIKbvSHMtZ3Qbn891KRKHdVUu6W8XmtcBpnXJYc40k%2B73GO3eMq3F1cDW%2BYhYcR1Bi6tDG1NhLYSTmbeB7kBG3Jbc1XujHJk%2FwpG7ffGXkluHZs4TCYQwTt3A2ptbiMPAnwNaIy8mjI%2F6ootSw6I5M6By73Mcx2pjT6EY492jAlQCDkM0w2PFJUzFjGzQshT50CbJZJfDSvq0QIU7i2cTqRndzb4bDNXhtpEYfr3GoQpTr3excX613qsjvXDPvnOhq7%7Ctkp%3ABk9SR87IkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Brass Spoon Shovel Ice Crusher, Scoop, Bottle Opener 7\u201d",
+          "price": 29,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/226804115506?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGT34ZES3126QC2MEZF&hash=item34ce942832%3Ag%3AN6YAAOSwyrZoRZ9t&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde9hq9Zvi6kp%2BLGulWL3xXDDzzL8cbuhzd5tgP89Lj0wZQfXLOVeQ%2Fkk02m3L5MarZHfSEb0iQ1v6HezQV3cG%2BsPRW2VScym41nrTrybm7XDJee6WR6mGUjmgbZ5BNP1%2BclgeJygQP1ysu4USNpdT8dDYNuVyDqJeoQlI8RYwt8QhplLSUJY4s71v9%2FdqkqcKGPd9Ti%2Bk3ZdEcOWSqkh27E4sn0uDO9FBasXiYdg4CwEM5GJQlTZnWVeQxh3vwLaKNwH55K4Y%2BkFcxuy0QSOUMut%7Ctkp%3ABk9SR87IkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "VINTAGE INDIAN ETHNIC BRASS NUDE LADY FIGURE SHAPE BOTTLE OPENER COLLECTIBLE ##1",
+          "price": 56.4,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/285677648264?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGT0XVP2V9ASS7HTG0D&hash=item4283b6f988%3Ag%3AaCMAAOSw1bJluTiW&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde8y47fZRgk9TuXWJNH0XRilGba3qfgT5FmHue7muY2fvCDEt1eX8a%2Ftl5zEP7T59wBJvLm33C9aXMsX8p1fA6q98OCx2erDvxORjabxFm2nLCcL7Umk2%2BL2FRa5GTLap3clq1kLg6TKr6DhneZrWvD7CR9o7PeSNnj6lNbAj3lx1wnr6XMCygtMMyhL66yciTo%2FFzlA3RdMVgIzgsAKuOBOykXL3zILsu9yEQoNjqfEWq34xIv9r33iCL1YB7xo51NfgaBWGxiZg7QQO9QILyb2YxoVigyLHq9EX0jVizxxjSVrWCIx6SDK8f9lozBfDSk%3D%7Ctkp%3ABk9SR87IkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Dog Bronze Corkscrew, Old Wine Opener, Walter Bosse Dachshund Figurine",
+          "price": 38,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/174520412105?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGT67007EMZ1S1HYE5E&hash=item28a23a27c9%3Ag%3ADpoAAOSw5cNYdV5J&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde%2Bm9u9%2FElIYE2O1O8lAQQ6ZpjwNvxBnOfb2iJTEWmDB53vSmIzqCUPXizLffIA9pwrBRuhLHmJ%2FUZOW%2B5aF2fRXQVbgtUxMvJOJ2d68NijLHcU2Rs8OxnLmnAHbIen7vbkDbH9Utzs1A8HbL844kEdEDkBDz0WQk%2Fl7t0NhIl3is1s36%2BipS2pEnER8qkAXHg4VUZ1B2%2BcebHud7STTMa7Z4mg2BJpyDIBpIdKWHQKEggPPH5oStk3%2BgMPibVp3QTGvmJChskJ5iiJjNkcvWhDV%7Ctkp%3ABk9SR87IkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Walter Bosse Moritz Brass Corkscrew Size W 3.7 x H 2.7 in",
+          "price": 330,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/396001394643?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGTY2BWXYB8WD0TDM1H&hash=item5c3385bfd3%3Ag%3AXrUAAOSwuNdnWY47&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde8nGEV1qEJ5tb%2FeHdHrz%2BBBfKc1CwX4n8YzDXsYhttzg1SNEMddilWDJfSsctQX%2B6mI6sCFzjDmNwbvad5OJ3RiQQwTwkAwvlnderbiNoijSYg3XLzf9fjiI5x3OgGkBcKHangTVS9jt8Sb70OH6%2Bj5Lo6zWuexzqN1t1KBMxQEHz%2FMH6sMqvGB%2Bfe0RXlh9z1zSFGOO%2FrjB2rUlR0isdkqMQ81zNRwtr79AlY2CCID6PBqUwlW4juQLCfFvyrReMVrdq9qnFPPuedDxRLwSriLAtwsFoTDHTyVjXQate0c2r916g1y9IpPYI3Wvgg4pvU%3D%7Ctkp%3ABk9SR87IkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Brass Priapus Wine Opener \u2013 Unique Collectible Greek Mythology Figurine Twister",
+          "price": 49,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/355265831748?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGTS7J5DG0YTGEPZBGP&hash=item52b77e6344%3Ag%3Ajm0AAOSwXYZlcMf0&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2Bs0JwhDLER4cv43u%2FGo8lu%2BR7ky3O3%2FXZjXokS9MOAPBD9S2Z3LUJ%2FaIpWheLAMnLBUm5YiTMtwagfxTdcMxu5yJIxdilQTXw6mOKt6xlVc1GRDTD7kiEk%2B4hvjcjlnDIfGpPmBxs9dKrw%2BsH6IR2AHSpHKAr3RvAEd6CuA4GEx5hmeJ0IyVUi7QkYTVMk0915N3cp%2BxhTrLvnQVTSZtWjmHN%2FfeHnBo98MVfZfuF8SSp5e0hAApPX%2FFkGbnUH6U%2FtLfKaFOTjfPqx7pK33OMUrhYGlP8PQDsYeOvmEZrR%2B0kV6h8lJl2ZbTrU7Z72UNE%3D%7Ctkp%3ABFBMzsiSp6po&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Polo's Ralph Lauren Solid Brass Boot Bottle Opener Set Collectible Used",
+          "price": 72.94,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/358283150439?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGTYJDAEXBFEEQPAC04&hash=item536b570467%3Ag%3A2lUAAeSwqjNpp4eI&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde81rhN7ywemnTw07YIjgDtvWMM5fjW7aZIZ0ez8D0JsHa8i0Pp3HzuttI4mlt6pWYHdLVB65tr%2Fe5gZ7EvUvXAnL5%2FYZWAm5XARvms7MIDyDNMNFURmHF4gmr%2BxD4vLs7Zqak0%2BthHJKcoRobzDF%2FWuxUAEA%2FvKOAoznHuHx6oHtOHExTYTr32iZUWWoLG9MHe1kuSnCVBpQw1O%2BttDfNrrKIP3NdGuCErvX6KSZF%2BGozICfNX%2Fz8DzIz0Cr4SMizRdxmoUjPTbGzURdjcBG9PJKpg6q1hooFHYc7ntmIx1Rv4CQ48AM%2BoBkL4t1%2F4a7MU%3D%7Ctkp%3ABFBMzsiSp6po&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Bottle opener Bell Handmade Engraved Elephant Brass Collection Decor",
+          "price": 75,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/293850604385?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGTYN9MWQC6H9W0G322&hash=item446adc6361%3Ag%3ANPkAAOSw629fu7t9&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde%2BeUvGeD1hKc2oOml7y3%2F4vBw8ij%2FkOowh6d%2BONHwcKPb9kLWYS2Bz2kmKH4%2BNbhwmBquwP36z2cJXy5C8coDOBnFeGQV495TmbvgpNh55Haczd35hRHlBean9hWIKMHENEUAjLD5UTGKboqXgsDsLh2Cd02FT8F3obsAkWy2d8Gzelqf%2FFWkJb9vEfOtKi2fgMgf3UIyi1XE1CPrmh91iMGNUMq2On%2FuEhl0M67OtpoewtvUp8DZP0JPgvHH3OmMNuuEzytefqI6sXcva6%2FVGw%7Ctkp%3ABk9SR87IkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Brass bottle opener, Thepphanom shape, vintage, 60 years old. Bottle Opener Thai",
+          "price": 50,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/285608649252?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGV8WPJE5JXK49QBF8M&hash=item427f9a2224%3Ag%3AW20AAOSwB3JlfA5x&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde9mTmBDfYhaxnfSLLclRQ8nKe4bgM8yCZFWOa2AOW1m0TUEh7rh8brUavPYphjd5N2SuyCPrzvML7Nxtvq46Cxeps%2FSDuLWsEgzXXPHPAHn%2FSXRKODpuU11MmkNfJFL%2FsLi5FiDWvBgvg8u5smJrDURdwv6fy1%2BfTo1eRG1XwcM8a04Rsp%2B9MvheUOerJMovFWJio29UT3HVYep4EDgGvzpfrvVAMYb0Jcqy3KeNwASLtItteS51S7TVE90tpuT3rAHRPVDkvOloUFp%2B7lesnJW%7Ctkp%3ABk9SR87IkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Rare Hand Crafted Brass Dolphin Figure Bottle Opener Collectible Opener",
+          "price": 129,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/257779738301?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGVHXZRAZVD5SGP51MV&hash=item3c04dea6bd%3Ag%3ATS0AAOSwvIFkhFi%7E&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2FX2r61a8hxzpR2p7xGXJzffr58I1j9wlCAtmTfBTkvJrrNukobGS1Hp1a3RlkJsp%2FmclPLjH0eI8KNzi65R4O7AZDHmVFhywLtA%2BBkJrv5uEhKp2RT78qyYz3IXhvtxiCx6mUU6Auq2Af%2FWsunraR6dKokBa1e1kWxEeC2utPgsrgCsLvpnnicCAdKjRjBUIOLRg7xElCG1hRut5AyjkekWXFe760CwJuYjbPEfRgsVve4RqvzTyeEWUce%2BsRimNW24%2FwpGtW8hRoTYU1DINnpCkUBo8F85Tjrt6ATGUmXCPwKicylPHCd%2BQalfjnJDZE%3D%7Ctkp%3ABk9SR87IkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Hamsa Made In Israel, Kabala Good Luck, Jewish Gift, Kabbalah Chamasa",
+          "price": 108,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/365291507806?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGVFA4QY79NCETZYPE6&hash=item550d12105e%3Ag%3A8DcAAOSwJExnYVhV&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2ByNi4SZTeYHP4PIPAXCQdnkQcqir3Ix47VdChn0VeQ3zxSyggBgOGh4ET3QJInfZItaabXxLVKgVWhmFUtibH3nFv8ooAXGJc5qPzgPgkApbSpyaWOT3ZgNB%2FeA6zTtR3rJn0Z1LwexfEr8yizJI3jBI9P9TXEU2zCKSrZinSx7%2BRuLHR8hMmMikBXTUeA9iBdysuoe9aOQO%2FedD8KCvRQvxCMrap2Pu6D3ba2CbEHZ5AJPaEiryNNDW%2BfWYASD04PI8qE5IyOYAftBK%2Bvr%2Bv0c%2BEI61VrQc1tTbYqA6ZRAhr2gRv3ojuzPKX84mmA8QY%3D%7Ctkp%3ABk9SR87IkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Brass Naked Lady Bottle Opener Old Metal Nude Erotica Art Opener G47-551",
+          "price": 76.3,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/156897937604?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGV274X019JAGV48WQB&hash=item2487d888c4%3Ag%3AMOkAAOSwog1kYhCD&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde--vVRT2lRMGVjoBpXQnIjWdzZqzbS5kn2jZrPMqEtGYGECRHf9V3vzLGbNUXAsbzZnZQ9GAvv5xqtIoRKbV3MXdfxCpxUFBka7mFQzeSjH9MbEM9h%2F5kCGRwc3kUuVncLk42X3XQw78TV2UE0v5YmMXtCAngEZD1dUKZuudL5NDRIBooyimYRNT27GHRZoJOF1SvQXwKKvjdOqBDujjcVWhAJFN9qtrN0a%2FumWGqauUrzVPMAZFP5Q3QzZ4klguEH%2FJl%2FjnnJvbw6EYelfoHw%2B%7Ctkp%3ABk9SR9DIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage Handcrafted Iron Multipurpose/Camping 2 In 1 Folding Pocket Cutter Knife",
+          "price": 149,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/257731152508?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGVP5D8ACJ3YR4PZFA4&hash=item3c01f94a7c%3Ag%3AujQAAeSwX5BourUs&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde9GG21lGeMhiCgAMtmTP8tckiyf98neh9UDYhsNoDUiFciHNQEOZPoOX7GwWCkjZCrQ2FA8xvdTOFJyyMSxUmizmY5Lks%2F7YqkBnVH3LXy7VnLoSqB3f4W1DDzsAMz7UM9Dhifnjz4szBirTkmPco%2BI2RY8kNyMPgEeVqgRwvZuK%2FA2ZQbv%2Fxu6JFk%2BDEiNcLJD4S2pw30tYukTVLOD0e9TAw5zJbD6zks0wkXJL0GlFwjj5N44lo2t9H82LZOb%2FCypQ8YlDwe1M4xfV4EjXQjev%2BgOaAq0mH458ExibazgRdGbX6OyyR5z%2FG41cQoac5E%3D%7Ctkp%3ABk9SR9DIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "BEL DAM PACKING AND RUBBER CO LONDON CHESTERMAN SHIFFIELD ENGLAND PAPER KNIFE",
+          "price": 125,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/364177208717?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGVK3D4SBYJ6MQGKKW5&hash=item54caa7358d%3Ag%3A1s8AAOSwpJZkCxVW&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2Fe2asRhX0cVTZyTziPXtmPKOMBD8FyoDfbuFUGUVR7K2i7YxQWkkEBxPVPXQ9YYjLGUz0BbqPjzCKAEpFWsAFnkbNy5vqXTl4Ra1%2BxJZ%2BKVTPw%2FtumZ5plCmIIgkX8REflKTA1GHNBkgKBljWTugdQwQVYHlGKTe2ALUpJT12l02OlUBj4gTzUnGDrGVII6SncwDweLVHQbc43ta2TlHCtRLon0ODz6WDVrBkcYjTsLgydC7it6jLNWrC3z6IoyYcumEKJd1yx5LhGoWvreBpnX6Ro7pEdO4XZzwJVuHfeuPkzpAWfyrwt6%2B5y5JN1nOM%3D%7Ctkp%3ABk9SR9DIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage German pocketknife. Hunting, german knife, folding knife collectible #11",
+          "price": 53,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/389307101894?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGVSNQEF17SW0Y9EDBV&hash=item5aa482f2c6%3Ag%3Al6cAAeSwdvlpK0Mi&itmprp=enc%3AAQALAAAA4CHNgUiiE%2FjQhlDTaMiAde%2FM%2BJjpDYlAV3O%2B3Z74UTwLJK1T%2F2S0gWirvg4JqmaU3277PYfhsM9rnPQqjH16rRbaZ6a9N4U4oOvKNZ71lFHG2TuuEAdz1KqfR3qzP9xTnPDSaTceCAMqxNe4lfKzLcJO5foPe3U7i68aKX8RUZbfp8fsPvgJowAkk4iulx%2FGfJrHHFmqounHVP21qyi0axjta7iLXH8bWxOYhqilRNKO4plk4kB80bqFKVxkXsdUwCUxblScimBJwOI%2BfU%2FlRvHwgi7ICT1FRLqig0kg%2B0mI%7Ctkp%3ABk9SR9DIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Vintage swedish pocketknife Hunting, Eka knife, folding knife collectible #34",
+          "price": 69,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/389374756795?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGV7CYR4P4C4BDYFGFQ&hash=item5aa88b47bb%3Ag%3AtMQAAeSwC9ppQCuj&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2BIIPrkF6%2BFreRgkbVC0wHcsmHglUkbPAR%2FjJ591DJZTiACllSZQnrpwNAk9hi0ffNLbx5LoxzkDG%2BXRAORSmKSD9jPHh%2BU%2BVnY6mWRQepo5MY%2FFO1fCd5OEVYAwebPq0Pgl737L4k2CPJTq9NZ1haHcx4uWFAiIg1hAJK3DKJc3j1ORRndsnT9VbBp4UVARd0HeWnHdPmqJMt9Jr%2FiptC%2BWbWUNvhTXpKhbvtsRQGKkcocpT5tJh5tgS07ihCzBxfOojH%2Ft%2Fln6gwT3fUiusDdGJIodVwBj6t5%2Bjp7akzVVCVLNOq2pVg5ffIFqEbbyHE%3D%7Ctkp%3ABk9SR9DIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Madison Bay Company Brass Bottle Opener & Hammer Pick - Three-in-One",
+          "price": 70,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/127815851169?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGWTBRZDRG0JWKKN9KS&hash=item1dc26b1ca1%3Ag%3AugYAAeSwrLVp4st7&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2FDdCg3s8--aElHFZHxjLXi38bM4%2BdYiydO5lt%2F%2BouKW%2FiRUu9L92aEkdWqlERONJNehx3%2B0CYJ2zOGJRexNXM4KDX3CYNO3EtkmisBLdF0PIjDRcC62ggQFGsme9zWuCVBlh9VvDf64TL2r5R0qH7Ga%2FD2Krun1PYmjfl4rLlMe5SQngYCPXwIBbX3Sos0L9sAHOXJazuolYm1rZ02wegWGTO9KMAhcBfRILxuAyJUdKpfIxjnJTirg3ENXsOQizdnlUAq%2BS69KRkhVKOblLkagwC9yc0WZGArNpUxpx2rCXMI4%2BCHGHmAss%2BJYEZV02c%3D%7Ctkp%3ABk9SR9DIkqeqaA&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        },
+        {
+          "title": "Filson Rugged Twill Tote Bag USA Leather Handle Heavy Duty Outdoor Used",
+          "price": 339,
+          "currency": "USD",
+          "condition": "Pre-Owned",
+          "url": "https://www.ebay.com/itm/306807593373?_skw=brass+bottle+opener+nautical&itmmeta=01M5974MGWD05HEWJYKAG9BM40&hash=item476f28599d%3Ag%3A4S0AAeSwm1lpqrKn&itmprp=enc%3AAQALAAABACHNgUiiE%2FjQhlDTaMiAde%2F3Avjf%2F2NwaQ4XL%2BO2sNztK9caU0K285Fdj73ou7xLZYht4nq6n5MfN1Zd9RsFdK%2FbR7BgC90ntwrWpR%2F2vnMM29rwp4T6tah6QgpAKmPonyxu0HzQF7EBag4XTz17wPdSmobLwmb8WQr9nOEkIDaNHMK2FccFkpifUp2D6y4lEpsgq7eeI9T2Rp4IU31f9zBnD%2FdiiyYNCuCV9E6wphD9h82pyfy1gufOvNyzitYcUyXSdEyF5KG8md%2FpigGc8pAr%2Br1hWxbHIwMHzIS1YPgfmXH5vEaveYQefHpx8JzKLb7MGdVbuqxkZD7hP92M8o4%3D%7Ctkp%3ABFBM0MiSp6po&LH_ItemCondition=3000",
+          "kind": "asking",
+          "source": "ebay (active listing)"
+        }
+      ],
+      "summary": {
+        "count": 51,
+        "low": 28.37,
+        "median": 63.2,
+        "high": 160.87,
+        "mean": 70.08,
+        "currency": "USD"
+      },
+      "source": "live",
+      "basis": "51 live eBay listings for \"brass bottle opener nautical\". Asking prices, adjusted 14% toward realised sale prices.",
+      "queriedAt": "2026-10-19T04:36:27.244Z",
+      "queryUsed": "brass bottle opener nautical"
+    },
+    "price": {
+      "expected": 58.14,
+      "low": 34.88,
+      "high": 81.4,
+      "method": "comps_median",
+      "confidence": 0.66,
+      "features": {
+        "category": "Kitchenware",
+        "brand": "unknown",
+        "condition": "good",
+        "compsMedian": 63.2,
+        "compsCount": 51,
+        "compsLow": 28.37,
+        "compsHigh": 160.87,
+        "compsSpread": 2.1,
+        "hasLiveComps": 1
+      },
+      "note": "Condition-adjusted median of the market data we found."
+    },
+    "verdict": {
+      "label": "BUY",
+      "maxOffer": 13.64,
+      "offerRatio": 0.59,
+      "economics": {
+        "buyPrice": 8,
+        "expectedResale": 58.14,
+        "netProceeds": 40.93,
+        "expectedProfit": 32.93,
+        "multiple": 5.12,
+        "roi": 4.12,
+        "feesTotal": 8.21
+      },
+      "reason": "At $8 you clear about $32.93 after fees on ebay. Buy it.",
+      "confidence": 0.66
+    },
+    "cost": {
+      "marketplace": "ebay",
+      "platformFeePct": 0.136,
+      "paymentFeePct": 0,
+      "paymentFlat": 0.3,
+      "shippingCost": 8,
+      "suppliesCost": 1,
+      "targetMultiple": 3,
+      "minProfit": 10
+    },
+    "stages": [
+      {
+        "stage": "identify",
+        "status": "start"
+      },
+      {
+        "stage": "identify",
+        "status": "done",
+        "ms": 2143,
+        "detail": "Brass Narwhal Bottle Opener"
+      },
+      {
+        "stage": "comps",
+        "status": "start"
+      },
+      {
+        "stage": "comps",
+        "status": "done",
+        "ms": 2552,
+        "detail": "51 live eBay listings for \"brass bottle opener nautical\". Asking prices, adjusted 14% toward realised sale prices."
+      },
+      {
+        "stage": "price",
+        "status": "start"
+      },
+      {
+        "stage": "price",
+        "status": "done",
+        "ms": 4,
+        "detail": "comps_median \u00b7 $58.14"
+      },
+      {
+        "stage": "verdict",
+        "status": "start"
+      },
+      {
+        "stage": "verdict",
+        "status": "done",
+        "ms": 0,
+        "detail": "BUY \u00b7 max $13.64"
+      }
+    ],
+    "ran": [
+      {
+        "step": "identify",
+        "provider": "ollama:gemma3:1b",
+        "locality": "device",
+        "ms": 2143,
+        "ok": true,
+        "detail": "Brass Narwhal Bottle Opener (conf 0.70)"
+      },
+      {
+        "step": "comps",
+        "provider": "serpapi (live eBay)",
+        "locality": "cloud",
+        "ms": 2552,
+        "ok": true,
+        "detail": "51 listings \u00b7 \"brass bottle opener nautical\""
+      },
+      {
+        "step": "price",
+        "provider": "comps_median",
+        "locality": "device",
+        "ms": 4,
+        "ok": true,
+        "detail": "$58.14 \u00b7 conf 0.66"
+      }
+    ],
+    "totalMs": 4798
+  }
+}
