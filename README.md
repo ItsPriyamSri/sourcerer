@@ -476,10 +476,18 @@ Conviction shows in what you refuse. Four ideas were generated and cut, with rea
 
 ## Documentation
 
-- [`docs/POST.md`](docs/POST.md) — the write-up: the finding, the eval, the failure, the limits.
-- [`docs/DESIGN.md`](docs/DESIGN.md) — personas, ranked pains, the cut list, ten UX principles, flows.
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — the pipeline, the provider model, and the failure behaviour of every layer.
-- [`docs/KEYS.md`](docs/KEYS.md) — optional API keys, where to get them, and what each unlocks.
+Seven documents, each doing one job. Start with the first if you are reading this as a
+submission; the rest are here so you can check a claim instead of taking it.
+
+| Document | What it is | Read it if |
+|---|---|---|
+| [`docs/POST.md`](docs/POST.md) | The write-up: the finding, the eval, the failure, the limits | you want the story |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | The pipeline, the provider model, and the failure behaviour of every layer | you are reading the code |
+| [`docs/DESIGN.md`](docs/DESIGN.md) | Personas, ranked pains, the cut list, ten UX principles, flows | you want the design thinking |
+| [`docs/UX-PASS.md`](docs/UX-PASS.md) | The craft pass: every change traced to a principle or a measured defect, and what was cut | you care about the UI |
+| [`docs/KEYS.md`](docs/KEYS.md) | Optional keys, where to get them, and the verification status of each | you want to run the keyed paths |
+| [`docs/SETUP-KEYS.md`](docs/SETUP-KEYS.md) | The click-by-click hand-off for those keys | you are setting them up |
+| [`docs/media/CAPTIONS.md`](docs/media/CAPTIONS.md) | Captions and alt text for all 21 screenshots | you are reading the figures |
 
 ---
 
