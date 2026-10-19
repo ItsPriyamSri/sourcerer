@@ -171,15 +171,30 @@ export async function findComps(input: {
       );
       if (raw.summary && raw.summary.count > 0) {
         const comps = raw.comps[0]?.kind === "asking" ? applyAskingDiscount(raw) : raw;
+        /**
+         * Report where the data actually came from, not which wrapper answered. SerpApi
+         * sits behind the on-disk cache, and the cache describes itself as local — so a
+         * cache *miss*, which does go to the network, was logged as `cache` on `device`.
+         * That is the single line whose whole job is to tell the user whether their query
+         * left the machine, and it said it had not. The result's own `source` is the truth.
+         */
+        const locality: RanLogEntry["locality"] =
+          comps.source === "live" ? "cloud" : provider.local ? "device" : "cloud";
+        const answeredBy =
+          comps.source === "live"
+            ? "serpapi (live eBay)"
+            : comps.source === "cache"
+              ? "serpapi (cached)"
+              : provider.id;
         return {
           comps,
           ran: {
             step: "comps",
-            provider: provider.id,
-            locality: provider.local ? "device" : "cloud",
+            provider: answeredBy,
+            locality,
             ms: Date.now() - t0,
             ok: true,
-            detail: `${comps.summary?.count ?? 0} listings`,
+            detail: `${comps.summary?.count ?? 0} listings${comps.queryUsed ? ` · "${comps.queryUsed}"` : ""}`,
           },
         };
       }
