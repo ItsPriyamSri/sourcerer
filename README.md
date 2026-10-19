@@ -36,6 +36,21 @@ needed — not by being slow, but architecturally.
 That is why this project is built the way it is. Open-weight AI on your own device is
 not a nice-to-have for this problem. **It is the only architecture that solves it.**
 
+Sourcerer keeps working with:
+
+- no internet connection
+- no API keys of any kind
+- no per-scan cost
+- no photos leaving your machine
+
+and gets *sharper* when you add the network and a few keys back. Degradation is part of
+the design, not an error path.
+
+<p align="center">
+<img src="docs/media/offline.shell.dark.png" alt="A dark-theme phone screenshot captured with the browser network disabled: the header chips read Offline · local only and Brain asleep, and the capture screen is fully rendered from the service-worker cache" width="300">
+</p>
+<p align="center"><sub><b>Network off, for real.</b> The browser's network was disabled before this shot. The chip reads <b>Offline · local only</b>, the brain is unreachable (<b>Brain asleep</b>), and the capture screen still renders — the service worker holds the app shell. Nothing here is a simulated offline flag.</sub></p>
+
 ## The stack, and what each piece does
 
 Read this one table and you know what the project is, what it runs on, and why each part is
@@ -58,21 +73,6 @@ there. Everything after the first three rows is optional and degrades rather tha
 Full failure behaviour per layer is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) §7, and
 [`docs/KEYS.md`](docs/KEYS.md) records the verification status of every keyed integration in
 one table.
-
-Sourcerer keeps working with:
-
-- no internet connection
-- no API keys of any kind
-- no per-scan cost
-- no photos leaving your machine
-
-and gets *sharper* when you add the network and a few keys back. Degradation is part of
-the design, not an error path.
-
-<p align="center">
-<img src="docs/media/offline.shell.dark.png" alt="A dark-theme phone screenshot captured with the browser network disabled: the header chips read Offline · local only and Brain asleep, and the capture screen is fully rendered from the service-worker cache" width="300">
-</p>
-<p align="center"><sub><b>Network off, for real.</b> The browser's network was disabled before this shot. The chip reads <b>Offline · local only</b>, the brain is unreachable (<b>Brain asleep</b>), and the capture screen still renders — the service worker holds the app shell. Nothing here is a simulated offline flag.</sub></p>
 
 ---
 
