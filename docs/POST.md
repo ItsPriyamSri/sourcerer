@@ -32,7 +32,7 @@ VERDICT      ● BUY
 MAX OFFER    $35.32
 EST. RESALE  $133.40   ($126.73 – $140.07)
 AT $12       $93.96 profit, after eBay fees, shipping and supplies
-BASIS        3 items from your own sold history
+BASIS        6 items from your own sold history
 ```
 
 Every number in that block was computed by `packages/shared`, not by the model: eBay's

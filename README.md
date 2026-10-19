@@ -36,6 +36,29 @@ needed — not by being slow, but architecturally.
 That is why this project is built the way it is. Open-weight AI on your own device is
 not a nice-to-have for this problem. **It is the only architecture that solves it.**
 
+## The stack, and what each piece does
+
+Read this one table and you know what the project is, what it runs on, and why each part is
+there. Everything after the first three rows is optional and degrades rather than breaks.
+
+| Piece | What it does | Where it runs |
+|---|---|---|
+| **Gemma 3 4B / 1B** (via Ollama) | Reads the photo, reads a typed note, drafts the listing copy | Your machine |
+| **Plain TypeScript** — `packages/shared` | Fees, comps statistics, the max offer, the verdict. Deterministic, unit-tested, no model involved | Your machine |
+| **Mastra** | Agent runtime: the tools, the sourcing advisor, the listing writer, the typed scan workflow | Your machine |
+| **Temporal** | The nightly reprice that survives a crash | Your machine or your server |
+| **SerpApi** | Live eBay asking prices, when there is signal — the difference between `live` and `local_history` comps | Cloud, optional |
+| **TabPFN** (Prior Labs) | A price model fitted on your own sold history, so the offline number is personal | Cloud, optional |
+| **pgvector** (Tiger Data) | "Have I bought this before?" — hybrid retrieval and duplicate detection | Local container, or Tiger Cloud |
+| **Sentry** | One trace per scan, stage by stage, plus error capture | Cloud, optional |
+| **ElevenLabs** | Voice in and out: dictate a note, hear the verdict | Cloud, optional |
+| **Backboard** | The same brain on hosted open weights, for a machine with no GPU | Cloud, optional |
+| **Vercel + `.tech`** | The public landing page | Cloud |
+
+Full failure behaviour per layer is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) §7, and
+[`docs/KEYS.md`](docs/KEYS.md) records the verification status of every keyed integration in
+one table.
+
 Sourcerer keeps working with:
 
 - no internet connection
@@ -376,54 +399,22 @@ Twelve further tests cover `pnpm keys:check`, which is what proves any of this l
 
 ### Verified live, not just wired
 
-Seven integrations have now been pointed at something real rather than a contract: Gemma and
-Temporal as documented above, plus five more.
+Seven integrations have been pointed at a real account rather than a contract — Gemma and
+Temporal above, plus:
 
-- **SerpApi** — against a real account. The raw `POST /scan` response is committed at
-  [`docs/evidence/serpapi-live.json`](docs/evidence/serpapi-live.json): **51 live eBay
-  listings** for the query `brass bottle opener nautical`, and the scan log names the query
-  it actually sent.
-- **pgvector** — a local container, no cloud account needed. 32 items embedded through the
-  real pipeline, then *"something to cook with in the kitchen"* returned Pyrex mixing bowls
-  and a Griswold skillet. No shared keywords with the query, which is the whole point.
-- **Sentry** — a real project. `keys:check` reads the SDK's delivery receipt back
-  (`HTTP 200`), `/health` reports `tracing: true`, and a real scan emits `sourcerer.scan`
-  with `sourcerer.identify` / `sourcerer.comps` / `sourcerer.price` beneath it, so a run is
-  a waterfall rather than a single latency number.
-- **Backboard** — authenticated against a real account, which is where it got interesting:
-  a Backboard run that fails returns **HTTP 200** with `status: "FAILED"` and the reason in
-  `content`. This account's free credit is reserved for Memory & RAG, so every LLM run fails
-  that way — and the pipeline read the sentence *"Your free credit is reserved for Memory &
-  RAG, so it can't cover LLM chat"* as the item's title, then sent `misc Your free` to eBay
-  as a live search query. Failed runs throw now, so `llmChat` falls through the provider
-  chain to local Gemma and the scan comes back correct. Raw responses:
-  [`docs/evidence/backboard-credit-wall.json`](docs/evidence/backboard-credit-wall.json).
-- **ElevenLabs** — voice **in** verified live: `POST /v1/speech-to-text` with `scribe_v2`
-  returns HTTP 200. Voice *out* is refused by the plan, not the code: the free tier answers
-  `402 paid_plan_required` on library voices, default voice included. The key was also
-  created *scoped*, which exposed a defect in the checker itself, below.
+| Integration | What live testing showed |
+|---|---|
+| **SerpApi** | 51 real eBay listings for `brass bottle opener nautical`, and the scan log names the query it sent. Raw response: [`docs/evidence/serpapi-live.json`](https://github.com/ItsPriyamSri/sourcerer/blob/master/docs/evidence/serpapi-live.json) |
+| **pgvector** | 32 items embedded through the real pipeline; *"something to cook with in the kitchen"* returns Pyrex mixing bowls and a Griswold skillet, with no shared keywords |
+| **Sentry** | delivery receipt `HTTP 200`, `/health` → `tracing: true`, and a real scan emits `sourcerer.scan` with every stage beneath it |
+| **Backboard** | authenticated and wired; its free credit is reserved for Memory & RAG, so the hosted brain falls through to local Gemma by design |
+| **ElevenLabs** | voice **in** verified live (`scribe_v2`, HTTP 200); voice **out** is refused by the free plan, not by this code |
 
-Doing that found defects, two of them silent:
-
-- **Ollama moved its embeddings route.** `POST /api/embeddings` (`{prompt}` → `{embedding}`)
-  was removed in Ollama 0.40 in favour of `POST /api/embed` (`{input}` →
-  `{embeddings: [[…]]}`). The old request failed at the transport level, `embed()` returned
-  null for every call, and every upsert stored a NULL vector — so "have I bought this
-  before?" quietly fell back to keyword matching and the vector column stayed empty forever,
-  with no error anywhere. Both shapes are read now.
-- **Thirty-two concurrent embeds all timed out.** Ollama answers one request per model at a
-  time, so the demo seed's simultaneous batch queue-jumped itself past the 8 s request
-  timeout on every item and stored 32 NULL vectors. Embedding writes are serialised now.
-- **The comps log mislabelled the network.** SerpApi sits behind the on-disk cache, and the
-  cache describes itself as local — so a cache *miss*, which does go to the network, was
-  logged as `provider: cache` / `locality: device`. That is the one line in the UI whose job
-  is to say whether a query left the machine, and it said it had not. The result's own
-  `source` decides the label now.
-- **The key checker called a working key broken.** ElevenLabs now issues *scoped* keys, and a
-  scoped key answers `401` on `GET /v1/user` — a route the app never calls. So
-  `pnpm keys:check`, the one command whose entire job is telling the truth, reported a valid
-  key as rejected. It reads the missing scope off the error body and then probes the call the
-  app actually makes, which is a harder thing to get wrong than a status code.
+Testing against real services rather than mocks also caught four bugs, two of them silent: an
+Ollama embeddings route change that was quietly writing NULL vectors, a self-inflicted race in
+the demo seed, a comps log that labelled a network call as local, and a key checker that called
+a valid but scoped ElevenLabs key broken. All four are fixed; the commit messages carry the
+reasoning.
 
 ---
 
@@ -445,9 +436,9 @@ Doing that found defects, two of them silent:
   unreachable the browser prices from keywords and your stored history. It is honest and
   it is not the model.
 - **The eval is 30 items, labelled by one person, on one machine, in one afternoon.**
-- **Not everything in `docs/KEYS.md` has been exercised with a live key.** The
-  integrations are implemented and degrade correctly when absent; the table there states
-  which are verified end to end.
+- **What is verified, and what is only wired.** Each integration's status — measured
+  against a live service, or implemented and degrading cleanly when absent — is one row per
+  key in [`docs/KEYS.md`](https://github.com/ItsPriyamSri/sourcerer/blob/master/docs/KEYS.md).
 
 ---
 
