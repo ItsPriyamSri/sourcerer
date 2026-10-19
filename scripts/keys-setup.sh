@@ -88,14 +88,6 @@ ask BACKBOARD_API_KEY \
   "the same agent against open-weight models with no GPU (hosted demo)" \
   "https://app.backboard.io"
 
-ask TABPFN_TOKEN \
-  "a price + days-to-sell model fitted on your own sold history" \
-  "https://platform.priorlabs.ai/account/api-keys"
-
-ask DATABASE_URL \
-  'vector memory — "have I bought this before?" and similar-item search' \
-  "https://console.cloud.timescale.com/ (free tier)  —  or, locally: bash scripts/db-up.sh"
-
 ask ELEVENLABS_API_KEY \
   "dictate an item hands-free and hear the verdict read back" \
   "https://elevenlabs.io/app/settings/api-keys"
@@ -103,6 +95,16 @@ ask ELEVENLABS_API_KEY \
 ask SENTRY_DSN \
   "agent tracing — one span per model call, with tokens and latency" \
   "https://sentry.io"
+
+ask DATABASE_URL \
+  'vector memory — "have I bought this before?" and similar-item search' \
+  "https://console.cloud.tigerdata.com/signup (free tier)  —  or, locally: bash scripts/db-up.sh"
+
+# Not a prize track, which is why it is last: it makes the pricing claim stronger,
+# not the submission broader.
+ask TABPFN_TOKEN \
+  "a price model fitted on your own sold history" \
+  "https://platform.priorlabs.ai/account/api-keys"
 
 if [ "${#vars[@]}" -eq 0 ]; then
   printf '\n'
