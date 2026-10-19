@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { dbConnection } from "./vector.ts";
+import { dbConnection, readEmbedding } from "./vector.ts";
 
 /**
  * `pg-connection-string` throws away an explicit `ssl` object whenever the URL
@@ -62,5 +62,40 @@ describe("dbConnection", () => {
     const url = new URL(connectionString);
     assert.equal(url.searchParams.get("application_name"), "sourcerer");
     assert.equal(url.searchParams.get("sslmode"), null);
+  });
+});
+
+/**
+ * Ollama 0.40 dropped `POST /api/embeddings`; 0.40+ answers `POST /api/embed` with
+ * `{embeddings: [[…]]}` instead of `{embedding: […]}`. Reading only the old shape
+ * returns null for every request, which stores NULL vectors and hides the whole
+ * feature — there is no live Ollama in CI, so both shapes are pinned here.
+ */
+describe("readEmbedding", () => {
+  it("reads the current /api/embed shape", () => {
+    assert.deepEqual(readEmbedding({ model: "nomic-embed-text", embeddings: [[0.1, -0.2, 0.3]] }), [
+      0.1, -0.2, 0.3,
+    ]);
+  });
+
+  it("reads the legacy /api/embeddings shape", () => {
+    assert.deepEqual(readEmbedding({ embedding: [1, 2, 3] }), [1, 2, 3]);
+  });
+
+  it("rejects an empty vector", () => {
+    assert.equal(readEmbedding({ embeddings: [[]] }), null);
+    assert.equal(readEmbedding({ embedding: [] }), null);
+  });
+
+  it("rejects non-numeric payloads rather than poisoning the column", () => {
+    assert.equal(readEmbedding({ embeddings: [["a", "b"]] }), null);
+    assert.equal(readEmbedding({ embeddings: [[1, null]] }), null);
+    assert.equal(readEmbedding({ embeddings: [[NaN]] }), null);
+  });
+
+  it("returns null for an error body", () => {
+    assert.equal(readEmbedding({ error: "model not found" }), null);
+    assert.equal(readEmbedding(null), null);
+    assert.equal(readEmbedding(undefined), null);
   });
 });

@@ -106,6 +106,50 @@ export async function ensureSchema(): Promise<boolean> {
   }
 }
 
+/**
+ * Ollama answers one request per model at a time, so a batch of concurrent embeds just
+ * queues up behind each other and every one of them waits out the full request timeout.
+ * A 32-item seed fired at once therefore stored 32 NULL vectors — the feature looked
+ * wired and was not. Serialise our own calls so each gets the timeout it was promised.
+ */
+let writeQueue: Promise<unknown> = Promise.resolve();
+function serial<T>(task: () => Promise<T>): Promise<T> {
+  const run = writeQueue.then(task, task);
+  writeQueue = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
+}
+
+/**
+ * Embed an item and store it for "have I bought this before?".
+ *
+ * Deliberately never rejects: this is best-effort, so a slow or absent embedding model
+ * must not fail a save — but it *is* caught here, because every caller fires it without
+ * awaiting and an unhandled rejection takes the server down. With no embed model
+ * configured `embed()` returns null and the row stays keyword-searchable only.
+ */
+export async function indexItem(row: {
+  id: string;
+  title: string;
+  category?: string;
+  brand?: string;
+  condition?: string;
+  soldFor?: number;
+}): Promise<void> {
+  if (!hasVectorDb()) return;
+  try {
+    await serial(async () => {
+      if (!(await ensureSchema())) return;
+      const text = [row.title, row.brand ?? "", row.category ?? ""].join(" ").trim();
+      await upsertItem({ ...row, embedding: await embed(text) });
+    });
+  } catch (err) {
+    console.warn("[vector] index skipped:", err instanceof Error ? err.message : err);
+  }
+}
+
 export interface SimilarHit {
   id: string;
   title: string;
@@ -186,21 +230,50 @@ export async function similarItems(
 }
 
 /** Embeddings from the local model. Returns null when unavailable. */
+/**
+ * Pull the vector out of an Ollama embeddings response.
+ *
+ * Ollama 0.40 removed the legacy `POST /api/embeddings` (`{prompt}` → `{embedding}`)
+ * in favour of `POST /api/embed` (`{input}` → `{embeddings: [[…]]}`), and the legacy
+ * route now fails at the transport level. Accept both shapes rather than pinning to
+ * one, because the failure is invisible: `embed()` returns null, every upsert stores a
+ * NULL vector, and `similarItems` quietly degrades to keyword-only search forever.
+ */
+export function readEmbedding(json: unknown): number[] | null {
+  const raw = (json as { embeddings?: unknown; embedding?: unknown } | null) ?? {};
+  const many = Array.isArray(raw.embeddings) ? raw.embeddings[0] : undefined;
+  const one = Array.isArray(raw.embedding) ? raw.embedding : undefined;
+  const vec = Array.isArray(many) ? many : one;
+  if (!Array.isArray(vec) || vec.length === 0) return null;
+  if (!vec.every((n) => typeof n === "number" && Number.isFinite(n))) return null;
+  return vec as number[];
+}
+
 export async function embed(text: string): Promise<number[] | null> {
   if (!config.ollama.embedModel) return null;
-  try {
-    const res = await fetch(`${config.ollama.baseUrl}/api/embeddings`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ model: config.ollama.embedModel, prompt: text }),
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) return null;
-    const json = (await res.json()) as { embedding?: number[] };
-    return json.embedding ?? null;
-  } catch {
-    return null;
-  }
+  const model = config.ollama.embedModel;
+  const call = async (path: string, body: unknown): Promise<Response | null> => {
+    try {
+      return await fetch(`${config.ollama.baseUrl}${path}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(8000),
+      });
+    } catch {
+      return null;
+    }
+  };
+
+  // Current Ollama.
+  const modern = await call("/api/embed", { model, input: text });
+  if (modern?.ok) return readEmbedding(await modern.json());
+
+  // Ollama < 0.3 had no /api/embed; keep the older builds working.
+  const legacy = await call("/api/embeddings", { model, prompt: text });
+  if (legacy?.ok) return readEmbedding(await legacy.json());
+
+  return null;
 }
 
 export async function closeVector(): Promise<void> {

@@ -33,7 +33,7 @@ import {
   clearLocalData,
   type SoldRecord,
 } from "./core/store.ts";
-import { hasVectorDb, similarItems, embed, ensureSchema } from "./providers/vector.ts";
+import { hasVectorDb, similarItems, embed, indexItem } from "./providers/vector.ts";
 import { hasVoice, transcribe, speak } from "./providers/voice.ts";
 import { initTracing, tracingEnabled, captureError, shutdownTracing } from "./providers/tracing.ts";
 import { llmProviders } from "./providers/llm.ts";
@@ -290,22 +290,14 @@ app.post("/inventory", async (c) => {
   const item = (await c.req.json().catch(() => null)) as CapturedItem | null;
   if (!item?.id) return c.json({ error: "item with id required" }, 400);
   await saveItem(item);
-  if (hasVectorDb()) {
-    const text = `${item.identification.title} ${item.identification.brand ?? ""} ${item.identification.category}`;
-    void ensureSchema().then(() => embed(text)).then((v) =>
-      import("./providers/vector.ts").then(({ upsertItem }) =>
-        upsertItem({
-          id: item.id,
-          title: item.identification.title,
-          brand: item.identification.brand,
-          category: item.identification.category,
-          condition: item.identification.condition,
-          soldFor: item.soldFor,
-          embedding: v,
-        }),
-      ),
-    );
-  }
+  void indexItem({
+    id: item.id,
+    title: item.identification.title,
+    brand: item.identification.brand,
+    category: item.identification.category,
+    condition: item.identification.condition,
+    soldFor: item.soldFor,
+  });
   return c.json({ ok: true });
 });
 
@@ -344,20 +336,15 @@ app.post("/inventory/:id/sold", async (c) => {
     compsCount: item.comps.summary?.count,
   });
 
-  if (hasVectorDb() && item) {
-    void embed(item.identification.title).then((v) =>
-      import("./providers/vector.ts").then(({ upsertItem }) =>
-        upsertItem({
-          id: item.id,
-          title: item.identification.title,
-          brand: item.identification.brand,
-          category: item.identification.category,
-          condition: item.identification.condition,
-          soldFor: body.soldFor,
-          embedding: v,
-        }),
-      ),
-    );
+  if (item) {
+    void indexItem({
+      id: item.id,
+      title: item.identification.title,
+      brand: item.identification.brand,
+      category: item.identification.category,
+      condition: item.identification.condition,
+      soldFor: body.soldFor,
+    });
   }
 
   return c.json({ ok: true, learned: true });
@@ -478,6 +465,17 @@ app.post("/demo/seed", async (c) => {
       note: "Seeded demo item — delete it whenever.",
     };
     await saveItem(item);
+    // Best-effort and un-awaited: the demo data itself needs no model, and a machine
+    // with no database (or no embed model) must still seed instantly. If pgvector is
+    // configured, "have I bought this before?" fills in a few seconds later.
+    void indexItem({
+      id: item.id,
+      title: item.identification.title,
+      brand: item.identification.brand,
+      category: item.identification.category,
+      condition: item.identification.condition,
+      soldFor: item.soldFor,
+    });
     seeded.push(item);
   }
 
