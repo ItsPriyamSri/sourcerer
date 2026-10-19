@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { decideExit, redact, runProbe, type CheckResult } from "../scripts/check-keys.ts";
+import { missingScope, silentWav } from "../scripts/check-keys.ts";
 
 /**
  * `keys:check` is the gate between "a key is in .env" and "the integration
@@ -120,5 +121,56 @@ describe("decideExit", () => {
 
   it("does not fail on a SHAPE-ONLY row, which is not a proven failure", () => {
     assert.equal(decideExit([result({ status: "SHAPE-ONLY", configured: true })]), 0);
+  });
+});
+
+/**
+ * ElevenLabs issues scoped keys, and a scoped key answers 401 on `GET /v1/user` — a route
+ * the app never calls. Testing only that route reported a valid key as "rejected", so the
+ * probe now reads the scope off the error body and falls through to the app's real call.
+ * This was observed against the live service: the first key supplied here was scoped.
+ */
+describe("missingScope", () => {
+  const body = (message: string, status = "missing_permissions") => ({
+    detail: { status, message, code: "unauthorized" },
+  });
+
+  it("reads the scope out of a live missing_permissions body", () => {
+    assert.equal(
+      missingScope(body("The API key you used is missing the permission user_read to execute this operation.")),
+      "user_read",
+    );
+  });
+
+  it("reads a different scope from the same shape", () => {
+    assert.equal(
+      missingScope(body("The API key you used is missing the permission models_read to execute this operation.")),
+      "models_read",
+    );
+  });
+
+  it("is null when the key is rejected outright, which is a real failure", () => {
+    assert.equal(missingScope(body("Invalid API key", "invalid_api_key")), null);
+  });
+
+  it("is null for anything that is not a scoping error", () => {
+    assert.equal(missingScope(null), null);
+    assert.equal(missingScope({}), null);
+    assert.equal(missingScope({ detail: { status: "missing_permissions" } }), "unknown");
+  });
+});
+
+describe("silentWav", () => {
+  it("is a WAV header big enough to be a real upload", () => {
+    const wav = silentWav();
+    const view = new DataView(wav.buffer);
+    assert.equal(String.fromCharCode(...wav.slice(0, 4)), "RIFF");
+    assert.equal(String.fromCharCode(...wav.slice(8, 12)), "WAVE");
+    assert.equal(view.getUint32(24, true), 16_000, "sample rate");
+    assert.equal(wav.length, 44 + Math.floor(0.2 * 16_000) * 2);
+  });
+
+  it("is silent, so transcribing it cannot invent words", () => {
+    assert.ok(silentWav().slice(44).every((b) => b === 0));
   });
 });

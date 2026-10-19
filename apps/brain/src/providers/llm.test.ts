@@ -150,3 +150,63 @@ describe("BackboardProvider request shape", () => {
     await assert.rejects(() => provider.chat(ask()), /BACKBOARD_API_KEY/);
   });
 });
+
+/**
+ * A Backboard run that fails — no credit, bad model, upstream error — comes back as
+ * **HTTP 200** with `status: "FAILED"` and the reason in `content`. Read as a success, the
+ * billing sentence became the item's title and was then used verbatim as a live eBay
+ * search query. This was observed against the real service, not imagined.
+ */
+describe("BackboardProvider failed runs", () => {
+  async function chatWith(status: string, content: string): Promise<() => Promise<unknown>> {
+    const original = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ content, status, thread_id: "t" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })) as typeof fetch;
+    const provider = new BackboardProvider("test-key", TOOL);
+    return async () => {
+      try {
+        return await provider.chat(ask());
+      } finally {
+        globalThis.fetch = original;
+      }
+    };
+  }
+
+  it("throws on a 200 that carries status FAILED", async () => {
+    const run = await chatWith(
+      "FAILED",
+      "Your free credit is reserved for Memory & RAG, so it can't cover LLM chat.",
+    );
+    await assert.rejects(run, /backboard run FAILED/);
+  });
+
+  it("carries the provider's reason into the error, so the log says why", async () => {
+    const run = await chatWith("FAILED", "Add credits or start a subscription.");
+    await assert.rejects(run, /Add credits or start a subscription/);
+  });
+
+  it("still returns content for a successful run", async () => {
+    const run = await chatWith("SUCCESS", '{"title":"Pyrex 444 mixing bowl"}');
+    const res = (await run()) as { text: string };
+    assert.equal(res.text, '{"title":"Pyrex 444 mixing bowl"}');
+  });
+
+  it("does not treat an absent status as a failure", async () => {
+    const original = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify({ content: "ok" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      })) as typeof fetch;
+    try {
+      const provider = new BackboardProvider("test-key", TOOL);
+      const res = (await provider.chat(ask())) as { text: string };
+      assert.equal(res.text, "ok");
+    } finally {
+      globalThis.fetch = original;
+    }
+  });
+});

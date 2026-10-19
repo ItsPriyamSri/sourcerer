@@ -1,0 +1,84 @@
+{
+  "_provenance": {
+    "what": "A real Backboard account, reached with a real key. Not a fixture, not a mock.",
+    "capturedAt": "2026-10-19T05:10:52+00:00",
+    "endpoint": "POST https://app.backboard.io/api/threads/messages",
+    "finding": [
+      "Backboard answers HTTP 200 for a run that FAILED, with status='FAILED' and the reason in `content`.",
+      "This account's free credit is reserved for Memory & RAG and cannot cover LLM chat, so every LLM run fails this way.",
+      "Therefore Backboard is authenticated and wired, but cannot be demonstrated serving inference without credit. That is stated, not hidden."
+    ]
+  },
+  "direct_api_response": {
+    "message": "Message added successfully",
+    "content": "Your free credit is reserved for Memory & RAG, so it can't cover LLM chat. Add credits or start a subscription on the Billing page to continue \u2014 and turn on auto-reload so your balance tops up automatically and you're never interrupted mid-conversation.",
+    "status": "FAILED",
+    "role": "assistant",
+    "model_name": null,
+    "model_provider": null,
+    "total_tokens": null,
+    "timestamp": "2026-10-19T05:10:52.155370"
+  },
+  "scan_before_the_fix": {
+    "note": "The billing sentence was adopted as the item title (conf 0.25) and then used verbatim as a live eBay search query: 124 listings for the query \"misc Your free\".",
+    "ran": [
+      {
+        "step": "identify",
+        "provider": "backboard:google/gemma-3-27b-it",
+        "locality": "cloud",
+        "ms": 2555,
+        "ok": true,
+        "detail": "Your free credit is reserved for Memory & RAG, so it can't cover LLM chat. Add c (conf 0.25)"
+      },
+      {
+        "step": "comps",
+        "provider": "serpapi (live eBay)",
+        "locality": "cloud",
+        "ms": 3644,
+        "ok": true,
+        "detail": "124 listings \u00b7 \"misc Your free\""
+      },
+      {
+        "step": "price",
+        "provider": "comps_median",
+        "locality": "device",
+        "ms": 3,
+        "ok": true,
+        "detail": "$19.75 \u00b7 conf 0.53"
+      }
+    ],
+    "identification_title": "Your free credit is reserved for Memory & RAG, so it can't cover LLM chat. Add c",
+    "comps_queryUsed": "misc Your free"
+  },
+  "scan_after_the_fix": {
+    "note": "A failed run now throws, so llmChat falls through the provider chain to local Gemma \u2014 the scan is correct again, on device, with no credit anywhere.",
+    "ran": [
+      {
+        "step": "identify",
+        "provider": "ollama:gemma3:1b",
+        "locality": "device",
+        "ms": 10576,
+        "ok": true,
+        "detail": "Vintage Pyrex 444 Cinderella Mixing Bowl (conf 0.70)"
+      },
+      {
+        "step": "comps",
+        "provider": "serpapi (live eBay)",
+        "locality": "cloud",
+        "ms": 3538,
+        "ok": true,
+        "detail": "120 listings \u00b7 \"vintage pyrex mixing bowl\""
+      },
+      {
+        "step": "price",
+        "provider": "comps_median",
+        "locality": "device",
+        "ms": 4,
+        "ok": true,
+        "detail": "$39.55 \u00b7 conf 0.66"
+      }
+    ],
+    "identification_title": "Vintage Pyrex 444 Cinderella Mixing Bowl",
+    "comps_queryUsed": "vintage pyrex mixing bowl"
+  }
+}

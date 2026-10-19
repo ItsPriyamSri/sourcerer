@@ -427,10 +427,10 @@ whole thing, including the kill; the raw worker and client logs are committed in
 Every figure here is measured on the machine described above, and each one is traceable to
 a file in the repository.
 
-- **91 unit tests pass** (`pnpm test`, no model, no network). Eighteen live in
+- **101 unit tests pass** (`pnpm test`, no model, no network). Eighteen live in
   `packages/shared` and cover the parts that decide whether someone makes money: eBay's fee
   arithmetic, the max-offer solve, the verdict thresholds, and trimmed-mean robustness to a
-  single seller asking ten times the going rate. The other seventy-three live in `apps/brain`,
+  single seller asking ten times the going rate. The other eighty-three live in `apps/brain`,
   and most of them pin the places this project cannot reach locally: the seams where a model
   meets code — the JSON salvage that stops a prose answer taking a whole scan down, and the
   verdict wrapper — and the exact request sent to each of the four integrations that need a
@@ -533,10 +533,11 @@ optimises for the other case: forty $12 items and ten seconds each.
 I have split this into two lists on purpose. The challenge rules are clear that a category
 has to be genuinely used, and "genuinely used" deserves a sharper definition than "an
 import statement exists". So: the first list has evidence behind it in this post — a
-measured eval, raw logs, a screenshot you can reproduce. The second list is everything that
-is genuinely wired into the running app, appears in the capability registry, and is what the
-UI falls back *from* when its key is absent — but which I have not exercised against a live
-paid account. Those are different claims and I am not going to blur them to widen a list.
+measured eval, raw logs, a screenshot you can reproduce. The second list is wired into the
+running app, appears in the capability registry, is what the UI falls back *from* when its
+key is absent, and has been pointed at a real account — but where the provider's own free
+tier or plan, rather than this code, is what stopped short of a full demonstration. Those
+are different claims and I am not going to blur them to widen a list.
 
 ### Demonstrated end to end
 
@@ -576,22 +577,41 @@ paid account. Those are different claims and I am not going to blur them to wide
   point. The same code talks to Tiger Cloud by connection string; the local container is
   there so the answer to "do I have to hand over a database?" is no.
 
-### Implemented and wired; not yet exercised against a live account
+### Wired, and exercised as far as the free tiers allow
 
-- **Best Use of TabPFN** — a price model fitted on the user's own sold history via the
-  Prior Labs REST API, which is what makes the offline number personal rather than
-  generic. It predicts price; sale speed is recorded on sold items but is not modelled,
-  and the repo says so rather than implying a second model exists.
+These are genuinely integrated — in the capability registry, called by the running app, and
+what the UI falls back *from* when the key is absent. Each has now also been pointed at a
+real account. What I am not going to do is call them "demonstrated" when the provider, not
+the code, is what stopped them.
+
+- **Best Use of Backboard** — the second brain: the same agents against open-weight models
+  through one key, which is what makes a GPU-less hosted demo possible. Live against a real
+  account, and it found a defect: **Backboard answers HTTP 200 when the *run* fails**, with
+  `status: "FAILED"` and the reason in `content`. This account's free credit is reserved for
+  Memory & RAG and cannot cover LLM chat, so the pipeline read the billing notice
+  *"Your free credit is reserved for Memory & RAG, so it can't cover LLM chat"* as the item's
+  title and then sent `misc Your free` to eBay as a live search query. A failed run now
+  throws, so `llmChat` falls through the provider chain to local Gemma and the scan comes back
+  correct with no credit anywhere — which is a better result than the demo I was hoping for.
+  Raw responses before and after: `docs/evidence/backboard-credit-wall.json`.
+- **Best Use of ElevenLabs** — dictate an item while both hands are full, or hear the verdict
+  read back. Voice **in** is verified live: `POST /v1/speech-to-text` with `scribe_v2`
+  returns HTTP 200 against a real key. Voice **out** is blocked by the plan rather than the
+  code — ElevenLabs refuses library voices over the API for free accounts with
+  `402 paid_plan_required`, including the default voice, which is why `ELEVENLABS_TTS_VOICE`
+  is documented as needing a voice the account owns. The key here was also created *scoped*,
+  and answered `401` on the read-only route the checker had chosen — a valid key reported as
+  broken by my own honesty tool, which now probes the app's real call instead.
 - **Best Use of Sentry Agent Tracing** — `@sentry/node` spans around identify, comps and
   price, so one scan becomes a waterfall, plus error capture that carries the route it
   came from. genAI input recording is explicitly off, so photos never enter a trace. The
   framework's own `gen_ai.*` spans are *not* wired: that needs `@mastra/observability` and
   a preloaded `Sentry.init`, and I would rather say that than let a span name imply token
   accounting that is not there.
-- **Best Use of ElevenLabs** — dictate an item while both hands are full, or hear the
-  verdict read back.
-- **Best Use of Backboard** — the second brain: the same agents against open-weight models
-  through one key, which is what makes a GPU-less hosted demo possible.
+- **Best Use of TabPFN** — a price model fitted on the user's own sold history via the
+  Prior Labs REST API, which is what makes the offline number personal rather than
+  generic. It predicts price; sale speed is recorded on sold items but is not modelled,
+  and the repo says so rather than implying a second model exists.
 
 **Not entered, and why:** *GitHub Copilot* (a development tool, not an integration — it
 does not belong in a product category) and *MongoDB Atlas* (it would have duplicated the

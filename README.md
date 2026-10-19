@@ -309,7 +309,7 @@ crash window observable, which is how the claim above was produced.
 Reproduce both:
 
 ```bash
-pnpm test                              # 91 unit tests, no model, no network
+pnpm test                              # 101 unit tests, no model, no network
 pnpm evidence:identify                 # the identification eval (needs Ollama)
 bash scripts/temporal-durability-demo.sh   # the crash-and-resume proof
 pnpm evidence:capture                  # every screenshot in docs/media, from the real app
@@ -320,7 +320,7 @@ pnpm evidence:capture                  # every screenshot in docs/media, from th
 ## Tests
 
 ```bash
-pnpm test          # 91 tests
+pnpm test          # 101 tests
 pnpm typecheck     # all three packages
 ```
 
@@ -330,7 +330,7 @@ listing, clamping of hostile cost-model input — plus the JSON salvage that kee
 answering in prose from taking a whole scan down with it. No model is mocked, because
 none of these need one.
 
-Twenty-eight of them cover the two integrations that no local run can reach, because both
+Thirty-two of them cover the two integrations that no local run can reach, because both
 need a key: the search request the app sends to SerpApi, and the message body it sends to
 Backboard. "The tests pass" had said nothing about either, and both had already shipped a
 defect that only a live call would have surfaced.
@@ -376,8 +376,8 @@ Twelve further tests cover `pnpm keys:check`, which is what proves any of this l
 
 ### Verified live, not just wired
 
-Four integrations have now been exercised against something real rather than a contract:
-Gemma and Temporal as documented above, plus two more.
+Six integrations have now been pointed at something real rather than a contract: Gemma and
+Temporal as documented above, plus four more.
 
 - **SerpApi** — against a real account. The raw `POST /scan` response is committed at
   [`docs/evidence/serpapi-live.json`](docs/evidence/serpapi-live.json): **51 live eBay
@@ -386,8 +386,20 @@ Gemma and Temporal as documented above, plus two more.
 - **pgvector** — a local container, no cloud account needed. 32 items embedded through the
   real pipeline, then *"something to cook with in the kitchen"* returned Pyrex mixing bowls
   and a Griswold skillet. No shared keywords with the query, which is the whole point.
+- **Backboard** — authenticated against a real account, which is where it got interesting:
+  a Backboard run that fails returns **HTTP 200** with `status: "FAILED"` and the reason in
+  `content`. This account's free credit is reserved for Memory & RAG, so every LLM run fails
+  that way — and the pipeline read the sentence *"Your free credit is reserved for Memory &
+  RAG, so it can't cover LLM chat"* as the item's title, then sent `misc Your free` to eBay
+  as a live search query. Failed runs throw now, so `llmChat` falls through the provider
+  chain to local Gemma and the scan comes back correct. Raw responses:
+  [`docs/evidence/backboard-credit-wall.json`](docs/evidence/backboard-credit-wall.json).
+- **ElevenLabs** — voice **in** verified live: `POST /v1/speech-to-text` with `scribe_v2`
+  returns HTTP 200. Voice *out* is refused by the plan, not the code: the free tier answers
+  `402 paid_plan_required` on library voices, default voice included. The key was also
+  created *scoped*, which exposed a defect in the checker itself, below.
 
-Doing that found three more defects, two of them silent:
+Doing that found defects, two of them silent:
 
 - **Ollama moved its embeddings route.** `POST /api/embeddings` (`{prompt}` → `{embedding}`)
   was removed in Ollama 0.40 in favour of `POST /api/embed` (`{input}` →
@@ -403,6 +415,11 @@ Doing that found three more defects, two of them silent:
   logged as `provider: cache` / `locality: device`. That is the one line in the UI whose job
   is to say whether a query left the machine, and it said it had not. The result's own
   `source` decides the label now.
+- **The key checker called a working key broken.** ElevenLabs now issues *scoped* keys, and a
+  scoped key answers `401` on `GET /v1/user` — a route the app never calls. So
+  `pnpm keys:check`, the one command whose entire job is telling the truth, reported a valid
+  key as rejected. It reads the missing scope off the error body and then probes the call the
+  app actually makes, which is a harder thing to get wrong than a status code.
 
 ---
 

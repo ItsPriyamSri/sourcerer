@@ -270,7 +270,18 @@ export class BackboardProvider implements LlmProvider {
       const detail = await res.text().catch(() => "");
       throw new Error(`backboard ${res.status}: ${detail.slice(0, 300)}`);
     }
-    const json = (await res.json()) as { content?: string; total_tokens?: number };
+    const json = (await res.json()) as { content?: string; total_tokens?: number; status?: string };
+    /**
+     * Backboard answers HTTP 200 when the *run* fails — no credit, bad model, upstream
+     * error — and puts the reason in `content` with `status: "FAILED"`. Read as a
+     * success, that billing notice became the item's title, and the pipeline then used
+     * the sentence "Your free credit is reserved for Memory & RAG…" as a live eBay search
+     * query. A failed run is a failed call, which lets llmChat fall through to the next
+     * provider instead of shipping nonsense downstream.
+     */
+    if (typeof json.status === "string" && /fail|error/i.test(json.status)) {
+      throw new Error(`backboard run ${json.status}: ${(json.content ?? "").slice(0, 200)}`);
+    }
     return {
       text: json.content ?? "",
       provider: this.id,

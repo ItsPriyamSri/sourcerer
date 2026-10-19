@@ -67,6 +67,7 @@ source. This is deliberate — the working offline behaviour *is* the pitch.
 | **Switch to it** | `MODEL_PROVIDER=backboard` (or `PREFER_BACKBOARD=1` to prefer it when a key exists) |
 | **Without it** | Local Gemma only. Fine locally; a problem only for a GPU-less host. |
 | **Gotcha** | Backboard is **not** OpenAI-compatible. It is a thread API; the provider handles that. |
+| **Live status** | Authenticated against a real account. But a Backboard run that fails comes back as **HTTP 200** with `status: "FAILED"` and the reason in `content` — and this account's free credit is reserved for Memory & RAG, so it cannot cover LLM chat. Read as a success, that billing notice became the item title and then a live search query. It is detected now and `llmChat` falls through to local Gemma, so the scan stays correct with no credit anywhere. See `docs/evidence/backboard-credit-wall.json`. |
 
 ### `DATABASE_URL` — vector memory ("have I bought this before?")
 | | |
@@ -88,6 +89,8 @@ source. This is deliberate — the working offline behaviour *is* the pitch.
 | **Unlocks** | Dictate an item while your hands are full (`POST /transcribe`) and hear the verdict read back (`POST /speak`). |
 | **Where** | <https://elevenlabs.io/app/settings/api-keys> |
 | **Without it** | The voice surfaces return `501` and the UI simply doesn't offer them. |
+| **Scopes** | New keys are created **scoped**, and a scoped key answers `401` on routes it was not granted — `user_read` included. The app needs `speech_to_text` and `text_to_speech`. `pnpm keys:check` reads the scope off the error body and then probes the app's real voice-in call, so a valid-but-scoped key is not misreported as broken. |
+| **Plan limit** | On the ElevenLabs free plan, **voice out does not work through the API at all**: library voices — including the default one — return `402 paid_plan_required` (*"Free users cannot use library voices via the API"*). Voice **in** works and is verified live. Voice out needs a paid plan, or `ELEVENLABS_TTS_VOICE` set to a voice the account owns. |
 
 ### Hosting & domain — no secret needed
 | | |
@@ -143,9 +146,9 @@ Two different things can be meant by "it works", so they are two separate column
 | `SERPAPI_API_KEY` | SerpApi | no | live eBay asking-price comps | **yes** — the `_ipg` cap snaps to an allowed size (25/50/100/200); 15 tests | **yes — live**, 51 real eBay listings for `brass bottle opener nautical` (`docs/evidence/serpapi-live.json`) |
 | `TABPFN_TOKEN` | Prior Labs | no | price model fitted on your own sales | **yes** — quantile-major output read as documented; 7 tests | not yet |
 | `SENTRY_DSN` | Sentry | no | a span per pipeline stage, plus error capture | **yes** — v11 `dataCollection`, `isEnabled`, flush-on-exit | not yet |
-| `BACKBOARD_API_KEY` | Backboard | no | hosted open-weight brain (GPU-less demo) | **yes** — per-turn text goes in `system_prompt`, not the undocumented `instructions`; 9 tests | not yet |
+| `BACKBOARD_API_KEY` | Backboard | no | hosted open-weight brain (GPU-less demo) | **yes** — per-turn text goes in `system_prompt`, not the undocumented `instructions`; 13 tests | **partly** — authenticated live, but this account's free credit is reserved for Memory & RAG and cannot cover LLM chat: a real run returns HTTP 200 with `status: FAILED`. Detected now, so the chain falls through to local Gemma (`docs/evidence/backboard-credit-wall.json`) |
 | `DATABASE_URL` | Tiger Data / pgvector | no | vector memory ("have I bought this before?") | **yes** — `sslmode` is stripped so it cannot override our TLS; 7 tests | **yes — pgvector**, a local container (no cloud account): 32 items embedded and a semantic search that shares no keywords with the answer |
-| `ELEVENLABS_API_KEY` | ElevenLabs | no | voice in and out | **yes** — `scribe_v2` (`scribe_v1` was retired 2026-07-09) and `eleven_flash_v2_5` | not yet |
+| `ELEVENLABS_API_KEY` | ElevenLabs | no | voice in and out | **yes** — `scribe_v2` (`scribe_v1` was retired 2026-07-09) and `eleven_flash_v2_5` | **yes — voice in**: `POST /v1/speech-to-text` with `scribe_v2` returns HTTP 200 live. Voice *out* is blocked by the ElevenLabs **plan**, not by this code: the free plan refuses library voices over the API with 402 `paid_plan_required` |
 | `SENTRY_RECORD_INPUTS` | Sentry | no | set `1` only to debug with inputs recorded | — | — |
 | `MODEL_PROVIDER` | — | no | force `ollama` or `backboard` | — | — |
 

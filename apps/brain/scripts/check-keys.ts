@@ -8,7 +8,7 @@ import { config } from "../src/env.ts";
  * Live verification of every optional integration.
  *
  * This is the gate between "I put a key in .env" and "the integration actually
- * works": every probe below is a real, read-only request against the provider.
+ * works": every probe below is a real request against the provider.
  * A key that is absent is not a failure — it is `SKIPPED(no key)`, because the
  * whole point of Sourcerer is that it runs with zero keys. A key that is present
  * and broken is a failure, and the run exits non-zero.
@@ -21,6 +21,10 @@ import { config } from "../src/env.ts";
  *    "free of charge ... not counted toward your monthly quota"; Prior Labs'
  *    cost estimate "does not consume tokens or reserve capacity". Neither
  *    performs a search or a fit.
+ *    One exception, and it is disclosed rather than hidden: a *scoped* ElevenLabs
+ *    key cannot answer the read-only route at all, so the probe transcribes a 0.2 s
+ *    silent clip instead — the app's real voice-in call, the only thing that proves
+ *    the scope is granted. It costs a fraction of a credit and stores nothing.
  *  - No secret is ever printed. At worst the first four characters.
  *  - A hung network never hangs the operator: every probe runs under a short
  *    deadline inside a concurrent overall budget.
@@ -260,6 +264,47 @@ async function probeDatabase(signal: AbortSignal): Promise<ProbeOutcome> {
 // ── ElevenLabs — voice in and out. ───────────────────────────────────────────
 // doc: https://elevenlabs.io/docs/api-reference/user/get (GET /v1/user) and
 // https://elevenlabs.io/docs/api-reference/authentication (`xi-api-key` header).
+//
+// Keys are now created scoped: a fresh key answers 401 on every route it was not granted,
+// `user_read` included. Since the app never calls /v1/user, testing it alone reported a
+// perfectly good key as "rejected" — a false alarm from the one command whose whole job is
+// telling the truth. So when the key authenticates but lacks a scope, probe the path the
+// app actually uses instead of the one that happens to be convenient.
+
+/** The missing scope out of an ElevenLabs error body, if it is a scoping error. */
+export function missingScope(body: unknown): string | null {
+  const detail = (body as { detail?: { status?: string; message?: string } } | null)?.detail;
+  if (detail?.status !== "missing_permissions") return null;
+  return /permission (\w+)/.exec(detail.message ?? "")?.[1] ?? "unknown";
+}
+
+/**
+ * A 0.2 s silent WAV, built here rather than committed as a blob.
+ *
+ * speech-to-text is the app's real voice-in call and the only way to prove the scope is
+ * granted; a silent clip gives a deterministic 200 with empty text and costs a fraction of
+ * a credit.
+ */
+export function silentWav(seconds = 0.2, rate = 16_000): Uint8Array {
+  const samples = Math.floor(seconds * rate);
+  const buf = new Uint8Array(44 + samples * 2);
+  const view = new DataView(buf.buffer);
+  const ascii = (at: number, s: string) => [...s].forEach((c, i) => (buf[at + i] = c.charCodeAt(0)));
+  ascii(0, "RIFF");
+  view.setUint32(4, 36 + samples * 2, true);
+  ascii(8, "WAVEfmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, rate, true);
+  view.setUint32(28, rate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  ascii(36, "data");
+  view.setUint32(40, samples * 2, true);
+  return buf; // samples stay zero: silence
+}
+
 async function probeElevenLabs(signal: AbortSignal): Promise<ProbeOutcome> {
   const key = config.elevenlabs.apiKey;
   const res = await fetch("https://api.elevenlabs.io/v1/user", {
@@ -270,7 +315,37 @@ async function probeElevenLabs(signal: AbortSignal): Promise<ProbeOutcome> {
     const body = (await res.json().catch(() => ({}))) as { subscription?: { tier?: string } };
     return { status: "PASS", reason: `GET /v1/user → HTTP ${res.status}, tier ${body.subscription?.tier ?? "?"}` };
   }
-  return { status: "FAIL", reason: `HTTP ${res.status} — key rejected (key ${redact(key)})` };
+
+  const body = await res.json().catch(() => null);
+  const scope = missingScope(body);
+  if (!scope) {
+    return { status: "FAIL", reason: `HTTP ${res.status} — key rejected (key ${redact(key)})` };
+  }
+
+  // The key is real; it just was not granted `user_read`. Ask it to do the app's job.
+  const form = new FormData();
+  form.append("file", new Blob([silentWav()], { type: "audio/wav" }), "silence.wav");
+  form.append("model_id", "scribe_v2");
+  const stt = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
+    method: "POST",
+    headers: { "xi-api-key": key },
+    body: form,
+    signal,
+  });
+  if (stt.ok) {
+    return {
+      status: "PASS",
+      reason: `key is scoped (no ${scope}), but the voice-in path works: POST /v1/speech-to-text → HTTP ${stt.status}`,
+    };
+  }
+  const sttBody = await stt.json().catch(() => null);
+  const sttScope = missingScope(sttBody);
+  return {
+    status: "FAIL",
+    reason: sttScope
+      ? `key is valid but lacks ${sttScope} — enable speech_to_text (and text_to_speech for voice out)`
+      : `POST /v1/speech-to-text → HTTP ${stt.status}`,
+  };
 }
 
 // ── Sentry — agent tracing. ──────────────────────────────────────────────────
@@ -352,7 +427,7 @@ function render(results: readonly CheckResult[]): void {
   const nameW = Math.max(...results.map((r) => r.name.length));
 
   console.log("");
-  console.log("  sourcerer keys:check — live probes (read-only, no search credits)");
+  console.log("  sourcerer keys:check — live probes (read-only; no search quota used)");
   console.log("");
   for (const r of results) {
     console.log(`  ${r.status.padEnd(statusW)}  ${r.name.padEnd(nameW)}  ${r.reason}`);

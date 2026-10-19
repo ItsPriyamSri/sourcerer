@@ -120,6 +120,19 @@ What it changes: you can dictate a condition note instead of typing it, and the
 verdict can be read back to you — which matters when both hands are holding a
 bowl. Transcription uses `scribe_v2`, speech uses `eleven_flash_v2_5`.
 
+**Two things about a new free key that each cost an afternoon if you hit them blind:**
+
+- **New keys are created scoped**, and a scoped key answers `401` on routes it was not
+  granted — `user_read` included. That is not a broken key. The app needs `speech_to_text`
+  (voice in) and `text_to_speech` (voice out); grant those at creation time.
+  `pnpm keys:check` reads the missing scope off the error body and then probes the app's
+  real call, so it names the scope instead of claiming the key was rejected.
+- **Voice out does not work on the free plan.** ElevenLabs refuses *library* voices over
+  the API for free accounts — `402 paid_plan_required`, *"Free users cannot use library
+  voices via the API"* — and that includes the default voice. Voice **in** works and is
+  verified live. For voice out: upgrade, or set `ELEVENLABS_TTS_VOICE` to a voice your
+  account owns.
+
 ### 4. Sentry — see what the agent actually did
 
 1. <https://sentry.io/signup/> — sign up (free Developer tier).
@@ -130,6 +143,18 @@ bowl. Transcription uses `scribe_v2`, speech uses `eleven_flash_v2_5`.
 
 The DSN looks like `https://<public-key>@o<org>.ingest.<region>.sentry.io/<id>`
 and is safe to paste (it is a write-mostly ingest key, not an auth token).
+
+**If you would rather not click through the UI**, create an auth token instead —
+**Settings → Auth Tokens → Create New Token**, with `project:read` and
+`project:write` — and hand that over. The project can then be created and the DSN
+read back through Sentry's API in one step, and the token is not the value that
+ends up in `.env`.
+
+**Not to be confused with:** the *Sentry Agent Plugin*
+(`npx @sentry/agent-plugin install <org>#<run-code>`). That installs Sentry into
+your **coding assistant** — it wires up the Sentry MCP server so the assistant can
+query your issues — and it does not produce a DSN, which is the one thing this app
+actually needs. Both are useful; only the DSN makes the pipeline appear in Sentry.
 
 What it changes: identify / comps / price get wrapped in real spans, so you can
 see "identify 4.2 s on Gemma, comps 900 ms, price 300 ms" instead of guessing.
